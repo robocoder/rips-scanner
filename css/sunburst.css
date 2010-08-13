@@ -1,0 +1,142 @@
+.userinput, .persistent {
+	list-style-type: disc;
+	color:white; 
+}
+.validated {
+	list-style-type: disc;
+	color:red; 
+}
+.functioninput {
+	list-style-type: disc;
+	color:yellow; 
+}
+
+.codebox {
+	margin-bottom: 10px;
+	background-color: #141414;
+}
+
+.windowcontent , #funccodecontent, #funccodetitle, .funclistcontent {
+	background-color: #141414;
+}
+
+.markline {
+	background-color: #531107;
+}
+
+.requires
+	{color: #99CF50; font-weight:bold;}
+	
+.linenr
+	{color: #999999;}
+	
+.link
+	{color: #43A8ED; font-weight:bold;}
+	
+.code,
+.phps-code, .vulntitle
+	{color: white; font-family: "Bitstream Vera Sans Mono", "Monaco", "Courier New", monospace; font-size:1em; font-size:9pt;}
+
+.phps-t-string,
+.phps-t-eval,
+.phps-t-print,
+.phps-t-include,
+.phps-t-include-once,
+.phps-t-require,
+.phps-t-require-once,
+.phps-t-empty,
+.phps-t-while,
+.phps-t-do,
+.phps-t-exit,
+.phps-t-try,
+.phps-t-catch,
+.phps-t-unset,
+.phps-t-list,
+.phps-t-array,
+.phps-t-echo,
+.phps-t-start-heredoc,
+.phps-t-end-heredoc
+	{color: #DAD085;}
+
+.phps-t-open-tag,
+.phps-t-close-tag,
+.phps-t-and-equal, 
+.phps-t-concat-equal, 
+.phps-t-div-equal, 
+.phps-t-minus-equal, 
+.phps-t-mod-equal, 
+.phps-t-mul-equal, 
+.phps-t-or-equal, 
+.phps-t-plus-equal, 
+.phps-t-sl-equal, 
+.phps-t-sr-equal, 
+.phps-t-xor-equal, 
+.phps-t-is-equal,
+.phps-t-is-greater-or-equal,
+.phps-t-is-identical,
+.phps-t-is-not-equal,	
+.phps-t-is-not-identical,
+.phps-t-inc,
+.phps-t-dec,
+.phps-t-object-operator,
+.phps-t-if,
+.phps-t-switch,
+.phps-t-isset,
+.phps-t-exclaim,
+.phps-t-for,
+.phps-t-foreach,
+.phps-t-return,
+.phps-t-double-arrow,
+.phps-t-as,
+.phps-t-or,
+.phps-t-case,
+.phps-t-default,
+.phps-t-break,
+.phps-t-continue,
+.phps-t-goto,
+.phps-t-and,
+.phps-t-xor,
+.phps-t-global,
+.phps-t-logical-and,
+.phps-t-logical-or,
+.phps-t-else,
+.phps-t-elseif,
+.phps-t-use,
+.phps-t-var,
+.phps-t-function,
+.phps-t-public,
+.phps-t-private,
+.phps-t-protected,
+.phps-t-static,
+.phps-t-class,
+.phps-t-new,
+.phps-t-bool-cast,
+.phps-t-double-cast,
+.phps-t-int-cast,
+.phps-t-unset-cast
+	{color: #CE864B;}
+
+.phps-t-const
+	{color: #3387CC;}
+	
+.phps-t-variable, .funclistline
+	{color: #3E87E3;}
+
+.phps-tainted-var
+	{color: #97C5FE;}
+	
+.phps-t-lnumber
+	{color: #3E87E3;}
+
+.phps-t-encapsed-and-whitespace,
+.phps-t-constant-encapsed-string
+	{color: #65B042;}
+
+.phps-t-inline-html
+	{color: #F9EE98;}
+
+.phps-t-comment,
+.phps-t-ml-comment,
+.phps-t-doc-comment
+	{color: #AEAEAE;
+	font-style: italic;}
