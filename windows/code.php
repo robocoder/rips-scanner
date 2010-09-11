@@ -20,9 +20,8 @@ You should have received a copy of the GNU General Public License along with thi
 	function highlightline($line, $line_nr, $marklines)
 	{
 		$tokens = @token_get_all('<? '.$line.' ?>');
-		$output = "<tr><td class=\"linenrcolumn\"><span class=\"linenr\">$line_nr</span>&nbsp;&nbsp;&nbsp;<A id='".($line_nr+2).'\'></A></td>';
 		
-		$output .= (in_array($line_nr, $marklines)) ? '<td nowrap class="markline">' : '<td nowrap>';
+		$output = (in_array($line_nr, $marklines)) ? '<tr><td nowrap class="markline">' : '<tr><td nowrap>';
 
 		foreach ($tokens as $token)
 		{
@@ -42,8 +41,14 @@ You should have received a copy of the GNU General Public License along with thi
 					if($token[0] === T_VARIABLE)
 					{
 						$cssname = str_replace('$', '', $token[1]);
-						$text.= 'style="cursor:pointer;" name="phps-var-'.$cssname.'" onClick="markVariable(\''.$cssname.'\')"';
+						$text.= 'style="cursor:pointer;" name="phps-var-'.$cssname.'" onClick="markVariable(\''.$cssname.'\')" ';
+						$text.= 'onmouseover="markVariable(\''.$cssname.'\')" onmouseout="markVariable(\''.$cssname.'\')" ';
 					}	
+					else if($token[0] === T_STRING)
+					{
+						$text.= "onmouseover=\"mouseFunction('{$token[1]}', this)\" onmouseout=\"this.style.textDecoration='none'\" ";
+						$text.= "onclick=\"openFunction('{$token[1]}','$line_nr');\" ";
+					}
 					$text.= 'class="phps-'.str_replace('_', '-', strtolower(token_name($token[0]))).'" ';
 					$text.= '>'.htmlentities($token[1], ENT_QUOTES, 'utf-8').'</span>';
 				}
@@ -64,10 +69,18 @@ You should have received a copy of the GNU General Public License along with thi
 	$file = $_GET['file'];
 	$marklines = explode(',', $_GET['lines']);
 
+	
 	if(!empty($file))
 	{
 		$lines = file($file);
-		for($i=0, $max=count($lines); $i<$max; $i++)
+		
+		// place line numbers in extra table for more elegant copy/paste without line numbers
+		echo '<tr><td><table>';
+		for($i=1, $max=count($lines); $i<=$max;$i++) 
+			echo "<tr><td class=\"linenrcolumn\"><span class=\"linenr\">$i</span><A id='".($i+2).'\'></A></td></tr>';
+		echo '</table></td><td><table width="100%">';
+		
+		for($i=0; $i<$max; $i++)
 		{
 			echo highlightline($lines[$i], $i+1, $marklines);
 		}
@@ -77,3 +90,4 @@ You should have received a copy of the GNU General Public License along with thi
 	}
 ?>
 </table>
+</td></tr></table>

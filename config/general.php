@@ -15,13 +15,13 @@ You should have received a copy of the GNU General Public License along with thi
 
 **/
 	
-	$start = microtime(TRUE);
 	ini_set('short_open_tag', 1);
 	set_time_limit(180);
 	error_reporting(0);
 		
-	$version = '0.32';				// RIPS version to be displayed	
+	$version = '0.33';				// RIPS version to be displayed	
 	$maxtrace = 30;					// maximum of parameter traces per PVF find
+	$warnfiles = 40;				// warn user if amount of files to scan is higher than this value
 	$basedir = '';					// default directory shown
 	$doku = 'http://php.net/';		// PHP dokumentation
 	
@@ -46,8 +46,8 @@ You should have received a copy of the GNU General Public License along with thi
 		'.phps', 
 		'.php4', 
 		'.php5', 
-		'.html', 
-		'.htm', 
+		//'.html', 
+		//'.htm', 
 		'.phtml', 
 		'.tpl',  
 		'.cgi'

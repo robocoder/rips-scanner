@@ -62,15 +62,25 @@ You should have received a copy of the GNU General Public License along with thi
 		'ord',
 		'sizeof',
 		'count',
-		'bin2hex'
+		'bin2hex',
+		'levenshtein',
+		'abs',
+		'bindec',
+		'decbin',
+		'hexdec',
+		'rand',
+		'max',
+		'min'
 	);
 	
-	// functions that insecures the string again - not implemented yet 
+	// functions that insecures the string again 
 	$F_INSECURING_STRING = array(
 		'rawurldecode',
 		'urldecode',
 		'base64_decode',
-		'html_entity_decode'
+		'html_entity_decode',
+		'str_rot13',
+		'chr'
 	);
 
 	// securing functions for XSS
@@ -81,8 +91,18 @@ You should have received a copy of the GNU General Public License along with thi
 	
 	// securing functions for SQLi
 	$F_SECURING_SQL = array(
+		'addslashes',
+		'dbx_escape_string',
+		'db2_escape_string',
+		'ingres_escape_string',
+		'maxdb_escape_string',
+		'maxdb_real_escape_string',
+		//'mysql_escape_string',
 		'mysql_real_escape_string',
-		'addslashes'
+		'mysqli_escape_string',
+		'mysqli_real_escape_string',
+		'pg_escape_string',		
+		'sqlite_escape_string'
 	);	
 	
 	// securing functions for RCE with e-modifier in preg_**
@@ -100,13 +120,19 @@ You should have received a copy of the GNU General Public License along with thi
 		'escapeshellcmd'
 	);	
 	
+	// securing XPath injection
+	$F_SECURING_XPATH = array(
+		'addslashes'
+	);
+	
 	// all specific securings
 	$F_SECURES_ALL = array_merge(
 		$F_SECURING_XSS, 
 		$F_SECURING_SQL,
 		$F_SECURING_PREG,
 		$F_SECURING_FILE,
-		$F_SECURING_SYSTEM
+		$F_SECURING_SYSTEM,
+		$F_SECURING_XPATH
 	);	
 		
 ?>	

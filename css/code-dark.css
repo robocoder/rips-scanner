@@ -37,6 +37,7 @@
 	
 .code,
 .phps-code,
+.phps-t-dollar-open-curly-braces,
 .phps-t-open-tag,
 .phps-t-close-tag,
 .phps-t-and-equal, 
@@ -96,7 +97,7 @@
 .phps-t-unset-cast
 	{color: #87AFD7;}
 
-.phps-t-variable, .funclistline
+.phps-t-variable, .phps-t-string-varname, .funclistline
 	{color: #AFAFD7;}
 
 .phps-tainted-var

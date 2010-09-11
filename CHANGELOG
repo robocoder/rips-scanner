@@ -1,0 +1,70 @@
+RIPS CHANGELOG
+===============
+
+RIPS 0.33:
+----------
+	Code analysis:
+	- added vulnerability type 'XPath Injection'
+	- implemented $F_INSECURING_STRING (list of functions like urldecode() that can re-taint already sanitized data) 
+	- fixed bug with $GLOBALS[] (ignore previous local vars, accept only global vars)
+	- improved tainted $_SESSION (=global var) handling
+	- fixed bug with tainting functions not displayed in the result tree
+	- fixed bug with differently used quotes in array['"parameter'"] during traceback
+	- added compact() support
+	- ignore upper/lowercase in function names because PHP does not (sYsTem())
+	- scan for dynamic function calls $variable() (possible code exec)
+	
+	Interface:
+	- added missing taint-highlighting in the first line of PVF tree
+	- added file list: listing all scanned files and includes
+	- added list of function calls to each list item of user-defined functions
+	- added help button for simple visualization, description, example, PoC, patch and securing function list in a new window
+	- RIPS warns you when scan may last very long (counts files to scan)
+	- added AJAX interface with scan animation
+	- added scan result statistics and graphs
+	- highlight variables onMouseOver in code viewer and scan result. persistent highlight onClick.
+	- code viewer now supports active jumping between function calls and declarations 
+		(click on function call to jump to declaration, click "return" to jump back to the call)
+	- added regex search function 
+	- windows are now resizeable
+	- added curl headers for all tainting $_SERVER parameters in the exploit creator
+
+RIPS 0.32:
+----------
+	Code analysis:
+	- rebuild PVF config (FILE, CODE and SYSTEM PVF into FILE_READ, FILE_AFFECT, FILE_INCLUDE and EXEC PVF)
+	- added $_SERVER parameters that are tainting to the config (example: $_SERVER['PHP_SELF'];)
+	- fixed bug with securing detection of global string securing functions (example: md5($a.$b);)
+	- fixed bug where the first token of an included file was ignored
+	
+	Interface:
+	- added a little howto to the welcome page
+	- added more detailed vulnerability types to scan for
+	- added vulnerability name to each find (name still present during minimization of output block)
+	- added .phps-tainted-var for highlighting tainting vars in the trace output
+	- added explaination to inter-procedual analysis results
+	- added RIPS logo (created by Gareth Heyes, thank you)
+	- added a option to change the output tree from bottom-up to top-down (requested by Joel, thank you)
+	- fixed bug with missing link by inter-procedual analysis when function name appeared in the "requires" list
+
+RIPS 0.31:
+----------
+	Code analysis:
+	- improved RIPS code + performance 
+		(http://code.google.com/speed/articles/optimizing-php.html)
+		(http://www.wmtips.com/php/tips-optimizing-php-code.htm)
+	- improved securing detection by detecting automatic type casts	
+	- added connection poisoning PVFs
+	- added support for $arrays{'a'} with curly braces
+	- added missing support for tainted OO function with XSS
+	- added a missing class-to-variable association when using a constructor call instead the keyword 'new'
+	- fixed bug where successful file inclusions were scanned again for a file inclusion vulnerability
+	- fixed bugs with detecting commands written over several code lines (reported by Stefan Esser & Pragmatk)
+		(patch does not solve all multi-line bugs)
+	- corrected analysis of variables marked as 'global'	
+	
+	Interface:
+	- better arranged user input list
+	- added option to highlight variables in the CodeViewer by click
+	- added vulnerability type "All" to scan client- and server-side vulns simultaneously 
+	- added missing exploit button for direct-tainted XSS vulnerabilities

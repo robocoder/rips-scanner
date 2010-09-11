@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 **/
 	
-	// get all files from directory, including all subdirectories
+	// get all php files from directory, including all subdirectories
 	function read_recursiv($path, $scan_subdirs)
 	{  
 		$result = array(); 
@@ -34,9 +34,10 @@ You should have received a copy of the GNU General Public License along with thi
 						$ar = read_recursiv($name, true); 
 						foreach ($ar as $value) 
 						{ 
-							$result[] = $value; 
+							if(in_array(substr($value, strrpos($value, '.')), $GLOBALS['filetypes']))
+								$result[] = $value; 
 						} 
-					} else  
+					} else if(in_array(substr($name, strrpos($name, '.')), $GLOBALS['filetypes'])) 
 					{  
 						$result[] = $name; 
 					}  
@@ -49,19 +50,27 @@ You should have received a copy of the GNU General Public License along with thi
 
 	// traces recursivly parameters and adds them as child to parent
 	// returns true if a parameter is tainted by userinput
-	function scan_parameter($file_name, $mainparent, $parent, $var_name, $var_declares, $last_token_id, $var_declares_global, $function_params, $function_obj, $userinput, $F_SECURES, $return_scan=false)
+	function scan_parameter($file_name, $mainparent, $parent, $var_name, $var_declares, $last_token_id, $var_declares_global, $function_params, $function_obj, $userinput, $F_SECURES, $return_scan=false, $ignore_securing=false)
 	{	
 		$vardependent = false;
 		$ignore_var = '';
-		
+
 		$arrayname = explode('[', $var_name);
 
 		// if $array[key] was not declared explicitly scan for $array
 		if(isset($arrayname[1]))
 		{
-			if ($arrayname[0] == '$GLOBALS'
-			&& !isset($var_declares[$var_name]) && !empty($arrayname[1]) ) 
+			if($arrayname[0] == '$GLOBALS' && !isset($var_declares[$var_name]) && !empty($arrayname[1]) ) 
+			{
 				$var_name = '$'. str_replace(array('"', "'", ']'), '', $arrayname[1]);
+				// php $GLOBALS: ignore previous local vars and take only global vars
+				$var_declares = $var_declares_global;
+			}
+			else if($arrayname[0] == '$_SESSION' && !isset($var_declares[$var_name]) && !empty($arrayname[1]))
+			{
+				// $_SESSION data is handled as global variables
+				$var_declares = array_merge($var_declares_global, $var_declares);
+			}
 			else if(!isset($var_declares[$var_name]) )
 				$var_name = $arrayname[0]; 
 		}
@@ -147,14 +156,14 @@ You should have received a copy of the GNU General Public License along with thi
 									$userinput = scan_parameter($file_name, $mainparent, $var_trace, 
 								$new_token_trace, $var_declares_global, $token_id, 
 								$var_declares_global, $function_params, $function_obj, $userinput,
-								$F_SECURES, $return_scan);
+								$F_SECURES, $return_scan, $ignore_securing);
 								// scan in local scope
 								} else
 								{
 									$userinput = scan_parameter($file_name, $mainparent, $var_trace, 
 								$new_token_trace, $var_declares, $token_id, 
 								$var_declares_global, $function_params, $function_obj, $userinput,
-								$F_SECURES, $return_scan);
+								$F_SECURES, $return_scan, $ignore_securing);
 								}
 							
 								// check if typecast or securing function wrapped
@@ -162,7 +171,7 @@ You should have received a copy of the GNU General Public License along with thi
 								&& in_array($tokens[$i-1][0], $GLOBALS['T_CASTS']))
 								|| (is_array($tokens[$i+1]) 
 								&& in_array($tokens[$i+1][0], $GLOBALS['T_CASTS'])) 
-								|| $in_securing)
+								|| $in_securing )
 								{
 									// mark user function as a securing user function
 									$GLOBALS['userfunction_secures'] = true;
@@ -230,16 +239,22 @@ You should have received a copy of the GNU General Public License along with thi
 								{
 									addtriggerfunction($mainparent, $function_obj, $file_name);
 								}	
-
-								return $userinput;
+								
+								// we could return here to not scan all parameters of the tainting function
+								// however we need to add the line manually to the output at this point
 							}
 							// detect securing functions
-							else if(in_array($tokens[$i][1], $F_SECURES)
-							|| (isset($tokens[$i][1]) &&
-							in_array($tokens[$i][1], $GLOBALS['F_SECURING_STRING'])) )
+							else if(!$ignore_securing && (in_array($tokens[$i][1], $F_SECURES)
+							|| (isset($tokens[$i][1]) && in_array($tokens[$i][1], $GLOBALS['F_SECURING_STRING']))) )
 							{
 								$parentheses_save = $parentheses_open;
 								$in_securing = true;
+							}
+							//detect insecuring functions (functions that make previous securing useless)
+							else if( isset($tokens[$i][1]) && in_array($tokens[$i][1], $GLOBALS['F_INSECURING_STRING']))
+							{
+								$parentheses_save = $parentheses_open;
+								$ignore_securing = true;
 							}
 							// if this is a vuln line, it has already been scanned -> return
 							else if( in_array($tokens[$i][0], $GLOBALS['T_FUNCTIONS']) 
@@ -270,6 +285,7 @@ You should have received a copy of the GNU General Public License along with thi
 							{
 								$parentheses_save = -1;
 								$in_securing = false;
+								$ignore_securing = false;
 							}
 						}						
 						// special case for var declaration in constructs
@@ -484,8 +500,8 @@ You should have received a copy of the GNU General Public License along with thi
 	{
 		$line = trim($lines_pointer[$linenr]);
 		$i = strlen($line)-1;
-		if($i>0 && $line[$i] != ';' && $line[$i] != ')' && $line[$i] != '(' 
-		&& $line[$i] != '{' && $line[$i] != '}')
+		if($i>0 && $line[$i] != ';' && $line[$i] != ')' /* && $line[$i] != '(' */
+		&& $line[$i] != '{' && $line[$i] != '}' && !strpos($line, '?>'))
 		{
 			$line .= getmultiline($lines_pointer, $linenr+1);
 		}
@@ -513,6 +529,7 @@ You should have received a copy of the GNU General Public License along with thi
 		$comment = '';
 		$inc_file = '';
 		$inc_file_stack = array();
+		$inc_map = array();
 		
 		$lines_stack = array();
 		$lines_stack[] = file($file_name);
@@ -548,6 +565,8 @@ You should have received a copy of the GNU General Public License along with thi
 					// save found				
 					$found_line = trim($lines_pointer[$line_nr-1])."\t".$comment;
 					$last_inc_file = $inc_file;	
+					
+					$GLOBALS['count_inc']++;
 	
 					// include('xxx')
 					if ( (($tokens[$i+1] === '(' 
@@ -645,7 +664,10 @@ You should have received a copy of the GNU General Public License along with thi
 												
 							$comment = '// '.basename($inc_file);
 						
-							$inc_file_stack[] = $inc_file;
+							$inc_file_stack[] = $inc_file;	
+
+							// build include map for file list
+							$inc_map[] = $try_file; // all basic includes
 							
 							// decrease token counter because we replaced the include with included tokens
 							// and dont wont to miss the first token of these
@@ -656,6 +678,7 @@ You should have received a copy of the GNU General Public License along with thi
 						else
 						{
 							$include = "// could not analyse file, tried: $try_file";
+							$GLOBALS['count_inc_fail']++;
 							$inc_file = $last_inc_file;
 						}
 					}
@@ -688,11 +711,11 @@ You should have received a copy of the GNU General Public License along with thi
 						continue;
 					}
 				}
-				
+	
 			// check for XSS vulns
 				if( in_array($token_name, $T_XSS) 
 				&& ($_POST['vector'] == 'client' || $_POST['vector'] == 'all') )
-				{			
+				{				
 					if($token_name === T_OPEN_TAG_WITH_ECHO)
 						$token_value = 'echo';
 				
@@ -716,12 +739,16 @@ You should have received a copy of the GNU General Public License along with thi
 					$has_vuln_parameters = false;
 					$parameter_has_userinput = false;
 					$secured_by_start = false;
+					$tainted_vars = array();
+					$var_count = 0;
 
 					while( $tokens[$i + $c] !== ';' )
 					{
 						$this_one_is_secure = false;
 						if( $tokens[$i + $c][0] === T_VARIABLE )
 						{
+							$var_count++;
+						
 							if( (is_array($tokens[$i + $c -2]) 
 							&& (in_array($tokens[$i + $c -2][1], $GLOBALS['F_SECURING_STRING']) 
 							|| in_array($tokens[$i + $c -2][1], $GLOBALS['F_SECURING_XSS'])))
@@ -755,7 +782,10 @@ You should have received a copy of the GNU General Public License along with thi
 							}
 				
 							if($userinput && (!$this_one_is_secure || $GLOBALS['verbosity'] >= 3) )
+							{
+								$tainted_vars[] = $var_count;
 								$parameter_has_userinput = true;
+							}	
 						} 
 						if($c>50)break;
 						$c++;
@@ -764,9 +794,9 @@ You should have received a copy of the GNU General Public License along with thi
 					// add find to output if function call has variable parameters (With userinput)
 					if( ($has_vuln_parameters && $parameter_has_userinput) || $GLOBALS['verbosity'] >= 5 ) 
 					{
+						$GLOBALS['count_xss']++;
 						$new_find->value = highlightline(getmultiline($lines_pointer, $line_nr-1)."\t".$comment, 
-													$line_nr, $token_value);
-					
+													$line_nr, $token_value, false, $tainted_vars);
 						if($secured_by_start)
 							$new_find->marker = 2;				
 					
@@ -828,8 +858,9 @@ You should have received a copy of the GNU General Public License along with thi
 					&& ($tokens[$i+2][0] === T_CONSTANT_ENCAPSED_STRING
 					 || $tokens[$i+2][0] === T_LNUMBER)
 					&& $tokens[$i+3] === ']')
-					{					
-						// global varlist or local (in function) varlist
+					{		
+						// first save array name
+						// in global varlist or local (in function) varlist
 						if($in_function)
 						{
 							if(!isset($var_declares_local[$new_token_value]))
@@ -875,7 +906,7 @@ You should have received a copy of the GNU General Public License along with thi
 					
 				}
 				
-			// add user input variables to global list
+			// add user input variables to global finding list
 				else if($token_name === T_VARIABLE && in_array($token_value, $GLOBALS['V_USERINPUT']))
 				{
 					$file_finding = (!empty($inc_file)) ? dirname($file_name) . '/' . $inc_file : $file_name;
@@ -884,6 +915,59 @@ You should have received a copy of the GNU General Public License along with thi
 						$GLOBALS['user_input'][$token_value.'['.$tokens[$i+2][1].']'][$file_finding][] = $line_nr;	
 					else
 						$GLOBALS['user_input'][$token_value][$file_finding][] = $line_nr;	
+				}
+			
+			// dynamic function call $bla()
+				else if($token_name === T_VARIABLE && $tokens[$i+1][0] === '(')
+				{
+					// build new find					 
+					$new_find = new VulnTreeNode();
+					$new_find->name = '$variable';
+					$new_find->title = 'Dynamic Function Call (Remote Code Execution)';
+					$new_find->lines[] = $line_nr;
+					
+					// if in included code, set file name
+					if(!empty($inc_file))
+						$new_find->filename = dirname($file_name) . '/' . $inc_file;
+				
+					// add dependencies
+					foreach($dependencies as $deplinenr=>$dependency)
+					{
+						$new_find->dependencies[$deplinenr] = $dependency;
+					}
+					
+					// trace back parameters and look for userinput
+					if($in_function)
+					{
+						$userinput = scan_parameter($file_name, $new_find, $new_find, 
+						$token_value, $var_declares_local, $i, 
+						$var_declares_global, $function_params, $function_obj, 
+						false, array());
+					} else 
+					{
+						$userinput = scan_parameter($file_name, $new_find, $new_find, 
+						$token_value, $var_declares_global, $i, 
+						null, array(), null, false, array());
+					}
+					
+					// add find to output if function call has variable parameters (With userinput)
+					if( $userinput || $GLOBALS['verbosity'] >= 5 ) 
+					{
+						$GLOBALS['count_code']++;
+						$new_find->value = highlightline(getmultiline($lines_pointer, $line_nr-1)."\t".$comment, 
+													$line_nr, $token_value, false, $tainted_vars);		
+					
+						$id = (isset($GLOBALS['output'][$file_name])) ? 
+								count($GLOBALS['output'][$file_name]) : 0;
+						$GLOBALS['output'][$file_name][$id] = $new_find;
+						
+						// mark function in class as vuln
+						if($in_function && $in_class)
+						{
+							$vuln_classes[$class_name][] = $function_name;
+						}
+
+					}
 				}
 			
 			// add globaled variables (global $a, $b, $c;) to var list	
@@ -926,24 +1010,68 @@ You should have received a copy of the GNU General Public License along with thi
 						$new_var->dependencies[$deplinenr] = $dependency;
 					}
 					
-					$new_token_value = '$'.str_replace(array('"', "'"), '', $tokens[$i+2][1]);
+					$token_value = '$'.str_replace(array('"', "'"), '', $tokens[$i+2][1]);
 					
 					// global varlist or local (in function) varlist
 					if($in_function)
 					{
-						if(!isset($var_declares_local[$new_token_value]))
-							$var_declares_local[$new_token_value] = array($new_var);
+						if(!isset($var_declares_local[$token_value]))
+							$var_declares_local[$token_value] = array($new_var);
 						else
-							array_unshift($var_declares_local[$new_token_value], $new_var);
+							array_unshift($var_declares_local[$token_value], $new_var);
 					} else
 					{
-						if(!isset($var_declares_global[$new_token_value]))
-							$var_declares_global[$new_token_value] = array($new_var);
+						if(!isset($var_declares_global[$token_value]))
+							$var_declares_global[$token_value] = array($new_var);
 						else
-							array_unshift($var_declares_global[$new_token_value], $new_var);
+							array_unshift($var_declares_global[$token_value], $new_var);
 					}
 				}
 				
+			// $array = compact("event", "city");
+				else if($token_name === T_STRING && $token_value === 'compact' && $tokens[$i-2][0] === T_VARIABLE)
+				{
+					$f=2;
+					while( $tokens[$i+$f] !== ')' )
+					{	
+						// for all array keys save new variable declarations
+						if($tokens[$i+$f][0] === T_CONSTANT_ENCAPSED_STRING)
+						{
+							$token_value = $tokens[$i-2][1].'['.$tokens[$i+$f][1].']';
+						
+							// add variable declaration to beginning of varlist
+							$new_var = new VarDeclare($token_value.' = $'.
+									str_replace(array('"', "'"), '', $tokens[$i+$f][1]).";\t //".
+									getmultiline($lines_pointer, $line_nr-1));
+							$new_var->line = $line_nr;
+							$new_var->id = $i;
+							
+							// add dependencies
+							foreach($dependencies as $deplinenr=>$dependency)
+							{
+								$new_var->dependencies[$deplinenr] = $dependency;
+							}
+					
+							// global varlist or local (in function) varlist
+							if($in_function)
+							{
+								if(!isset($var_declares_local[$token_value]))
+									$var_declares_local[$token_value] = array($new_var);
+								else
+									array_unshift($var_declares_local[$token_value], $new_var);
+							} else
+							{
+								if(!isset($var_declares_global[$token_value]))
+									$var_declares_global[$token_value] = array($new_var);
+								else
+									array_unshift($var_declares_global[$token_value], $new_var);
+							}
+						}
+						if($f>50)break;
+						$f++;
+					}
+				}	
+							
 			// list($drink, $color, $power) = $info;
 				else if($token_name === T_LIST)
 				{			
@@ -1008,7 +1136,7 @@ You should have received a copy of the GNU General Public License along with thi
 			// check if token is a function call and a function to scan
 				else if( in_array($token_name, $T_FUNCTIONS) 
 					   && isset($scan_functions[$token_value]) )
-				{				
+				{						
 					// prevent alerts with wrong classes (same function name in classes)
 					// $classvar->func();
 					if($tokens[$i-1][0] === T_OBJECT_OPERATOR)
@@ -1023,7 +1151,25 @@ You should have received a copy of the GNU General Public License along with thi
 						{
 							continue;					
 						}
-					}	
+					}
+					// check if function call is a standalone or not
+					else if($tokens[$i-1] === '=' || $tokens[$i-1] === ')' || $tokens[$i-1] === ',')
+					{
+						$var_count = 1;
+					} else
+					{
+						$var_count = 0;
+					}
+					
+					// add function call to user-defined function list
+					$class = !empty($class) ? $class.'::' : '';
+					if(isset($GLOBALS['user_functions_offset'][$class.$token_value]))
+					{
+						$GLOBALS['user_functions_offset'][$class.$token_value][3][] = array(
+							(!empty($inc_file) ? dirname($file_name).'/'.$inc_file : $file_name), 
+							$line_nr
+						);
+					}
 	
 					// build new find					 
 					$new_find = new VulnTreeNode();
@@ -1046,6 +1192,7 @@ You should have received a copy of the GNU General Public License along with thi
 					$parameter_has_userinput = false;
 					$secured_by_start = false;
 					$newbraceopen = ($tokens[$i+1] === '(') ? 1 : 0;
+					$tainted_vars = array();
 	
 					// get all variables in parameter list between (...)
 					// not only until ';' because: system(get($a),$b,strstr($c));
@@ -1053,48 +1200,53 @@ You should have received a copy of the GNU General Public License along with thi
 					{
 						$this_one_is_secure = false;
 						if( is_array($tokens[$i + $c]) 
-						&& $tokens[$i + $c][0] === T_VARIABLE
-						// scan only potential vulnerable parameters of function call
-						&& (in_array($parameter, $scan_functions[$token_value][0]) 
-						|| (isset($scan_functions[$token_value][0][0])
-							&& $scan_functions[$token_value][0][0] === 0) // all parameters accepted
-						) )
+						&& $tokens[$i + $c][0] === T_VARIABLE )
 						{
-							if( (is_array($tokens[$i + $c -2]) 
-							&& (in_array($tokens[$i + $c -2][1], $GLOBALS['F_SECURING_STRING']) 
-							|| in_array($tokens[$i + $c -2][1], $scan_functions[$token_value][1])))
-							|| in_array($tokens[$i + $c -1][0], $GLOBALS['T_CASTS']) )
+							$var_count++;
+							// scan only potential vulnerable parameters of function call
+							if ( in_array($parameter, $scan_functions[$token_value][0]) 
+							|| (isset($scan_functions[$token_value][0][0])
+								&& $scan_functions[$token_value][0][0] === 0) ) // all parameters accepted
 							{
-								$secured_by_start = true;
-								$this_one_is_secure = true;
-							}
-							$has_vuln_parameters = true;
-							
-							$trace_par_var = $tokens[$i + $c][1];
-							
-							// $var['keyname'] should be directly traced, not $var
-							if($tokens[$i + $c +1] === '[')
-							{
-								$trace_par_var = $trace_par_var.'['.$tokens[$i + $c +2][1].']';
-							}
-							
-							// trace back parameters and look for userinput
-							if($in_function)
-							{
-								$userinput = scan_parameter($file_name, $new_find, $new_find, 
-								$trace_par_var, $var_declares_local, $i+$c, 
-								$var_declares_global, $function_params, $function_obj, 
-								false, $scan_functions[$token_value][1]);
-							} else 
-							{
-								$userinput = scan_parameter($file_name, $new_find, $new_find, 
-								$trace_par_var, $var_declares_global, $i+$c, 
-								null, array(), null, false, $scan_functions[$token_value][1]);
-							}
-				
-							if($userinput && (!$this_one_is_secure || $GLOBALS['verbosity'] >= 3) )
-								$parameter_has_userinput = true;
-						} 
+								if( (is_array($tokens[$i + $c -2]) 
+								&& (in_array($tokens[$i + $c -2][1], $GLOBALS['F_SECURING_STRING']) 
+								|| in_array($tokens[$i + $c -2][1], $scan_functions[$token_value][1])))
+								|| in_array($tokens[$i + $c -1][0], $GLOBALS['T_CASTS']) )
+								{
+									$secured_by_start = true;
+									$this_one_is_secure = true;
+								}
+								$has_vuln_parameters = true;
+								
+								$trace_par_var = $tokens[$i + $c][1];
+								
+								// $var['keyname'] should be directly traced, not $var
+								if($tokens[$i + $c +1] === '[')
+								{
+									$trace_par_var = $trace_par_var.'['.$tokens[$i + $c +2][1].']';
+								}
+								
+								// trace back parameters and look for userinput
+								if($in_function)
+								{
+									$userinput = scan_parameter($file_name, $new_find, $new_find, 
+									$trace_par_var, $var_declares_local, $i+$c, 
+									$var_declares_global, $function_params, $function_obj, 
+									false, $scan_functions[$token_value][1]);
+								} else 
+								{
+									$userinput = scan_parameter($file_name, $new_find, $new_find, 
+									$trace_par_var, $var_declares_global, $i+$c, 
+									null, array(), null, false, $scan_functions[$token_value][1]);
+								}
+					
+								if($userinput && (!$this_one_is_secure || $GLOBALS['verbosity'] >= 3) )
+								{
+									$parameter_has_userinput = true;
+									$tainted_vars[] = $var_count;
+								}	
+							} 
+						}
 						// count parameters
 						else if( $newbraceopen === 1 && $tokens[$i + $c] === ',' )
 						{
@@ -1125,7 +1277,7 @@ You should have received a copy of the GNU General Public License along with thi
 						} else
 						{
 							$found_line = highlightline(getmultiline($lines_pointer, $line_nr-1)."\t".$comment, 
-													$line_nr, $token_value);
+													$line_nr, $token_value, false, $tainted_vars);
 						}
 						$new_find->value = $found_line;
 					
@@ -1158,7 +1310,7 @@ You should have received a copy of the GNU General Public License along with thi
 						{
 							$new_find->title = getVulnNodeTitle($token_value);
 						}
-						
+					
 						// add to output
 						$id = (isset($GLOBALS['output'][$file_name])) ? 
 								count($GLOBALS['output'][$file_name]) : 0;
@@ -1178,7 +1330,7 @@ You should have received a copy of the GNU General Public License along with thi
 						unset($GLOBALS['user_functions'][$file_name][$function_name]);
 						$GLOBALS['userfunction_secures'] = false;
 					}
-				}	
+				}
 								
 			// check if token is a function declaration
 				else if($token_name === T_FUNCTION)
@@ -1238,10 +1390,36 @@ You should have received a copy of the GNU General Public License along with thi
 				{
 					$class_vars[ $tokens[$i-2][1] ] = $tokens[$i+1][1];
 				}
-			// $var = Classname($constructor_param);	
-				else if( $token_name === T_STRING && $tokens[$i-1][0] !== T_NEW && isset($vuln_classes[$token_value]) )
+				
+			// watch function and constructor calls
+				else if( $token_name === T_STRING )
 				{
-					$class_vars[ $tokens[$i-2][1] ] = $token_value;
+					// $var = Classname($constructor_param);
+					if( $tokens[$i-1][0] !== T_NEW && isset($vuln_classes[$token_value]) )
+					{
+						$class_vars[ $tokens[$i-2][1] ] = $token_value;
+					}
+					// add function call to user-defined function list
+					else
+					{
+						$class='';
+						// $classvar->bla()
+						if($tokens[$i-1][0] === T_OBJECT_OPERATOR)
+						{
+							$classvar = $tokens[$i-2][1];
+							if(substr($classvar,0,1) !== '$')
+								$classvar = '$'.$classvar;
+							$class = ($classvar === '$this' ? $class_name : $class_vars[$classvar]).'::';
+						}	
+
+						if(isset($GLOBALS['user_functions_offset'][$class.$token_value]))
+						{
+							$GLOBALS['user_functions_offset'][$class.$token_value][3][] = array(
+								(!empty($inc_file) ? dirname($file_name).'/'.$inc_file : $file_name), 
+								$line_nr
+							);
+						}
+					}
 				}
 				
 			// add exit(),die() or throw exception() as requirements to watch out for	
@@ -1443,5 +1621,7 @@ You should have received a copy of the GNU General Public License along with thi
 			// token scanned. next.
 		}	
 		// all tokens scanned.
+		
+		return $inc_map;
 	}
 ?>	

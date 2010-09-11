@@ -34,7 +34,7 @@
 	{color: #43A8ED; font-weight:bold;}
 	
 .code,
-.phps-code, .vulntitle
+.phps-code, .phps-t-dollar-open-curly-braces, .vulntitle
 	{color: white; font-family: "Bitstream Vera Sans Mono", "Monaco", "Courier New", monospace; font-size:1em; font-size:9pt;}
 
 .phps-t-string,
@@ -119,7 +119,7 @@
 .phps-t-const
 	{color: #3387CC;}
 	
-.phps-t-variable, .funclistline
+.phps-t-variable, .phps-t-string-varname, .funclistline
 	{color: #3E87E3;}
 
 .phps-tainted-var

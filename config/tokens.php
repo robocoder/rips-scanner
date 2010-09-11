@@ -87,7 +87,7 @@ You should have received a copy of the GNU General Public License along with thi
 		T_UNSET
 	);
 	
-	// arithmetical operators to detect automatic typecasts - not implemented yet
+	// arithmetical operators to detect automatic typecasts
 	$T_ARITHMETIC = array(
 		'+',
 		'-',

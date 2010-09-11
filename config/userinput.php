@@ -32,8 +32,8 @@ You should have received a copy of the GNU General Public License along with thi
 		'$HTTP_SERVER_VARS',
 		'$HTTP_ENV_VARS',
 		'$HTTP_RAW_POST_DATA',
-		'argc',
-		'argv'
+		'$argc',
+		'$argv'
 	);
 	
 	$V_SERVER_PARAMS = array(
@@ -45,7 +45,7 @@ You should have received a copy of the GNU General Public License along with thi
 		'HTTP_KEEP_ALIVE',
 		'HTTP_CONNECTION',
 		'QUERY_STRING',
-		/*'REQUEST_URI', */ // url encoded
+		'REQUEST_URI', // partly urlencoded
 		'PATH_INFO',
 		'PATH_TRANSLATED',
 		'PHP_SELF'

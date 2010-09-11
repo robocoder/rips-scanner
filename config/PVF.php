@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License along with thi
 	
 	// cross-site scripting affected functions
 	// parameter = 0 means, all parameters will be traced
+	$NAME_XSS = 'Cross-Site Scripting';
 	$F_XSS = array(
 		'echo'							=> array(array(1), $F_SECURING_XSS), 
 		'print'							=> array(array(1), $F_SECURING_XSS),
@@ -27,6 +28,7 @@ You should have received a copy of the GNU General Public License along with thi
 	
 	// code evaluating functions  => (parameters to scan, securing functions)
 	// example parameter array(1,3) will trace only first and third parameter 
+	$NAME_CODE = 'Code Evaluation';
 	$F_CODE = array(
 		'array_filter'					=> array(array(2), array()),
 		'array_map'						=> array(array(1), array()),
@@ -48,6 +50,7 @@ You should have received a copy of the GNU General Public License along with thi
 	);
 	
 	// file inclusion functions => (parameters to scan, securing functions)
+	$NAME_FILE_INCLUDE = 'File Inclusion';
 	$F_FILE_INCLUDE = array(
 		'include' 						=> array(array(1), $F_SECURING_FILE),
 		'include_once' 					=> array(array(1), $F_SECURING_FILE),
@@ -61,6 +64,7 @@ You should have received a copy of the GNU General Public License along with thi
 	// file affecting functions  => (parameters to scan, securing functions)
 	// file handler functions like fopen() are added as parameter 
 	// for functions that use them like fread() and fwrite()
+	$NAME_FILE_READ = 'File Disclosure';
 	$F_FILE_READ = array(
 		'bzread'						=> array(array(1), $F_SECURING_FILE), 
 		'bzflush'						=> array(array(1), $F_SECURING_FILE), 
@@ -103,6 +107,7 @@ You should have received a copy of the GNU General Public License along with thi
 	);
 	
 	// file or file system affecting functions
+	$NAME_FILE_AFFECT = 'File Manipulation';
 	$F_FILE_AFFECT = array(
 		'bzwrite'						=> array(array(2), array()),
 		'chmod'							=> array(array(1), $F_SECURING_FILE),
@@ -118,7 +123,8 @@ You should have received a copy of the GNU General Public License along with thi
 		'gzwrite'						=> array(array(1,2), array()),
 		'gzputs'						=> array(array(1,2), array()),
 		'mkdir'							=> array(array(1), array()),
-		'move_uploaded_file'			=> array(array(1), $F_SECURING_FILE),		
+		'move_uploaded_file'			=> array(array(1), $F_SECURING_FILE),	
+		'recode_file'					=> array(array(2,3), $F_SECURING_FILE),	
 		'rename'						=> array(array(1,2), $F_SECURING_FILE),
 		'rmdir'							=> array(array(1), $F_SECURING_FILE),	
 		'touch'							=> array(array(1), $F_SECURING_FILE),
@@ -126,6 +132,7 @@ You should have received a copy of the GNU General Public License along with thi
 	);
 
 	// OS Command executing functions => (parameters to scan, securing functions)
+	$NAME_EXEC = 'Command Execution';
 	$F_EXEC = array(
 		'backticks'						=> array(array(1), $F_SECURING_SYSTEM),
 		'exec'							=> array(array(1), $F_SECURING_SYSTEM),
@@ -138,6 +145,7 @@ You should have received a copy of the GNU General Public License along with thi
 	);
 
 	// SQL executing functions => (parameters to scan, securing functions)
+	$NAME_DATABASE = 'SQL Injection';
 	$F_DATABASE = array(
 	// Abstraction Layers
 		'dba_open'						=> array(array(1), array()),
@@ -196,8 +204,17 @@ You should have received a copy of the GNU General Public License along with thi
 		'sybase_query'					=> array(array(1), $F_SECURING_SQL), 
 		'sybase_unbuffered_query'		=> array(array(1), $F_SECURING_SQL)
 	);
+	
+	// xpath injection
+	$NAME_XPATH = 'XPath Injection';
+	$F_XPATH = array(
+		'xpath_eval'					=> array(array(2), $F_SECURING_SQL),	
+		'xpath_eval_expression'			=> array(array(2), $F_SECURING_SQL),		
+		'xptr_eval'						=> array(array(2), $F_SECURING_SQL)
+	);
 
 	// connection handling functions
+	$NAME_CONNECT = 'Connection Handling';
     $F_CONNECT = array(
 		'curl_setopt'					=> array(array(2,3), array()),
 		'curl_setopt_array' 			=> array(array(2), array()),
@@ -230,6 +247,7 @@ You should have received a copy of the GNU General Public License along with thi
 	);
 	
 	// other critical functions
+	$NAME_OTHER = 'Possible Flow Control'; // :X
 	$F_OTHER = array(
 		'apache_setenv'					=> array(array(1,2), array()),	
 		'dl' 							=> array(array(1), array()),	
@@ -237,7 +255,8 @@ You should have received a copy of the GNU General Public License along with thi
 		'import_request_variables'		=> array(array(1), array()),		
 		'ini_set' 						=> array(array(1,2), array()),
 		'putenv'						=> array(array(1), array()),
-		'sleep'							=> array(array(1), array())
+		'sleep'							=> array(array(1), array()),
+		'unserialize'					=> array(array(1), array())
 	);
 
 ?>	

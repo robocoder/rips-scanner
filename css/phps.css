@@ -36,6 +36,7 @@
 	{font-weight:bold; color: #0000BB;}
 
 .phps-code,
+.phps-t-dollar-open-curly-braces,
 .phps-t-open-tag,
 .phps-t-close-tag,
 .phps-t-and-equal, 
@@ -113,6 +114,7 @@
 
 .phps-t-const,
 .phps-t-variable,
+.phps-t-string-varname, 
 .phps-t-string,
 .phps-t-eval,
 .phps-t-lnumber,

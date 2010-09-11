@@ -27,6 +27,8 @@ You should have received a copy of the GNU General Public License along with thi
 					unset($tokens[$i]);
 				else if( $tokens[$i][0] === T_CLOSE_TAG )
 					$tokens[$i] = ';';	
+				else if( $tokens[$i][0] === T_CONSTANT_ENCAPSED_STRING )
+					$tokens[$i][1] = str_replace('"', "'", $tokens[$i][1]);
 			}
 			// ternary operator gives headaches, only partly supported
 			else if($tokens[$i] === '?')
@@ -113,81 +115,89 @@ You should have received a copy of the GNU General Public License along with thi
 				}
 				$tokens[$i+$f] = ']';
 			}
-		// rebuild if-clauses without { }
-			else if( is_array($tokens[$i]) 
-			&& ($tokens[$i][0] === T_IF
-			|| $tokens[$i][0] === T_ELSEIF) )
-			{				
-				$f=4; $start=$end=0;
-				while( $tokens[$i+$f] !== '{' )
-				{		
-					// idea: if there is a var or functioncall with a ')' infront 
-					// it must be a if() without { }
-					if( is_array($tokens[$i+$f])
-					&& $tokens[$i+$f-1] === ')' 
-					&& ($tokens[$i+$f][0] === T_VARIABLE
-					|| in_array($tokens[$i+$f][0], $GLOBALS['T_FUNCTIONS']) ) )
-						$start = $i+$f;
+		// real token
+			else if( is_array($tokens[$i]) )
+			{
+			// rebuild if-clauses without { }
+				if ($tokens[$i][0] === T_IF || $tokens[$i][0] === T_ELSEIF )
+				{				
+					$f=4; $start=$end=0;
+					while( $tokens[$i+$f] !== '{' )
+					{		
+						// idea: if there is a var or functioncall with a ')' infront 
+						// it must be a if() without { }
+						if( is_array($tokens[$i+$f])
+						&& $tokens[$i+$f-1] === ')' 
+						&& ($tokens[$i+$f][0] === T_VARIABLE
+						|| in_array($tokens[$i+$f][0], $GLOBALS['T_FUNCTIONS']) ) )
+							$start = $i+$f;
+							
+						if ( $tokens[$i+$f] === ';' )
+						{
+							$end = $i+$f; break;
+						}
 						
-					if ( $tokens[$i+$f] === ';' )
-					{
-						$end = $i+$f; break;
+						if($f>50)break;
+							
+						$f++;
 					}
 					
-					if($f>50)break;
-						
-					$f++;
+					if($start && $end)
+					{ 
+						$tokens = wrapbraces($tokens, $start, $end-$start+1, $end+1);
+						$i = $start;
+					}		
+				} 
+			// rebuild else without { }	
+				else if( $tokens[$i][0] === T_ELSE 
+				&& $tokens[$i+1][0] !== T_IF
+				&& $tokens[$i+1] !== '{')
+				{	
+					$f=2;
+					while( $tokens[$i+$f] !== ';' )
+					{		
+						if($f>50)break;
+						$f++;
+					}
+					$tokens = wrapbraces($tokens, $i+1, $f, $i+$f+1);
 				}
-				
-				if($start && $end)
-				{ 
-					$tokens = wrapbraces($tokens, $start, $end-$start+1, $end+1);
-					$i = $start;
-				}		
-			} 
-		// rebuild else without { }	
-			else if( is_array($tokens[$i]) 
-			&& $tokens[$i][0] === T_ELSE 
-			&& $tokens[$i+1][0] !== T_IF
-			&& $tokens[$i+1] !== '{')
-			{	
-				$f=2;
-				while( $tokens[$i+$f] !== ';' )
-				{		
-					if($f>50)break;
-					$f++;
+			// rebuild switch case: without { }	
+				else if( $tokens[$i][0] === T_CASE
+				&& $tokens[$i+2] === ':'
+				&& $tokens[$i+3] !== '{' )
+				{
+					$f=3;
+					while( isset($tokens[$i+$f]) 
+					&& !(is_array($tokens[$i+$f]) && $tokens[$i+$f][0] === T_BREAK ) )
+					{		
+						if($f>250)break;
+						$f++;
+					}
+					$tokens = wrapbraces($tokens, $i+3, $f-1, $i+$f+2);
+					$i++;
 				}
-				$tokens = wrapbraces($tokens, $i+1, $f, $i+$f+1);
-			}
-		// rebuild switch case: without { }	
-			else if( is_array($tokens[$i]) 
-			&& $tokens[$i][0] === T_CASE
-			&& $tokens[$i+2] === ':'
-			&& $tokens[$i+3] !== '{' )
-			{
-				$f=3;
-				while( isset($tokens[$i+$f]) 
-				&& !(is_array($tokens[$i+$f]) && $tokens[$i+$f][0] === T_BREAK ) )
-				{		
-					if($f>250)break;
-					$f++;
+			// rebuild switch default: without { }	
+				else if( $tokens[$i][0] === T_DEFAULT
+				&& $tokens[$i+2] !== '{' )
+				{
+					$f=2;
+					while( $tokens[$i+$f] !== ';' )
+					{		
+						if($f>250)break;
+						$f++;
+					}
+					$tokens = wrapbraces($tokens, $i+2, $f-1, $i+$f+1);
 				}
-				$tokens = wrapbraces($tokens, $i+3, $f-1, $i+$f+2);
-				$i++;
-			}
-		// rebuild switch default: without { }	
-			else if( is_array($tokens[$i]) 
-			&& $tokens[$i][0] === T_DEFAULT
-			&& $tokens[$i+2] !== '{' )
-			{
-				$f=2;
-				while( $tokens[$i+$f] != ';' )
-				{		
-					if($f>250)break;
-					$f++;
-				}
-				$tokens = wrapbraces($tokens, $i+2, $f-1, $i+$f+1);
-			}
+			// lowercase all function names because PHP doesn't care	
+				else if( $tokens[$i][0] === T_FUNCTION )
+				{
+					$tokens[$i+1][1] = strtolower($tokens[$i+1][1]);
+				}	
+				else if( $tokens[$i][0] === T_STRING )
+				{
+					$tokens[$i][1] = strtolower($tokens[$i][1]);
+				}	
+			}	
 		}
 		// return tokens with rearranged key index
 		return array_values($tokens);

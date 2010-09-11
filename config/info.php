@@ -55,7 +55,9 @@ You should have received a copy of the GNU General Public License along with thi
 		'SQLite3'						=> 'using DBMS SQLite3',
 		'sybase_connect'				=> 'using DBMS Sybase',
 		'sybase_pconnect'				=> 'using DBMS Sybase',
-		'TokyoTyrant'					=> 'using DBMS TokyoTyrant'
+		'TokyoTyrant'					=> 'using DBMS TokyoTyrant',
+		'xptr_new_context'				=> 'using XML document',
+		'xpath_new_context'				=> 'using XML document'
 	);	
 	
 ?>	
