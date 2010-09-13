@@ -71,6 +71,7 @@ You should have received a copy of the GNU General Public License along with thi
 				// $_SESSION data is handled as global variables
 				$var_declares = array_merge($var_declares_global, $var_declares);
 			}
+			// if array[key] was not defined, scan for array itself
 			else if(!isset($var_declares[$var_name]) )
 				$var_name = $arrayname[0]; 
 		}
@@ -346,42 +347,57 @@ You should have received a copy of the GNU General Public License along with thi
 		}			
 		// if var is userinput, return true directly	
 		if( in_array($arrayname[0], $GLOBALS['V_USERINPUT']) )
-		{	
-			// add userinput markers to mainparent object
-			if(isset($arrayname[1]))
-				$parameter_name = str_replace(array('"', "'", ']'), '', $arrayname[1]);
-			
-			// mark tainted, but only specific $_SERVER parameters
-			if($arrayname[0] !== '$_SERVER'
-			|| in_array($parameter_name, $GLOBALS['V_SERVER_PARAMS']) )
+		{
+			// check if userinput variable has been overwritten
+			$overwritten = false;
+			if(isset($var_declares[$arrayname[0].'['.$arrayname[1]]))
 			{
-				$userinput = true;
-				$parent->marker = 1;			
-
-				if(!empty($parameter_name))
+				foreach($var_declares[$arrayname[0].'['.$arrayname[1]] as $var)
 				{
-					switch($arrayname[0])
+					// if there is a var declare for this userinput !except the same line!: overwritten
+					if($last_token_id != $var->id)
+						$overwritten = true;
+				}
+			}	
+			
+			if(!$overwritten)
+			{
+				// add userinput markers to mainparent object
+				if(isset($arrayname[1]))
+					$parameter_name = str_replace(array('"', "'", ']'), '', $arrayname[1]);
+				
+				// mark tainted, but only specific $_SERVER parameters
+				if($arrayname[0] !== '$_SERVER'
+				|| in_array($parameter_name, $GLOBALS['V_SERVER_PARAMS']) )
+				{
+					$userinput = true;
+					$parent->marker = 1;			
+
+					if(!empty($parameter_name))
 					{
-						case '$_GET': 				$mainparent->get[] = $parameter_name; break;
-						case '$HTTP_GET_VARS': 		$mainparent->get[] = $parameter_name; break;
-						case '$_REQUEST': 			$mainparent->get[] = $parameter_name; break;
-						case '$HTTP_REQUEST_VARS':	$mainparent->get[] = $parameter_name; break;
-						case '$_POST': 				$mainparent->post[] = $parameter_name; break;
-						case '$HTTP_POST_VARS':		$mainparent->post[] = $parameter_name; break;
-						case '$HTTP_RAW_POST_DATA':	$mainparent->post[] = $parameter_name; break;
-						case '$_COOKIE': 			$mainparent->cookie[] = $parameter_name; break;
-						case '$HTTP_COOKIE_VARS':	$mainparent->cookie[] = $parameter_name; break;
-						case '$_FILES': 			$mainparent->files[] = $parameter_name; break;
-						case '$HTTP_POST_FILES':	$mainparent->files[] = $parameter_name; break;
-						case '$_SERVER':			$mainparent->server[] = $parameter_name; break;
+						switch($arrayname[0])
+						{
+							case '$_GET': 				$mainparent->get[] = $parameter_name; break;
+							case '$HTTP_GET_VARS': 		$mainparent->get[] = $parameter_name; break;
+							case '$_REQUEST': 			$mainparent->get[] = $parameter_name; break;
+							case '$HTTP_REQUEST_VARS':	$mainparent->get[] = $parameter_name; break;
+							case '$_POST': 				$mainparent->post[] = $parameter_name; break;
+							case '$HTTP_POST_VARS':		$mainparent->post[] = $parameter_name; break;
+							case '$HTTP_RAW_POST_DATA':	$mainparent->post[] = $parameter_name; break;
+							case '$_COOKIE': 			$mainparent->cookie[] = $parameter_name; break;
+							case '$HTTP_COOKIE_VARS':	$mainparent->cookie[] = $parameter_name; break;
+							case '$_FILES': 			$mainparent->files[] = $parameter_name; break;
+							case '$HTTP_POST_FILES':	$mainparent->files[] = $parameter_name; break;
+							case '$_SERVER':			$mainparent->server[] = $parameter_name; break;
+						}
 					}
 				}
-			}
-						
-			// userinput received in function, just needs a trigger
-			if($function_obj !== null && !$return_scan)
-			{
-				addtriggerfunction($mainparent, $function_obj, $file_name);
+							
+				// userinput received in function, just needs a trigger
+				if($function_obj !== null && !$return_scan)
+				{
+					addtriggerfunction($mainparent, $function_obj, $file_name);
+				}
 			}
 		} 
 				

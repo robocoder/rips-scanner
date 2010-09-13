@@ -73,7 +73,18 @@ You should have received a copy of the GNU General Public License along with thi
 		'mysql_fetch_assoc',
 		'mysql_fetch_field',
 		'mysql_fetch_object',
-		'mysql_fetch_row'
+		'mysql_fetch_row',
+		'pg_fetch_all',
+		'pg_fetch_array',
+		'pg_fetch_assoc',
+		'pg_fetch_object',
+		'pg_fetch_result',
+		'pg_fetch_row',
+		'sqlite_fetch_all',
+		'sqlite_fetch_array',
+		'sqlite_fetch_object',
+		'sqlite_fetch_single',
+		'sqlite_fetch_string'
 	);
 	
 	// other functions as input

@@ -101,8 +101,10 @@ You should have received a copy of the GNU General Public License along with thi
 		'mysql_real_escape_string',
 		'mysqli_escape_string',
 		'mysqli_real_escape_string',
-		'pg_escape_string',		
-		'sqlite_escape_string'
+		'pg_escape_string',	
+		'pg_escape_bytea',
+		'sqlite_escape_string',
+		'sqlite_udf_encode_binary'
 	);	
 	
 	// securing functions for RCE with e-modifier in preg_**

@@ -233,7 +233,10 @@ You should have received a copy of the GNU General Public License along with thi
 					// delete tree
 					$value = $output[key($output)][$i]->name;
 					decreaseVulnCounter($value);
-					unset($output[key($output)][$i]);
+					if(count($output[key($output)]) <= 1)
+						unset($output[key($output)]);
+					else
+						unset($output[key($output)][$i]);
 						
 					if( isset($GLOBALS['user_functions'][key($output)][$value]) )
 						unset($GLOBALS['user_functions'][key($output)][$value]);	

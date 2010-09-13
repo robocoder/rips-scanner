@@ -1,6 +1,12 @@
 RIPS CHANGELOG
 ===============
 
+RIPS 0.34:
+----------
+	- fixed false positive when userinput is overwritten: $_GET['c']=1; exec($_GET['c']);
+	- fixed critical bug with missing scan results
+	- added more database securing and tainting functions (thanks to Yasuo Ohgaki)
+
 RIPS 0.33:
 ----------
 	Code analysis:
