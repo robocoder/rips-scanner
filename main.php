@@ -68,7 +68,7 @@ You should have received a copy of the GNU General Public License along with thi
 			$user_input = array();
 			$counterlines=0;
 			
-			$count_xss=$count_sqli=$count_fr=$count_fa=$count_fi=$count_exec=$count_code=$count_eval=$count_xpath=$count_con=$count_other=$count_inc=$count_inc_fail=0;
+			$count_xss=$count_sqli=$count_fr=$count_fa=$count_fi=$count_exec=$count_code=$count_eval=$count_xpath=$count_ldap=$count_con=$count_other=$count_inc=$count_inc_fail=0;
 			
 			$verbosity = isset($_POST['verbosity']) ? $_POST['verbosity'] : 1;
 		
@@ -82,6 +82,7 @@ You should have received a copy of the GNU General Public License along with thi
 				case 'exec':  		$scan_functions = $F_EXEC;			break;
 				case 'database': 	$scan_functions = $F_DATABASE;		break;
 				case 'xpath':		$scan_functions = $F_XPATH;			break;
+				case 'ldap':		$scan_functions = $F_LDAP;			break;
 				case 'connect': 	$scan_functions = $F_CONNECT;		break;
 				
 				case 'all': 
@@ -94,6 +95,7 @@ You should have received a copy of the GNU General Public License along with thi
 						$F_EXEC,
 						$F_DATABASE,
 						$F_XPATH,
+						$F_LDAP,
 						$F_CONNECT
 					); break;
 				
@@ -107,6 +109,7 @@ You should have received a copy of the GNU General Public License along with thi
 						$F_EXEC,
 						$F_DATABASE,
 						$F_XPATH,
+						$F_LDAP,
 						$F_CONNECT
 					); break; 
 				}
@@ -231,40 +234,32 @@ You should have received a copy of the GNU General Public License along with thi
 <?php 
 	if(empty($_POST['search']))
 	{
-		$count_all=$count_xss+$count_sqli+$count_fr+$count_fa+$count_fi+$count_exec+$count_code+$count_eval+$count_xpath+$count_con+$count_other;
+		$count_all=$count_xss+$count_sqli+$count_fr+$count_fa+$count_fi+$count_exec+$count_code+$count_eval+$count_xpath+$count_ldap+$count_con+$count_other;
 		
 		if($count_all > 0)
 		{
 			if($count_code > 0)
-				echo '<tr><td>Code Evaluation:</td><td nowrap><div class="chart" style="width:',
-				round(($count_code/$count_all)*100,0),'"></div><div>',$count_code,'</div></td></tr>';
+				statsRow($NAME_CODE, $count_code, $count_all);
 			if($count_exec > 0)	
-				echo '<tr><td nowrap>Command Execution:</td><td nowrap><div class="chart" style="width:',
-				round(($count_exec/$count_all)*100,0),'"></div><div>',$count_exec,'</div></td></tr>';
+				statsRow($NAME_EXEC, $count_exec, $count_all);
 			if($count_con > 0)	
-				echo '<tr><td nowrap>Connection Handling:</td><td nowrap><div class="chart" style="width:',
-				round(($count_con/$count_all)*100,0),'"></div><div>',$count_con,'</div></td></tr>';
+				statsRow($NAME_CONNECT, $count_con, $count_all);
 			if($count_fr > 0)	
-				echo '<tr><td nowrap>File Disclosure:</td><td nowrap><div class="chart" style="width:',
-				round(($count_fr/$count_all)*100,0),'"></div><div>',$count_fr,'</div></td></tr>';
+				statsRow($NAME_FILE_READ, $count_fr, $count_all);
 			if($count_fi > 0)	
-				echo '<tr><td nowrap>File Inclusion:</td><td nowrap><div class="chart" style="width:',
-				round(($count_fi/$count_all)*100,0),'"></div><div>',$count_fi,'</div></td></tr>';
+				statsRow($NAME_FILE_INCLUDE, $count_fi, $count_all);
 			if($count_fa > 0)	
-				echo '<tr><td nowrap>File Manipulation:</td><td nowrap><div class="chart" style="width:',
-				round(($count_fa/$count_all)*100,0),'"></div><div>',$count_fa,'</div></td></tr>';
+				statsRow($NAME_FILE_AFFECT, $count_fa, $count_all);
+			if($count_ldap > 0)	
+				statsRow($NAME_LDAP, $count_ldap, $count_all);
 			if($count_sqli > 0)	
-				echo '<tr><td nowrap>SQL Injection:</td><td nowrap><div class="chart" style="width:',
-				round(($count_sqli/$count_all)*100,0),'"></div><div>',$count_sqli,'</div></td></tr>';
+				statsRow($NAME_DATABASE, $count_sqli, $count_all);
 			if($count_xpath > 0)	
-				echo '<tr><td nowrap>XPath Injection:</td><td nowrap><div class="chart" style="width:',
-				round(($count_xpath/$count_all)*100,0),'"></div><div>',$count_xpath,'</div></td></tr>';
+				statsRow($NAME_XPATH, $count_xpath, $count_all);
 			if($count_xss > 0)	
-				echo '<tr><td nowrap>Cross-Site Scripting:</td><td nowrap><div class="chart" style="width:',
-				round(($count_xss/$count_all)*100,0),'"></div><div>',$count_xss,'</div></td></tr>';
+				statsRow($NAME_XSS, $count_xss, $count_all);
 			if($count_other > 0)	
-				echo '<tr><td nowrap>Other:</td><td nowrap><div class="chart" style="width:',
-				round(($count_other/$count_all)*100,0),'"></div><div>',$count_other,'</div></td></tr>';
+				statsRow($NAME_OTHER, $count_other, $count_all);
 			echo '<tr><td nowrap>Sum:</td><td>',$count_all,'</td></tr>'; 
 		} else
 		{

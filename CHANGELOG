@@ -1,6 +1,18 @@
 RIPS CHANGELOG
 ===============
 
+RIPS 0.35:
+----------
+	- added ini_set("auto_detect_line_endings", true) to support MAC OSX newlines
+	- added preg_match(_all) support with $matches array
+	- prevented getmultiline() funtion to recursively loop for more than 10 rows (tracker ID: 3075359, thanks to lexak)
+	- added vulnerability type 'LDAP Injection'
+	- fixed bug with wrong detection of user defined securing functions using for-loops
+	- fixed critical bug with wrong detection of securing during inter-procedual analysis
+	- fixed bug with not detected function calls in included files and case-sensitive function names
+	- fixed bug with userinput returned by user-defined functions
+	
+
 RIPS 0.34:
 ----------
 	- fixed false positive when userinput is overwritten: $_GET['c']=1; exec($_GET['c']);

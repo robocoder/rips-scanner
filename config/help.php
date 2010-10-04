@@ -81,10 +81,19 @@ $HELP_DATABASE = array(
 $HELP_XPATH = array(
 'description' => 'An attacker might execute arbitrary XPath expressions with this vulnerability. User tainted data is used when creating the XPath expression that will be executed on a XML resource. An attacker can inject own XPath syntax to read arbitrary XML entries.',
 'link' => '',
-'code' => '<?php $ctx->xpath_eval("//user[name/text()=\'" . $_GET["name"] . "\']/account/text()")',
+'code' => '<?php $ctx->xpath_eval("//user[name/text()=\'" . $_GET["name"] . "\']/account/text()"); ?>',
 'poc' => '/index.php?name=\' or \'\'=\'',
 'patchtext' => 'Always embed expected strings into quotes and escape the string with a PHP buildin function before embedding it to the expression. Always embed expected integers without quotes and typecast the data to integer before embedding it to the expression. Escaping data but embedding it without quotes is not safe.',
-'patch' => '<?php $ctx->xpath_eval("//user[name/text()=\'" . addslashes($_GET["name"]) . "\']/account/text()")'
+'patch' => '<?php $ctx->xpath_eval("//user[name/text()=\'" . addslashes($_GET["name"]) . "\']/account/text()"); ?>'
+);
+
+$HELP_LDAP = array(
+'description' => 'An attacker might execute arbitrary LDAP expressions with this vulnerability. User tainted data is used when creating a LDAP filter that will be executed on a LDAP server. An attacker can inject own LDAP syntax to read arbitrary LDAP entries.',
+'link' => '',
+'code' => '<?php ldap_search($ds, $dn, "(&(sn=person)(person=".$_GET["person"]."))"); ?>',
+'poc' => '/index.php?person=*',
+'patchtext' => 'Expected strings are not embedded into quotes in LDAP. Limit the input character set to alphanumeric (if possible) to prevent an injection of filter syntax.',
+'patch' => '<?php if(!preg_match(\'/^[a-z0-9]+$/\', $_GET["person"])) exit; ?>'
 );
 
 $HELP_CONNECT = array(

@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License along with thi
 
 **/
 
+include('../config/general.php');
+
 	// prepare output to style with CSS
 	function highlightline($line, $line_nr, $marklines)
 	{
@@ -72,7 +74,7 @@ You should have received a copy of the GNU General Public License along with thi
 	
 	if(!empty($file))
 	{
-		$lines = file($file);
+		$lines = file($file); 
 		
 		// place line numbers in extra table for more elegant copy/paste without line numbers
 		echo '<tr><td><table>';

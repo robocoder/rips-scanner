@@ -15,15 +15,16 @@ You should have received a copy of the GNU General Public License along with thi
 
 **/
 	
-	ini_set('short_open_tag', 1);
-	set_time_limit(300);			// 5 minutes
+	ini_set('short_open_tag', 1);			// who knows if I use them ;)
+	ini_set('auto_detect_line_endings', 1);	// detect newlines in MAC files
+	set_time_limit(300);					// 5 minutes
 	error_reporting(E_ERROR);
 		
-	$version = '0.34';				// RIPS version to be displayed	
-	$maxtrace = 30;					// maximum of parameter traces per PVF find
-	$warnfiles = 40;				// warn user if amount of files to scan is higher than this value
-	$basedir = '';					// default directory shown
-	$doku = 'http://php.net/';		// PHP dokumentation
+	$version = '0.35';						// RIPS version to be displayed	
+	$maxtrace = 30;							// maximum of parameter traces per PVF find
+	$warnfiles = 40;						// warn user if amount of files to scan is higher than this value
+	$basedir = '';							// default directory shown
+	$doku = 'http://php.net/';				// PHP dokumentation
 	
 	// available stylesheets (filename without .css ending)
 	// more colors at http://wiki.macromates.com/Themes/UserSubmittedThemes

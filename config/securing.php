@@ -127,6 +127,10 @@ You should have received a copy of the GNU General Public License along with thi
 		'addslashes'
 	);
 	
+	// securing LDAP injection
+	$F_SECURING_LDAP = array(
+	);
+	
 	// all specific securings
 	$F_SECURES_ALL = array_merge(
 		$F_SECURING_XSS, 

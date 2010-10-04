@@ -208,11 +208,21 @@ You should have received a copy of the GNU General Public License along with thi
 	// xpath injection
 	$NAME_XPATH = 'XPath Injection';
 	$F_XPATH = array(
-		'xpath_eval'					=> array(array(2), $F_SECURING_SQL),	
-		'xpath_eval_expression'			=> array(array(2), $F_SECURING_SQL),		
-		'xptr_eval'						=> array(array(2), $F_SECURING_SQL)
+		'xpath_eval'					=> array(array(2), $F_SECURING_XPATH),	
+		'xpath_eval_expression'			=> array(array(2), $F_SECURING_XPATH),		
+		'xptr_eval'						=> array(array(2), $F_SECURING_XPATH)
 	);
-
+	
+	// ldap injection
+	$NAME_LDAP = 'LDAP Injection';
+	$F_LDAP = array(
+		'ldap_add'						=> array(array(2,3), $F_SECURING_LDAP),
+		'ldap_delete'					=> array(array(2), $F_SECURING_LDAP),
+		'ldap_list'						=> array(array(3), $F_SECURING_LDAP),
+		'ldap_read'						=> array(array(3), $F_SECURING_LDAP),
+		'ldap_search'					=> array(array(3), $F_SECURING_LDAP)
+	);	
+		
 	// connection handling functions
 	$NAME_CONNECT = 'Connection Handling';
     $F_CONNECT = array(
@@ -222,7 +232,6 @@ You should have received a copy of the GNU General Public License along with thi
 		'error_log'						=> array(array(3), array()),
 		'fsockopen'						=> array(array(1), array()), 
 		'ftp_chmod' 					=> array(array(2,3), array()),
-		'ftp_connect'					=> array(array(1), array()), 
 		'ftp_exec'						=> array(array(2), array()), 
 		'ftp_delete' 					=> array(array(2), array()), 
 		'ftp_fget' 						=> array(array(3), array()), 
@@ -230,12 +239,9 @@ You should have received a copy of the GNU General Public License along with thi
 		'ftp_nlist' 					=> array(array(2), array()), 
 		'ftp_nb_fget' 					=> array(array(3), array()), 
 		'ftp_nb_get' 					=> array(array(2,3), array()), 
-		'ftp_ssl_connect' 				=> array(array(1), array()), 
 		'imap_open'						=> array(array(1), array()),  
 		'imap_mail'						=> array(array(1), array()),
-		'ldap_connect'					=> array(array(1), array()), 
 		'mail' 							=> array(array(1,4), array()), 
-		'msession_connect'	 			=> array(array(1), array()),
 		'pfsockopen'					=> array(array(1), array()),   
 		'session_register'				=> array(array(0), array()),  
 		'socket_bind'					=> array(array(2), array()),  

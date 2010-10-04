@@ -81,6 +81,7 @@ include 'config/general.php';
 							'file_read' => '- File Disclosure',
 							'file_include' => '- File Inclusion',							
 							'file_affect' => '- File Manipulation',
+							'ldap' => '- LDAP Injection',
 							'database' => '- SQL Injection',
 							'xpath' => '- XPath Injection',
 							'client' => 'Cross-Site Scripting',

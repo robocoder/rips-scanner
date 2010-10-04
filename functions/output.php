@@ -110,6 +110,8 @@ You should have received a copy of the GNU General Public License along with thi
 		{	$vulnname = $GLOBALS['NAME_CODE']; $GLOBALS['count_code']++; }
 		else if(isset($GLOBALS['F_XPATH'][$func_name])) 
 		{	$vulnname = $GLOBALS['NAME_XPATH'];	$GLOBALS['count_xpath']++; } 
+		else if(isset($GLOBALS['F_LDAP'][$func_name])) 
+		{	$vulnname = $GLOBALS['NAME_LDAP'];	$GLOBALS['count_ldap']++; }
 		else if(isset($GLOBALS['F_CONNECT'][$func_name])) 
 		{	$vulnname = $GLOBALS['NAME_CONNECT']; $GLOBALS['count_con']++; }		
 		else if(isset($GLOBALS['F_OTHER'][$func_name])) 
@@ -137,6 +139,8 @@ You should have received a copy of the GNU General Public License along with thi
 			$GLOBALS['count_code']--;
 		else if(isset($GLOBALS['F_XPATH'][$func_name])) 
 			$GLOBALS['count_xpath']--;
+		else if(isset($GLOBALS['F_LDAP'][$func_name])) 
+			$GLOBALS['count_ldap']--;	
 		else if(isset($GLOBALS['F_CONNECT'][$func_name])) 
 			$GLOBALS['count_con']--;	
 		else if(isset($GLOBALS['F_OTHER'][$func_name])) 
@@ -175,6 +179,7 @@ You should have received a copy of the GNU General Public License along with thi
 		}
 		
 		// do not display a line twice
+		// problem: different lines in different files with equal line number
 		if(!isset($lines[$tree->line]))
 		{
 			echo '<li';
@@ -412,6 +417,12 @@ You should have received a copy of the GNU General Public License along with thi
 			}
 			echo '</table>';
 		}
+	}
+	
+	function statsRow($name, $amount, $all)
+	{
+		echo '<tr><td nowrap>',$name,':</td><td nowrap><div class="chart" style="width:',
+			round(($amount/$all)*100,0),'"></div><div>',$amount,'</div></td></tr>';
 	}
 	
 ?>	

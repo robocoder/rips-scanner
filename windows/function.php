@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License along with thi
 
 **/
 
+include('../config/general.php');
+
 	// prepare output to style with CSS
 	function highlightline($line, $line_nr)
 	{
@@ -59,7 +61,8 @@ You should have received a copy of the GNU General Public License along with thi
 
 	if(!empty($file))
 	{
-		$lines = file($file);
+		$lines = file($file); 
+		
 		if( isset($lines[$start]) && isset($lines[$end]) )
 		{
 			for($i=$start; $i<=$end; $i++)

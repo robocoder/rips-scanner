@@ -36,6 +36,9 @@ switch($_GET['type'])
 	case $NAME_XPATH: 			$HELP = $HELP_XPATH;
 								$FUNCS = $F_SECURING_XPATH;
 								break;
+	case $NAME_LDAP: 			$HELP = $HELP_LDAP;
+								$FUNCS = $F_SECURING_LDAP;
+								break;							
 	case $NAME_CONNECT: 		$HELP = $HELP_CONNECT; 
 								$FUNCS = array();
 								break;
