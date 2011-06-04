@@ -30,29 +30,6 @@ You should have received a copy of the GNU General Public License along with thi
 				else if( $tokens[$i][0] === T_CONSTANT_ENCAPSED_STRING )
 					$tokens[$i][1] = str_replace('"', "'", $tokens[$i][1]);
 			}
-			// ternary operator gives headaches, only partly supported
-			else if($tokens[$i] === '?')
-			{
-				$d=1;
-				// find last token before '?'
-				while( !isset($tokens[$i-$d]) )
-				{
-					if($d>10)break;
-					$d++;
-				}
-				// if condition in paranthesis ( )
-				if($tokens[$i-$d] === ')')
-				{
-					$d=1;
-					while( isset($tokens[$i-$d]) && $tokens[$i-$d] !== '(' )
-					{
-						// delete condition, because vars should not be traced
-						unset($tokens[$i-$d]);
-						if($d>20)break;
-						$d++;
-					}
-				}
-			}
 		}
 		
 		// return tokens with rearranged key index
@@ -114,6 +91,99 @@ You should have received a copy of the GNU General Public License along with thi
 					$f++;
 				}
 				$tokens[$i+$f] = ']';
+			}
+		// handle ternary operator (remove condition, only values should be handled during trace)
+		// problem: tainting in the condition is not actual tainting the line -> remove condition
+			else if( $tokens[$i] === '?' )
+			{
+				$tokens[$i] = '';
+				// condition in brackets: fine, delete condition
+				if($tokens[$i-1] === ')')
+				{
+					$tokens[$i-1] = '';
+					// delete tokens till ( 
+					$newbraceopen = 1;
+					$f = 2;
+					while( !($newbraceopen === 0 || $tokens[$i - $f] === ';') )
+					{
+						if( $tokens[$i - $f] === '(' )
+						{
+							$newbraceopen--;
+						}
+						else if( $tokens[$i - $f] === ')' )
+						{
+							$newbraceopen++;
+						}
+						$tokens[$i - $f] = '';	
+						if($f>50)break;
+						$f++;
+					}
+
+					//delete token before, if T_STRING
+					if(is_array($tokens[$i-$f]) 
+					&& ($tokens[$i-$f][0] === T_STRING || $tokens[$i-$f][0] === T_EMPTY || $tokens[$i-$f][0] === T_ISSET))
+					{
+						$tokens[$i-$f] = '';
+					}
+				}
+				// condition is a check or assignment
+				else if(in_array($tokens[$i-2][0], $GLOBALS['T_ASSIGNMENT']) || in_array($tokens[$i-2][0], $GLOBALS['T_OPERATOR']) )
+				{
+					// remove both operands
+					$tokens[$i-1] = '';
+					$tokens[$i-2] = '';
+					// if operand is in braces
+					if($tokens[$i-3] === ')')
+					{
+						// delete tokens till ( 
+						$newbraceopen = 1;
+						$f = 4;
+						while( !($newbraceopen === 0 || $tokens[$i - $f] === ';') )
+						{
+							if( $tokens[$i - $f] === '(' )
+							{
+								$newbraceopen--;
+							}
+							else if( $tokens[$i - $f] === ')' )
+							{
+								$newbraceopen++;
+							}
+						
+							$tokens[$i - $f] = '';	
+							if($f>50)break;
+							$f++;
+						}
+
+						//delete token before, if T_STRING
+						if(is_array($tokens[$i-$f]) 
+						&& ($tokens[$i-$f][0] === T_STRING || $tokens[$i-$f][0] === T_EMPTY || $tokens[$i-$f][0] === T_ISSET))
+						{
+							$tokens[$i-$f] = '';
+						}
+					}
+					// if first operand is an $array['key']
+					else if($tokens[$i-3] === ']' && $tokens[$i-4][0] === T_CONSTANT_ENCAPSED_STRING && $tokens[$i-5] === '[')
+					{
+						$tokens[$i-4] = ''; // 'key'
+						$tokens[$i-5] = ''; // [
+						$tokens[$i-6] = ''; // $array
+					}
+					$tokens[$i-3] = '';
+					
+				}
+				// condition is a single variable, delete
+				else if(is_array($tokens[$i-1]) && $tokens[$i-1][0] === T_VARIABLE)
+				{
+					$tokens[$i-1] = '';
+				}
+				// condition is a single array key, delete
+				else if($tokens[$i-1] === ']' && $tokens[$i-2][0] === T_CONSTANT_ENCAPSED_STRING && $tokens[$i-3] === '[')
+				{
+					$tokens[$i-1] = ''; // ]
+					$tokens[$i-2] = ''; // 'key'
+					$tokens[$i-3] = ''; // [
+					$tokens[$i-4] = ''; // $array
+				}
 			}
 		// real token
 			else if( is_array($tokens[$i]) )

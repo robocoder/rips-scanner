@@ -1,6 +1,37 @@
 RIPS CHANGELOG
 ===============
 
+RIPS 0.40:
+----------
+	Code analysis:
+	- fixed bug with vartrace and different dependencies (if(condition) $var=1; else $var=2;)
+	- fixed bug with string reconstruction of included files (include("/foo/$var/bar");)
+	- improved file inclusion rate (name reconstruction, consider include_path, try to guess file)	
+	- fixed bug with usage of defined CONSTANTs (thanks to Dawid) 
+	- fixed bug with successful inclusion and FI vulnerability within one inclusion
+	- fixed bug with FI vulnerability and function call (require urldecode($_GET['a']))
+	- fixed bug with overwritten parameter vars in user-defined function
+	- fixed bug with two sensitive sinks in one userdefined functions affected by different parameters
+	- improved ternary operator handling
+	- added quote analysis for more precise securing detection (mysql_query("SELECT ".addslashes($id)); =vuln)
+		(still some bugs with quote analysis, TBD)
+	- added vulnerability type 'Unserialize' to scan for POP gadgets
+	
+	Interface:
+	- fixed bug with exploit creator and error_reporting=on (thanks Gregory and others)
+	- moved info gathering to seperate verbosity level, removed info about program exits
+	- added maximize button to code viewer
+	- added graph for file inclusion visualization
+	- added graph for function call and vulnerability flow visualization
+	- added pie chart for result
+	- grouped vulnerable lines for each vulnerability
+	- added new color schema 'ayti' and improved other color schemas
+	- fixed bug with vulnerable functions in the result that have not been called with userinput
+	- fixed bug with multiline comments in the code viewer
+	- added link to stats to show only vulns of specific type (click on vulnerability type)	
+	- added color highlighting for regex search results
+	- changed stylesheet is now tracked permanently by cookie
+
 RIPS 0.35:
 ----------
 	- added ini_set("auto_detect_line_endings", true) to support MAC OSX newlines
@@ -11,7 +42,6 @@ RIPS 0.35:
 	- fixed critical bug with wrong detection of securing during inter-procedual analysis
 	- fixed bug with not detected function calls in included files and case-sensitive function names
 	- fixed bug with userinput returned by user-defined functions
-	
 
 RIPS 0.34:
 ----------

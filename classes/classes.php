@@ -34,6 +34,23 @@ You should have received a copy of the GNU General Public License along with thi
 		}
 	}
 	
+	// group vulnerable parts to one vulnerability trace
+	class VulnBlock
+	{
+		public $vuln;
+    	public $category;
+    	public $treenodes;
+		public $sink;
+		
+		function __construct($category = 'unknown', $sink = '') 
+		{
+			$this->vuln = false;
+			$this->category = $category;
+			$this->treenodes = array();
+			$this->sink = $sink;
+		}
+	}
+	
 	// used to store new finds
 	class VulnTreeNode
 	{
@@ -47,6 +64,7 @@ You should have received a copy of the GNU General Public License along with thi
 		public $filename;
 		public $children;
 		public $funcdepend;
+		public $funcparamdepend;
 		public $get;
 		public $post;
 		public $cookie;
@@ -65,6 +83,7 @@ You should have received a copy of the GNU General Public License along with thi
 			$this->filename = '';
 			$this->children = array();
 			$this->funcdepend = '';
+			$this->funcparamdepend = null;
 		}
 	}
 	
@@ -74,17 +93,17 @@ You should have received a copy of the GNU General Public License along with thi
     	public $value;
 		public $dependencies;
 		public $name;
-		public $line;
+		public $lines;
 		public $title;
 		public $filename;
 
 		function __construct($value = null) 
 		{
-			$this->title = 'Information Gathering';
+			$this->title = 'File Inclusion';
 			$this->value = $value;
 			$this->dependencies = array();
 			$this->name = '';
-			$this->line = 0;
+			$this->lines = array();
 			$this->filename = '';
 		}
 	}

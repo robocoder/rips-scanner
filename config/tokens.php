@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License along with thi
 	
 	// tokens to ignore while scanning
 	$T_IGNORE = array(
-		T_ENCAPSED_AND_WHITESPACE,
 		T_BAD_CHARACTER,
 		T_DOC_COMMENT,
 		T_COMMENT,
@@ -49,6 +48,16 @@ You should have received a copy of the GNU General Public License along with thi
 		T_SL_EQUAL,
 		T_SR_EQUAL,
 		T_XOR_EQUAL
+	);
+	
+	// condition operators
+	$T_OPERATOR = array(
+		T_IS_EQUAL,
+		T_IS_GREATER_OR_EQUAL,
+		T_IS_IDENTICAL,
+		T_IS_NOT_EQUAL,
+		T_IS_NOT_IDENTICAL,
+		T_IS_SMALLER_OR_EQUAL
 	);
 	
 	// all function call tokens

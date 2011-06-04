@@ -17,10 +17,11 @@ You should have received a copy of the GNU General Public License along with thi
 	
 	ini_set('short_open_tag', 1);			// who knows if I use them ;)
 	ini_set('auto_detect_line_endings', 1);	// detect newlines in MAC files
-	set_time_limit(300);					// 5 minutes
-	error_reporting(E_ERROR);
+	ini_set("memory_limit","1000M");		// set memory size to 1G
+	set_time_limit(5*60);					// 5 minutes
+	error_reporting(E_ERROR | E_WARNING | E_PARSE);
 		
-	$version = '0.35';						// RIPS version to be displayed	
+	$version = '0.40';						// RIPS version to be displayed	
 	$maxtrace = 30;							// maximum of parameter traces per PVF find
 	$warnfiles = 40;						// warn user if amount of files to scan is higher than this value
 	$basedir = '';							// default directory shown
@@ -33,12 +34,17 @@ You should have received a copy of the GNU General Public License along with thi
 		'code-dark',
 		'twilight',
 		'espresso',
-		'sunburst',
+		//'sunburst',
 		'barf',
-		'notepad++'
+		'notepad++',
+		'ayti'
 	);
 	
-	$default_stylesheet = 'twilight';
+	// track chosen stylesheet permanently
+	if(isset($_POST['stylesheet']) && $_POST['stylesheet'] !== $_COOKIE['stylesheet'])
+		$_COOKIE['stylesheet'] = $_POST['stylesheet'];
+	$default_stylesheet = isset($_COOKIE['stylesheet']) ? $_COOKIE['stylesheet'] : 'ayti';
+	setcookie("stylesheet", $default_stylesheet);
 	
 	// filetypes to scan
 	$filetypes = array(
@@ -49,6 +55,7 @@ You should have received a copy of the GNU General Public License along with thi
 		'.php5', 
 		//'.html', 
 		//'.htm', 
+		//'.js',
 		'.phtml', 
 		'.tpl',  
 		'.cgi'

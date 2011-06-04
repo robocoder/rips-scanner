@@ -31,6 +31,9 @@ include 'config/general.php';
 	?>
 	<script src="js/script.js"></script>
 	<script src="js/exploit.js"></script>
+	<script src="js/hotpatch.js"></script>
+	<script src="js/netron.js"></script>
+	<title>RIPS - A static source code analyser for vulnerabilities in PHP scripts</title>
 </head>
 <body onload="draginit();" onmousemove="getPos(event);" onmouseup="mouseButtonPos='up';">
 
@@ -55,8 +58,8 @@ include 'config/general.php';
 							1 => '1. user tainted only',
 							2 => '2. file/DB tainted +1',
 							3 => '3. show secured +1,2',
-							4 => '4. info gathering +1,2,3',
-							5 => '5. untainted +1,2,3,4'
+							4 => '4. untainted +1,2,3',
+							5 => '5. debug'
 						);
 						
 						foreach($verbosities as $level=>$description)
@@ -77,7 +80,7 @@ include 'config/general.php';
 							'server' => 'All server side',							
 							'code' => '- Code Evaluation',
 							'exec' => '- Command Execution',
-							'connect' => '- Connection Handling',							
+							'connect' => '- Header Injection',							
 							'file_read' => '- File Disclosure',
 							'file_include' => '- File Inclusion',							
 							'file_affect' => '- File Manipulation',
@@ -85,7 +88,8 @@ include 'config/general.php';
 							'database' => '- SQL Injection',
 							'xpath' => '- XPath Injection',
 							'client' => 'Cross-Site Scripting',
-							'all' => 'All'
+							'all' => 'All',
+							'unserialize' => 'Unserialize / POP',
 						);
 						
 						foreach($vectors as $vector=>$description)
@@ -100,7 +104,7 @@ include 'config/general.php';
 		<tr>
 			<td nowrap>code style:</td>
 			<td nowrap>
-				<select name="stylesheet" id="css" onchange="setActiveStyleSheet(this.value);" style="width:49%" title="select color schema for scan result">
+				<select name="stylesheet" id="css" onChange="setActiveStyleSheet(this.value);" style="width:49%" title="select color schema for scan result">
 					<?php 
 						foreach($stylesheets as $stylesheet)
 						{
@@ -127,11 +131,11 @@ include 'config/general.php';
 		</tr>
 		</table>
 		<div id="options" style="margin-top:-10px; display:none; text-align:center;" >
-			<p>windows</p>
-			<input type="button" class="Button" style="width:50px" value="files" onClick="openWindow(5)" title="show list of scanned files" />
+			<p class="textcolor">windows</p>
+			<input type="button" class="Button" style="width:50px" value="files" onClick="openWindow(5);eval(document.getElementById('filegraph_code').innerHTML);maxWindow(5, 650);" title="show list of scanned files" />
 			<input type="button" class="Button" style="width:80px" value="user input" onClick="openWindow(4)" title="show list of user input" /><br />
 			<input type="button" class="Button" style="width:50px" value="stats" onClick="document.getElementById('stats').style.display='block';" title="show scan statistics" />
-			<input type="button" class="Button" style="width:80px" value="functions" onClick="openWindow(3)" title="show list of user-defined functions" />
+			<input type="button" class="Button" style="width:80px" value="functions" onClick="openWindow(3);eval(document.getElementById('functiongraph_code').innerHTML);maxWindow(3, 650);" title="show list of user-defined functions" />
 		</div>
 	</td>
 	<td width="25%" align="center" valign="center" nowrap>

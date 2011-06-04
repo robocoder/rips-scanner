@@ -2,7 +2,7 @@ body, html {
 	font-family: helvetica;
 	background-color: #DFDFDF;
 	padding: 0;
-    margin: 0;
+	margin: 0;
 	color: #DFDFDF;
 }
 
@@ -31,8 +31,8 @@ a#logo {
 }
 
 .scanning, .stats {
-	border:3px solid black;
 	margin-left:35%;
+	border:3px solid black;
 	position:absolute;
 	opacity: .94;
 	background-color: #223344;
@@ -41,7 +41,6 @@ a#logo {
 
 .stats {
 	width:290px;
-	margin-top:45px;
 	font-size: 12px;
 	padding:5px;
 }	
@@ -67,6 +66,11 @@ a#logo {
 	margin-left:113px;
 	margin-top:50px;
 	opacity: .50;
+}
+
+.diagram {
+	height:70px;
+	width:80px;
 }
 
 .warning {
@@ -144,6 +148,17 @@ a#logo {
 	background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAACXBIWXMAAAsTAAALEwEAmpwYAAAABGdBTUEAALGOfPtRkwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6QAAdTAAAOpgAAA6mAAAF2+SX8VGAAAC8klEQVR42mL8//8/AwwcvfNL+d///1H//v2PA9IS//79Y/j77/8LIL0ISC/zNuC/C1MLEECMMI0Hbn4PBmqYLC/MIsn4/y/D379/weJMTEwMv4DMa0++Pf/7719umKXYWpA4QACBNe65+jUYKLhQXYKV++OX7wzXH39lePT2K8g2BjF+NgZtaT4GIQEOhmM3Pnz9+/dffLKL3FqAAGLceuGjEtAph7Wk2aVevv/GsPvKawZJflYGT0Mphv9AeObOe4az998x2KuLMEiLcDPsufjqGVCzLUAAMf34+StGUZRV6sPnnww7Lrxk+PblJ0O0rTyDEA8bgzAPO4O7gTgDG+N/hoPXXjK8A6oxVOSX+vr9ZwxAAAA5AMb/Avb4+10FAv8A0d/wAPf4+gD7/v0A7vP6AL/T6ADK2+sAAQAAAD4rFADw9PUAzt/sABAMBAD19/pdAgio8Zc0I9BJD15/YvgDDJBff34xdKy9wMDE+I9BX0GQ4dO33wyPXn1h+PvnH8OD5+8ZWICB9eX7T2mAAGL59v0nAyhg/wDxrz9ANjBAQHwbLQmG90Bn96w+z/Dj1x8GUNj/ARr2H+hsoI0MAAHEAiSe/vr7V0UaGGqfPn9j+PfvDwMo/kpmHQVHx9/ffxiApoEDSlJCmOH7z98MQMueAgQQE9Daxc9ef2UwUBRkYGWEKPz/9x9DW6IFQ0uCOcMfoEF/gBpBcWuqLs5w6+F7BqD3FgMEEBPQxiUbj91/xsLEwOBpIsPAysLI8OfPb4YV+28wrDpwE5II/v1mcDdXZWBlZmJYsOPqM2CALgEIIHACSOjaF/wHmAAy/XS4fwNtO3blCcOjF+8Z/gEDRFqcn8FKW5qBhYWZoWnBia/AhBJ/aGLYWoAAgie5oPptoNQzOdReRVJdXoiBnY0ZLP79xx+GK3dfM8zbfuU5MEnmHp8aCU5yAAHEiJzIXUvXKQOTGTCR/4sDpg5gIv8PTHb/XgAT/CIge9mZmTHwRA4QYABQyY5ecbnnNAAAAABJRU5ErkJggg==');
 }
 
+.hotpatch {
+	cursor:pointer;
+	float:left;
+	height: 15px;
+	width: 15px;
+	margin-top: -1px;
+	margin-left: 2px;
+	background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAFM0aXcAAAACXBIWXMAAAsTAAALEwEAmpwYAAAABGdBTUEAALGOfPtRkwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6QAAdTAAAOpgAAA6mAAAF2+SX8VGAAACw0lEQVR42mL8//8/AwgABBDTxxcv97/vZvsPEECMMBGAAGL536Py/8P/RwwAAcTwZdWcQ3+iVf+/9mP8/86S5T9AAIGVfJ4j+/+vkDbDw9VnvwAEEFwPDAAEEMv/XJP/bx+dA3N4ijYfAAggFgb5DwzMcixgAQ57b0eAAGJheCjAwGgmwMDALQIWBAggBpAZIPzj2ukGoG0Nl5xMP/ytd/9wVI774c8fPxMAAgAhAN7/BPjBtb/6679A/cqOAP3zAAAVgIsA5CUyACouAA/37+9iAogBqGrOh+cv/n+aLfP//eGk/w+f7wOzQRhkMkAAwa0ACnwAKn4D48MwQABh+AMZAAQQC4zxfXJxw4/lkwL4lBQVrj0XYODQMZ4CEECM/3KM//97/4nh/ec7cB3fJ2xk4IkOYgAIIKbfPcfggl+11Bi+zdzL8J+Th+Gv6F8GgAAC6wSFzodX9xg+F+1l4F3sDlcMEEBgnR+VVICeZWFg/P6FgdEyFoxZBMUZAAIIrPOjGQMD88+XDH/ZxSFBKSbNcC165V2AAAL751ZexlNg8H1A9ydAAOH1JyEAEEAsQP/v4Lh10P2/sAjDFx0dBp4rV+CS/+/cY/h07z6c/3bpAQbhaAcwm61wxlmAAGJh1HNi/3dyMwMDMKz+ftsF9JQRAyyhgIEogsnO8A4cRKAgk9DR/wwQQCyMYuIMTIJ8DJ/tHRi4fdsY7j47DUlhT04w/AKmBN4+Z6ghLAw80/0ZGNQZGPj+3mJgVNJ7DxBALECCDRRD3Bs2MTA92MAgLvCT4c/7l2D1v1R3MrCoSYP5oOD9b+gHFmd8/4CBjZ0tCCCAwAEGStOg4P6hEMnwRcaCQeTpPAbmG7sgQY8MFPUZGO5fBDMFYs8wAgQQWPNlZ7NTQL6pluQHhm8O38GSsDh7PPUdg1JG+hvu0GRR9NAGCDAAI6Y+qpsRI6MAAAAASUVORK5CYII=');
+}
+
+
 .vulntitle {
 	margin-left: 20px;
 }
@@ -193,17 +208,24 @@ a#logo {
 	white-space:nowrap;
 }
 
-.closebutton {
+.closebutton, .maxbutton {
 	height:15px; 
 	width:15px;
 	top:10px;
-	right:20px;
 	position:absolute;
+}
+
+.maxbutton {
+	right:40px;
+}
+
+.closebutton {
+	right:20px;
 }
 
 .windowcontent, .funclistcontent {
 	overflow:auto;
-	opacity: .96;
+	opacity: .98;
 	border-left: 2px solid black;
 	border-right: 2px solid black;
 	height: 100%;
@@ -299,7 +321,7 @@ input[type="text"],select {
 	border:1px solid #000;
 }
 
-.closebutton,
+.closebutton,.maxbutton,
 .Button { 
 	background-color:#454545; 
 	color:#fff; 
@@ -341,4 +363,21 @@ a {
 .codebox {
 	margin-bottom: 10px;
 	background-color: #DFDFDF;
+}
+
+.vulnblocktitle {
+	margin-left: 20px;
+	font-size: 10pt;
+	padding:5px;
+	width:200px;
+}
+
+.vulnblock {
+	border:1px solid black;
+}
+
+.filecanvas {
+	width:100%;
+	height:100%;
+	position:relative;
 }

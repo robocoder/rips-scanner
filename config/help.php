@@ -35,7 +35,7 @@ $HELP_CODE = array(
 
 $HELP_FILE_INCLUDE = array(
 'description' => 'An attacker might include local or remote PHP files or read non-PHP files with this vulnerability. User tainted data is used when creating the file name that will be included into the current file. PHP code in this file will be evaluated, non-PHP code will be embedded to the output. This vulnerability can lead to full server compromise.',
-'link' => '',
+'link' => 'http://websec.wordpress.com/2010/02/22/exploiting-php-file-inclusion-overview/',
 'code' => '<?php include("includes/" . $_GET["file"]); ?>',
 'poc' => '/index.php?file=../../../../../../../etc/passwd',
 'patchtext' => 'Build a whitelist for positive file names. Do not only limit the file name to specific paths or extensions.',
@@ -103,5 +103,24 @@ $HELP_CONNECT = array(
 'poc' => 'Can not be generalized.',
 'patchtext' => 'Can not be generalized.',
 'patch' => 'Can not be generalized.'
+);
+
+$HELP_POP = array(
+'description' => 'When userinput is parsed by the unserialize() function an attacker may abuse this by supplying serialized objects that will be used in the current application scope. These objects can only be instances of classes of this application. Several gadgets such as __wakeup() or __destruct() functions of those classes will be automatically called when the object is resurrected during the unserialization and object variables specified by the attacker may lead to vulnerabilities in those gadgets.',
+'link' => 'https://media.blackhat.com/bh-us-10/presentations/Esser/BlackHat-USA-2010-Esser-Utilizing-Code-Reuse-Or-Return-Oriented-Programming-In-PHP-Application-Exploits-slides.pdf',
+'code' => '<?php
+class foo { 
+	public $file = "test.txt";
+	public $data = "text"; 
+	function __destruct() 
+	{ 
+		file_put_contents($this->file, $this->data); 
+	} 
+} 
+$a = unserialize($_GET["s"]);
+?>',
+'poc' => '/index.php?s=O:3:"foo":2:{s:4:"file";s:9:"shell.php";s:4:"data";s:29:"<?php passthru($_GET["c"]);?>";}',
+'patchtext' => 'Prevent using unserialize because it contains much more flaws.',
+'patch' => 'No code.'
 );
 ?>

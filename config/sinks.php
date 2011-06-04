@@ -22,8 +22,7 @@ You should have received a copy of the GNU General Public License along with thi
 		'echo'							=> array(array(1), $F_SECURING_XSS), 
 		'print'							=> array(array(1), $F_SECURING_XSS),
 		'printf'						=> array(array(0), $F_SECURING_XSS),
-		'vprintf'						=> array(array(0), $F_SECURING_XSS),
-		'header' 						=> array(array(1), array())
+		'vprintf'						=> array(array(0), $F_SECURING_XSS)
 	);
 	
 	// code evaluating functions  => (parameters to scan, securing functions)
@@ -224,7 +223,7 @@ You should have received a copy of the GNU General Public License along with thi
 	);	
 		
 	// connection handling functions
-	$NAME_CONNECT = 'Connection Handling';
+	$NAME_CONNECT = 'Header Injection';
     $F_CONNECT = array(
 		'curl_setopt'					=> array(array(2,3), array()),
 		'curl_setopt_array' 			=> array(array(2), array()),
@@ -239,6 +238,7 @@ You should have received a copy of the GNU General Public License along with thi
 		'ftp_nlist' 					=> array(array(2), array()), 
 		'ftp_nb_fget' 					=> array(array(3), array()), 
 		'ftp_nb_get' 					=> array(array(2,3), array()), 
+		'header' 						=> array(array(1), array()),
 		'imap_open'						=> array(array(1), array()),  
 		'imap_mail'						=> array(array(1), array()),
 		'mail' 							=> array(array(1,4), array()), 
@@ -257,11 +257,19 @@ You should have received a copy of the GNU General Public License along with thi
 	$F_OTHER = array(
 		'apache_setenv'					=> array(array(1,2), array()),	
 		'dl' 							=> array(array(1), array()),	
+		'ereg'							=> array(array(2), array()), # nullbyte injection affected		
+		'eregi'							=> array(array(2), array()), # nullbyte injection affected	
 		'extract'						=> array(array(1), array()),
 		'import_request_variables'		=> array(array(1), array()),		
 		'ini_set' 						=> array(array(1,2), array()),
 		'putenv'						=> array(array(1), array()),
 		'sleep'							=> array(array(1), array()),
+		'unserialize'					=> array(array(1), array())
+	);
+	
+	// property oriented programming with unserialize
+	$NAME_POP = 'Unserialize';
+	$F_POP = array(
 		'unserialize'					=> array(array(1), array())
 	);
 

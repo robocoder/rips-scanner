@@ -27,8 +27,9 @@ function scan(ignore_warning)
 	var	verbosity = document.getElementById("verbosity").value;
 	var vector = document.getElementById("vector").value;
 	var treestyle = document.getElementById("treestyle").value;
+	var stylesheet = document.getElementById("css").value;
 	
-	var params = "loc="+location+"&subdirs="+subdirs+"&verbosity="+verbosity+"&vector="+vector+"&treestyle="+treestyle;
+	var params = "loc="+location+"&subdirs="+subdirs+"&verbosity="+verbosity+"&vector="+vector+"&treestyle="+treestyle+"&stylesheet="+stylesheet;
 
 	if(ignore_warning)
 		params+="&ignore_warning=1";
@@ -50,6 +51,7 @@ function scan(ignore_warning)
 				window.clearInterval(animation);
 				document.getElementById("options").style.display="";
 				document.getElementById("result").innerHTML=(this.responseText);
+				generateDiagram();
 			}
 			else
 			{
@@ -70,7 +72,12 @@ function scan(ignore_warning)
 		} 
 		else if (this.readyState == 4 && this.status != 200) 
 		{
-			alert("Network error ("+this.status+").");
+			var warning = "<div class=\"warning\">";
+			warning+="<h2>Network error ("+this.status+")</h2>";
+			warning+="<p>Could not access <i>main.php</i>. Make sure you copied all files and your webserver is running.</p>";
+			warning+="</div>";
+			document.getElementById("scanning").style.backgroundImage="none";
+			document.getElementById("scanning").innerHTML=warning;
 		}
 	}
 	client.open("POST", "main.php", true);
@@ -87,7 +94,9 @@ function search()
 	var location = encodeURIComponent(document.getElementById("location").value);
 	var subdirs = Number(document.getElementById("subdirs").checked);
 	var regex = encodeURIComponent(document.getElementById("search").value);
-	var params = 'loc='+location+'&subdirs='+subdirs+'&search=1&regex='+regex+'&ignore_warning=1&treestyle=1';
+	var stylesheet = document.getElementById("css").value;
+	
+	var params = 'loc='+location+'&subdirs='+subdirs+'&search=1&regex='+regex+'&ignore_warning=1&treestyle=1&stylesheet='+stylesheet;
 
 	document.getElementById("scanning").style.backgroundImage="url(css/scanning.gif)";
 	document.getElementById("scanning").innerHTML='searching ...<div class="scanned" id="scanned"></div>';
@@ -148,15 +157,42 @@ function hide(tag)
 	}
 }
 
+function catshow(tag)
+{
+	var elements = document.getElementsByName('allcats');
+	for(var i=0;i<elements.length;i++)
+	{
+		if(elements[i].firstChild.getAttribute('name') == tag)
+			elements[i].firstChild.style.display="block";
+		else
+			elements[i].firstChild.style.display="none";
+	}	
+	
+	var elements = document.getElementsByName('pic'+tag);
+	for(var i=0;i<elements.length;i++)
+	{
+			elements[i].className='minusico';
+	}	
+}
+
+function showAllCats()
+{
+	var elements = document.getElementsByName('allcats');
+	for(var i=0;i<elements.length;i++)
+	{
+		elements[i].firstChild.style.display="block";
+	}		
+}
+
 function markVariable(variable)
 {
 	var i, a;
 	for(i=0; (a = document.getElementsByName("phps-var-"+variable)[i]); i++)
 	{
-		if(a.style.backgroundColor == '')
-			a.style.backgroundColor = 'darkred';
+		if(a.className == 'phps-t-variable' || a.className == 'phps-tainted-var')
+			a.className = 'phps-t-variable-marked';	
 		else
-			a.style.backgroundColor = '';
+			a.className = 'phps-t-variable';
 	}
 }
 
@@ -194,6 +230,7 @@ function returnLastCode()
 	document.body.scrollTop = document.body.scrollTop - 100;
 }
 
+
 /* MANAGE WINDOWS */
 
 function closeFuncCode()
@@ -206,6 +243,22 @@ function closeWindow(id)
 	document.getElementById("window"+id).style.display="none";
 }
 
+var lastheight = 200;
+var lastwidth = 400;
+function maxWindow(id, newwidth)
+{
+	lastheight = document.getElementById("window"+id).style.height;
+	lastwidth = document.getElementById("window"+id).style.width;
+	document.getElementById("window"+id).style.height = 400;
+	document.getElementById("window"+id).style.width = newwidth;
+}
+
+function minWindow(id, oldwidth)
+{
+	document.getElementById("window"+id).style.height = lastheight;
+	document.getElementById("window"+id).style.width = lastwidth;
+}
+
 function top(wid)
 {
 	var windows = document.getElementsByName("window");
@@ -216,6 +269,26 @@ function top(wid)
 		else
 			windows[i].style.zIndex = 1;
 	}
+}
+
+function showgraph(type)
+{
+	document.getElementById(type+'canvas').style.display="block";
+	document.getElementById(type+'listdiv').style.display="none";
+	document.getElementById(type+'graphbutton').style.background="white";
+	document.getElementById(type+'graphbutton').style.color="black";
+	document.getElementById(type+'listbutton').style.background="#454545";
+	document.getElementById(type+'listbutton').style.color="white";
+}
+
+function showlist(type)
+{
+	document.getElementById(type+'canvas').style.display="none";
+	document.getElementById(type+'listdiv').style.display="block";
+	document.getElementById(type+'listbutton').style.background="white";
+	document.getElementById(type+'listbutton').style.color="black";
+	document.getElementById(type+'graphbutton').style.background="#454545";
+	document.getElementById(type+'graphbutton').style.color="white";
 }
 
 /* LOAD WINDOWS */
@@ -309,6 +382,48 @@ function openHelp(hoveritem, type, thefunction, get, post, cookie, files, server
 	}
 	client.open("GET", 
 		"windows/help.php?type="+type+"&function="+thefunction+"&get="+get+"&post="+post+"&cookie="+cookie+"&files="+files+"&server="+server);
+	client.send();
+}
+
+function openHotpatch(hoveritem, file, get, post, cookie, files, server)
+{
+	var title = 'HotPatcher - ';
+	if(file.length > 50)
+		title+= '...'+file.substr(file.length-50,50);
+	else
+		title+= file;
+		
+	var mywindow = document.getElementById("window2");	
+	mywindow.style.display="block";
+	
+	var tmp = hoveritem.offsetParent;
+	
+	mywindow.style.top = tmp.offsetParent.offsetTop - 100; 
+	mywindow.style.right = 200; 
+	
+	document.getElementById("windowtitle2").innerHTML=title;
+	
+	var a = true;
+	var client = new XMLHttpRequest();
+	client.onreadystatechange = function () 
+	{ 
+		if(this.readyState == 4 && this.status == 200 && a) 
+		{
+			document.getElementById("windowcontent2").innerHTML=(this.responseText);
+					
+			document.getElementById("windowcontent2").scrollIntoView();
+		
+			document.body.scrollTop = tmp.offsetParent.offsetTop - 200;
+			
+			a=false;
+		} 
+		else if (this.readyState == 4 && this.status != 200) 
+		{
+			alert("Network error ("+this.status+").");
+		}
+	}
+	client.open("GET", 
+		"windows/hotpatch.php?file="+file+"&get="+get+"&post="+post+"&cookie="+cookie+"&files="+files+"&server="+server);
 	client.send();
 }
 

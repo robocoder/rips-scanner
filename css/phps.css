@@ -1,3 +1,15 @@
+body, html {
+	color: #111111;
+}
+
+.textcolor {
+	color: #ffffff;
+}
+
+.darkcolor {
+	color: black;
+}
+
 .userinput, .persistent {
 	list-style-type: disc;
 	color:white; 
@@ -16,8 +28,15 @@
 	background-color: #C4CDD1;
 }
 
+.vulnblock {
+	background-color:#ABBBC3;
+	color:black;
+	font-weight:bold;
+}
+
 .windowcontent , #funccodecontent, #funccodetitle, .funclistcontent {
 	background-color: #C4CDD1;
+	opacity:0.92;
 }
 
 .markline {
@@ -109,7 +128,9 @@
 .phps-t-bool-cast,
 .phps-t-double-cast,
 .phps-t-int-cast,
-.phps-t-unset-cast
+.phps-t-unset-cast,
+.phps-t-boolean-or,
+.phps-t-boolean-and
 	{color: #007700;}
 
 .phps-t-const,
@@ -118,12 +139,17 @@
 .phps-t-string,
 .phps-t-eval,
 .phps-t-lnumber,
-.funclistline
+.funclistline,
+.phps-t-variable-marked,
+.phps-tainted-var
 	{color: #0000BB;}
 	
+.phps-t-variable-marked
+	{background-color:#F5A69A;}	
+	
 .phps-tainted-var
-	{color: #FBFBFC;}	
-
+	{font-weight:bold;}	
+	
 .phps-t-encapsed-and-whitespace,
 .phps-t-constant-encapsed-string
 	{color: #DD0000;}

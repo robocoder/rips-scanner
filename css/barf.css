@@ -1,3 +1,13 @@
+.menu {
+	background-color: #1D261B;
+}
+
+input[type="text"],select {
+	color: #000 !important;
+	background: #99A298 !important;
+}
+
+
 .userinput, .persistent {
 	list-style-type: disc;
 	color:white; 
@@ -13,19 +23,25 @@
 
 .codebox {
 	margin-bottom: 10px;
-	background-color: #14191E;
+	background-color: #0D1219;
+}
+
+.vulnblock {
+	background-color:#283325;
+	color:#94F877;
+	font-weight:bold;
 }
 
 .windowcontent, #funccodecontent, #funccodetitle, .funclistcontent  {
-	background-color: #14191E;
+	background-color: #0D1219;
 }
 
 .markline {
-	background-color: #531107;
+	background-color: #243245;
 }
 
 .requires
-	{color: #D2A8A1; font-weight:bold;}
+	{color: #697B8F; font-weight:bold;}
 	
 .linenr
 	{color: #888;}
@@ -67,7 +83,7 @@
 .phps-t-double-cast,
 .phps-t-int-cast,
 .phps-t-unset-cast
-	{color: #7F8D9D;}
+	{color: #EFF3F8;}
 	
 .phps-t-open-tag,
 .phps-t-close-tag,
@@ -91,7 +107,6 @@
 .phps-t-dec,
 .phps-t-object-operator,
 .phps-t-exclaim,
-.phps-t-return,
 .phps-t-double-arrow,
 .phps-t-as,
 .phps-t-or,
@@ -116,11 +131,15 @@
 .phps-t-static,
 .phps-t-class,
 .phps-t-new,
-.phps-t-const
-	{color: #A3D295;}
+.phps-t-const,
+.phps-t-return
+	{color: #94F877;}
 	
-.phps-t-variable, .phps-t-string-varname, .funclistline
+.phps-t-variable, .phps-t-string-varname, .funclistline, .phps-t-variable-marked
 	{color: #708E67;}
+
+.phps-t-variable-marked
+	{background-color:darkred;}
 	
 .phps-tainted-var
 	{color: #7FC16B;}	

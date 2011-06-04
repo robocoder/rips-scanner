@@ -16,6 +16,12 @@
 	background-color: #141414;
 }
 
+.vulnblock {
+	background-color:#050505;
+	color:#3E87E3;
+	font-weight:bold;
+}
+
 .windowcontent , #funccodecontent, #funccodetitle, .funclistcontent {
 	background-color: #141414;
 }
@@ -119,8 +125,11 @@
 .phps-t-const
 	{color: #3387CC;}
 	
-.phps-t-variable, .phps-t-string-varname, .funclistline
+.phps-t-variable, .phps-t-string-varname, .funclistline, .phps-t-variable-marked
 	{color: #3E87E3;}
+
+.phps-t-variable-marked
+	{background-color:darkred;}
 
 .phps-tainted-var
 	{color: #97C5FE;}

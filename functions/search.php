@@ -19,22 +19,25 @@ You should have received a copy of the GNU General Public License along with thi
 	{
 		$search = str_replace('/', '\/', $search);
 		$lines = file($file_name);
+		$block = new VulnBlock('Search hits');
 		for($i=0; $i<count($lines); $i++)
 	 	{
-			if(preg_match("/".trim($search)."/", $lines[$i]))
+			if(preg_match("/".trim($search)."/i", $lines[$i]))
 			{
 				$GLOBALS['count_matches']++;
-
-				$new_find = new VulnTreeNode(highlightline($lines[$i], $i+1, $search));
+				
+				$line = highlightline($lines[$i], $i+1, $search);
+				$line = preg_replace("/(".trim($search).")/i", "<span class='markline'>$1</span>", $line);
+				$new_find = new VulnTreeNode($line);
 				$new_find->title = 'Regular expression match';
 				$new_find->lines[] = $i+1;
 					
-				$id = (isset($GLOBALS['output'][$file_name])) ? 
-						count($GLOBALS['output'][$file_name]) : 0;
-				$GLOBALS['output'][$file_name][$id] = $new_find;
-						
+				$block->treenodes[] = $new_find;	
+				$block->vuln = true;	
 			}
 		}
+		$id = (isset($GLOBALS['output'][$file_name])) ? count($GLOBALS['output'][$file_name]) : 0;
+		$GLOBALS['output'][$file_name][$id] = $block;
 	}
 	
 ?> 

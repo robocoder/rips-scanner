@@ -2,15 +2,17 @@
 
 include '../config/general.php';
 include '../config/securing.php';
-include '../config/PVF.php';
-include '../config/userinput.php';
+include '../config/sinks.php';
+include '../config/sources.php';
 include '../config/help.php';
 include '../functions/output.php';
 
 $function = htmlentities($_GET['function'], ENT_QUOTES, 'utf-8');
 $type = htmlentities($_GET['type'], ENT_QUOTES, 'utf-8');
+$type = explode(" (", $type);
+$type = $type[0];
 
-switch($_GET['type'])
+switch($type)
 {
 	case $NAME_XSS: 			$HELP = $HELP_XSS;	
 								$FUNCS = $F_SECURING_XSS;
@@ -42,6 +44,9 @@ switch($_GET['type'])
 	case $NAME_CONNECT: 		$HELP = $HELP_CONNECT; 
 								$FUNCS = array();
 								break;
+	case $NAME_POP: 			$HELP = $HELP_POP; 
+								$FUNCS = array();
+								break;							
 	default: 					
 		$HELP = array(
 			'description' => 'No description available for this vulnerability.',
@@ -53,15 +58,15 @@ switch($_GET['type'])
 }
 ?>
 
-<div style="padding:30px">
-
+<div style="padding-left:30px;padding-right:30px">
+<h2><?php echo $type; ?></h2>
 <h3>vulnerability concept:</h3>
 
-<table>
+<table class="textcolor">
 <tr>
-	<th class="helptitle">user input</th>
+	<th class="helptitle">source</th>
 	<th></th>
-	<th class="helptitle">potentially<br />vulnerable function</th>
+	<th class="helptitle">sink</th>
 	<th></th>
 	<th class="helptitle">vulnerability</th>
 </tr>
@@ -69,7 +74,7 @@ switch($_GET['type'])
 <td align="left" class="helpbox">
 <ul style="margin-left:-25px">
 <?php
-if($_GET['get']) 	
+if($_GET['get'] || (empty($_GET['get']) && empty($_GET['post']) && empty($_GET['cookie']) && empty($_GET['files']) && empty($_GET['server']))) 	
 	echo "<li class=\"userinput\"><a href=\"{$doku}reserved.variables.get\" target=\"_blank\">\$_GET</a></li>";
 if($_GET['post'])	
 	echo "<li class=\"userinput\"><a href=\"{$doku}reserved.variables.post\" target=\"_blank\">\$_POST</a></li>";
@@ -95,7 +100,7 @@ if($_GET['server'])
 
 <h3>vulnerability description:</h3>
 <p><?php echo $HELP['description']; ?></p>
-<p><?php if(!empty($helplink)) echo "More information about $type can be found <a href=\"{$HELP['link']}\">here</a>."; ?></p>
+<p><?php if(!empty($HELP['link'])) echo "More information about $type can be found <a href=\"{$HELP['link']}\">here</a>."; ?></p>
 
 <h3>vulnerable example code:</h3>
 <pre><?php echo highlightline($HELP['code'], 1); ?></pre>
@@ -114,7 +119,7 @@ if(!empty($FUNCS))
 {
 	foreach($FUNCS as $func)
 	{
-		echo "<li><a href=\"$doku$func\" target=\"_blank\">$func</a></li>\n";
+		echo "<li><a class=\"darkcolor\" href=\"$doku$func\" target=\"_blank\">$func</a></li>\n";
 	}
 } else
 {

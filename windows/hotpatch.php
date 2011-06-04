@@ -22,44 +22,20 @@ if(!empty($_GET['file']))
 
 <div style="padding: 20px; width: 400px">
 	
-<div style='width: 300px'>
-	#!/usr/bin/php -f<br>
-	&lt;?php<br>
-	#<br>
-	# <?php echo basename($file); ?> curl exploit<br>
-	#<br><br>
-</div>
 
-<div id="exploitbuild">
-<div class="exploitbox">
-	<div class="exploittitlebox">
-		<div class="exploittitle">general settings:</div>
-		<div style="clear: left;"></div>
-	</div>
+<div id="hotpatchbuild">
 
-	<div class="exploitcontentbox">
-	<table class="textcolor">
-	<tr>
-		<td>URL:</td>
-		<td><input type="text" size="40" id="target" name="target" value="http://$target/<?php echo basename($file); ?>" /></td>
-	</tr>
-	<tr>
-		<td>COOKIEJAR:</td>
-		<td><input type="text" id="cookiejar" name="cookiejar" value="/tmp/cookie_$target" /></td>
-	</tr>
-	<tr>
-		<td>Max Exec Time:</td>
-		<td><input type="text" id="exectime" size=2 name="exectime" value="3" /> (s)</td>
-	</tr>
-	<tr>
-		<td>SSL: <input type="checkbox" id="ssl" name="ssl" value="1" onChange="setssl()" /></td>
-		<td>BasicAuth: <input type="checkbox" id="auth" name="auth" value="1" /></td>
-	</tr>
-	</table>
-	</div>
-</div>
+Create mod_security rule.
 
 <?php
+	
+	function getFilterOptions($id)
+	{
+		return '<select name="filter" onchange="document.getElementById('.$id.').value=this.value">'
+			.'<option value="alpha">alphanum</option>'
+			.'<option value="alpha">numerical</option>'
+			.'</select>';
+	}
 	
 	function creatediv($method, $name)
 	{
@@ -86,7 +62,8 @@ if(!empty($_GET['file']))
 				{
 					$param = htmlentities($param, ENT_QUOTES, 'utf-8');
 					echo "\n<tr><td>$param:</td>\n",
-					"\t<td><input type='text' name='$param' value=''></td>\n",
+					"\t<td><input type='text' id='{$method}{$param}' name='$param' value='' /></td>",
+					"<td>".getFilterOptions($method.$param)."</td>\n",
 					'</tr>';
 				} else
 				{
@@ -111,13 +88,14 @@ if(!empty($_GET['file']))
 	
 ?>
 	
-	<input type="button" class="Button" value="create" onClick="createExploit()" />&nbsp;
+	<input type="button" class="Button" value="create" onClick="createHotpatch()" />&nbsp;
 	<br /><br />
 </div>	
 
-<div id="exploitcode" style="display:none;"></div>
-	?&gt;
-</div>	
+<div id="hotpatchcode">
+
+</div>
+
 <?php
 } else
 {
@@ -125,3 +103,5 @@ if(!empty($_GET['file']))
 }
 
 ?>
+
+</div>

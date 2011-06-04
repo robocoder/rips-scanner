@@ -1,3 +1,13 @@
+.menu {
+	background-color:#010101;
+}
+
+
+input[type="text"],select {
+	color: #000 !important;
+	background-color:#797979 !important;
+}
+
 .userinput, .persistent {
 	list-style-type: disc;
 	color:white; 
@@ -14,6 +24,12 @@
 .codebox {
 	margin-bottom: 10px;
 	background-color: #222222;
+}
+
+.vulnblock {
+	background-color:#111111;
+	color:#FBFB97;
+	font-weight:bold;
 }
 
 .windowcontent , #funccodecontent, #funccodetitle, .funclistcontent {
@@ -97,8 +113,11 @@
 .phps-t-unset-cast
 	{color: #87AFD7;}
 
-.phps-t-variable, .phps-t-string-varname, .funclistline
+.phps-t-variable, .phps-t-string-varname, .funclistline, .phps-t-variable-marked
 	{color: #AFAFD7;}
+
+.phps-t-variable-marked
+	{background-color:darkred;}
 
 .phps-tainted-var
 	{color: #5959E2;}

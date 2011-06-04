@@ -89,7 +89,8 @@ You should have received a copy of the GNU General Public License along with thi
 	
 	// other functions as input
 	$F_OTHER_INPUT = array(
-		'get_headers'
+		'get_headers',
+		'getFormData'
 	);
 	
 	//	'getenv' and 'apache_getenv' 

@@ -11,23 +11,23 @@
 	color:yellow; 
 }
 
-.codebox {
-	margin-bottom: 10px;
-	background-color: #141414;
-}
-
 .vulnblock {
-	background-color:#151D24;
+	background-color:#223344;
 	color:#FFCC44;
 	font-weight:bold;
 }
 
+.codebox {
+	margin-bottom: 10px;
+	background-color: #101820;
+}
+
 .windowcontent, .filecanvas, #funccodecontent, #funccodetitle, .funclistcontent {
-	background-color: #141414;
+	background-color: #101820;
 }
 
 .markline {
-	background-color: #531107;
+	background-color: #334455;
 }
 
 .requires
@@ -36,8 +36,8 @@
 .linenr
 	{color: #888;}
 	
-.link
-	{color: #CF6A4C; font-weight:bold;}
+.link  
+	{color: #6262F0; font-weight:bold;}
 	
 .code,
 .phps-code, .phps-t-dollar-open-curly-braces, .vulntitle
@@ -63,8 +63,8 @@
 .phps-t-echo,
 .phps-t-start-heredoc,
 .phps-t-end-heredoc
-	{color: #DAD085;}
-
+	{color: #FFFFFF;}
+/*E1E1F9*/
 	
 .phps-t-open-tag,
 .phps-t-close-tag,
@@ -122,7 +122,7 @@
 .phps-t-double-cast,
 .phps-t-int-cast,
 .phps-t-unset-cast
-	{color: #9B703F;}
+	{color: #9467FC;}
 
 .phps-t-const
 	{color: #CF6A4C;}
@@ -131,25 +131,25 @@
 .phps-t-variable-marked,
 .phps-t-string-varname, 
 .funclistline
-	{color: #7587A6;}
+	{color: #768FEB;}
 	
 .phps-t-variable-marked
 	{background-color:darkred;}
 	
 .phps-tainted-var
-	{color: #9ABDFB;}
+	{color: #AAC8FD;}
 	
 .phps-t-lnumber
 	{color: #CF6A4C}
 
 .phps-t-encapsed-and-whitespace,
 .phps-t-constant-encapsed-string
-	{color: #8F9D6A;}
-
+	{color: #FFCE42;}
+/* FFCE42 */
 .phps-t-inline-html
-	{color: #F9EE98;}
+	{color: #FFCE42;}
 
 .phps-t-comment,
 .phps-t-ml-comment,
 .phps-t-doc-comment
-	{color: #5F5A60}
+	{color: #3F4852}

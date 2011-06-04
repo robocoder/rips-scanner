@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License along with thi
 	
 	// interesting functions, output and comment them if seen (verbosity 4)
 	$F_INTEREST = array(
-		'__destruct'					=> 'can be called with unserialize()',
 		'phpinfo'						=> 'outputs PHP info',
 		'session_start'					=> 'uses sessions',
 		'dbase_open' 					=> 'using DBMS dBase',
@@ -38,7 +37,7 @@ You should have received a copy of the GNU General Public License along with thi
 		'mssql_connect'					=> 'using DBMS MS SQL',
 		'mssql_pconnect'				=> 'using DBMS MS SQL',
 		'mysql_connect'					=> 'using DBMS MySQL',
-		'mysql_escape_string'			=> 'insecure validating function in use',
+		'mysql_escape_string'			=> 'insecure mysql_escape_string',
 		'mysql_pconnect'				=> 'using DBMS MySQL',
 		'mysqli'						=> 'using DBMS MySQL, MySQLi Extension',
 		'mysqli_connect'				=> 'using DBMS MySQL, MySQLi Extension',
@@ -63,5 +62,18 @@ You should have received a copy of the GNU General Public License along with thi
 		'xptr_new_context'				=> 'using XML document',
 		'xpath_new_context'				=> 'using XML document'
 	);	
+	
+	// interesting functions for POP/Unserialze
+	$F_INTEREST_POP = array(
+		'__destruct'					=> 'POP gagdet __destruct',
+		'__wakeup'						=> 'POP gagdet __wakeup',
+		'__toString'					=> 'POP gagdet __toString',
+		'__call'						=> 'POP gagdet __call',
+		'__callStatic'					=> 'POP gagdet __callStatic',
+		'__get'							=> 'POP gagdet __get',
+		'__set'							=> 'POP gagdet __set',
+		'__isset'						=> 'POP gagdet __isset',
+		'__unset'						=> 'POP gagdet __unset'
+	);
 	
 ?>	

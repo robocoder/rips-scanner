@@ -1,3 +1,15 @@
+body, html {
+	color: #111111;
+}
+
+.textcolor {
+	color: #ffffff;
+}
+
+.darkcolor {
+	color: black;
+}
+
 .userinput, .persistent {
 	list-style-type: disc;
 	color:grey; 
@@ -11,6 +23,12 @@
 	color:yellow; 
 }
 
+.vulnblock {
+	background-color:#D4D0C8;
+	color:black;
+	font-weight:bold;
+}
+
 .codebox {
 	margin-bottom: 10px;
 	background-color: #ffffff;
@@ -18,7 +36,7 @@
 
 .windowcontent, #funccodecontent, #funccodetitle, .funclistcontent  {
 	background-color: #ffffff;
-	opacity:0.9;
+	opacity:0.95;
 }
 
 .markline {
@@ -36,11 +54,11 @@
 	
 .code,
 .phps-code, .phps-t-dollar-open-curly-braces, .vulntitle
-	{color: #8000FF; font-family: "Bitstream Vera Sans Mono", "Monaco", "Courier New", monospace; font-size:1em; font-size:9pt;}
+	{color: #8000FF; font-family: "Bitstream Vera Sans Mono", "Monaco", "Courier New", monospace; font-size:1em; font-size:9pt; font-weight: bold;}
 
 .phps-t-string,
 .phps-t-eval
-	{color: #000000;}
+	{color: #000000; font-weight: bold;}
 	
 .phps-t-and-equal, 
 .phps-t-concat-equal, 
@@ -61,7 +79,9 @@
 .phps-t-inc,
 .phps-t-dec,
 .phps-t-object-operator,
-.phps-t-double-arrow
+.phps-t-double-arrow,
+.phps-t-boolean-or,
+.phps-t-boolean-and
 	{color: #8000FF;}
 	
 .phps-t-print,
@@ -123,11 +143,14 @@
 .phps-t-const
 	{color: #000000;}
 	
-.phps-t-variable, .phps-t-string-varname, .funclistline
+.phps-t-variable, .phps-t-string-varname, .funclistline, .phps-t-variable-marked
 	{color: #000080;}
 
+.phps-t-variable-marked
+	{background-color:#F5A69A;}
+
 .phps-tainted-var
-	{color: #0606EA;}
+	{color: #0606Ed;}
 	
 .phps-t-lnumber
 	{color: #FF8000}
@@ -136,7 +159,7 @@
 .phps-t-constant-encapsed-string,
 .phps-t-start-heredoc,
 .phps-t-end-heredoc
-	{color: #808080;}
+	{color: #4A4A4A;}
 
 .phps-t-inline-html
 	{color: #000000; font-weight:bold;}

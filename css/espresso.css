@@ -1,3 +1,14 @@
+.menu {
+	background-color: #351F12;
+}
+
+
+input[type="text"],select {
+	color: #000 !important;
+	background: #968B85 !important;
+}
+
+
 .userinput, .persistent {
 	list-style-type: disc;
 	color:white; 
@@ -16,19 +27,25 @@
 	background-color: #2A211C;
 }
 
+.vulnblock {
+	background-color:#23150D;
+	color:#049B0A;
+	font-weight:bold;
+}
+
 .windowcontent , #funccodecontent, #funccodetitle, .funclistcontent {
 	background-color: #2A211C;
 }
 
 .markline {
-	background-color: #531107;
+	background-color: #1E3F06;
 }
 
 .requires
 	{color: #43A8ED; font-weight:bold;}
 	
 .linenr
-	{color: #FF9358;}
+	{color: #888;}
 	
 .link
 	{color: #2F5FE0; font-weight:bold;}
@@ -57,7 +74,7 @@
 .phps-t-echo,
 .phps-t-start-heredoc,
 .phps-t-end-heredoc
-	{color: #7290D9;}
+	{color: #FFCE42;}
 
 	
 .phps-t-open-tag,
@@ -120,15 +137,21 @@
 .phps-t-const
 	{color: #C5656B;}
 	
-.phps-t-variable, .phps-t-string-varname, .funclistline
-	{color: #318495;}
+.phps-t-variable, .phps-t-string-varname, .funclistline, .phps-tainted-var
+	{color: #0066FF;}
+
+.phps-t-variable-marked
+	{background-color:darkred;color:#4B91FB;}
+
+.phps-tainted-var
+	{color: #4B91FB;}
 	
 .phps-t-lnumber
-	{color: #C5656B;}
+	{color: #C4BDA1;}
 
 .phps-t-encapsed-and-whitespace,
 .phps-t-constant-encapsed-string
-	{color: #049B0A;}
+	{color: #EEEEEE;}
 
 .phps-t-inline-html
 	{color: #F9EE98;}
@@ -136,4 +159,4 @@
 .phps-t-comment,
 .phps-t-ml-comment,
 .phps-t-doc-comment
-	{color: #0066FF; font-style: italic;}
+	{color: #534A44; font-style: italic;}
