@@ -73,8 +73,13 @@ function scan(ignore_warning)
 		else if (this.readyState == 4 && this.status != 200) 
 		{
 			var warning = "<div class=\"warning\">";
-			warning+="<h2>Network error ("+this.status+")</h2>";
-			warning+="<p>Could not access <i>main.php</i>. Make sure you copied all files and your webserver is running.</p>";
+			warning+="<h2>Network error (HTTP "+this.status+")</h2>";
+			if(this.status == 0)
+				warning+="<p>Could not access <i>main.php</i>. Make sure your webserver is running.</p>";
+			else if(this.status == 404)
+				warning+="<p>Could not access <i>main.php</i>. Make sure you copied all files.</p>";
+			else if(this.status == 500)	
+				warning+="<p>Scan aborted. Try to scan only one entry file at once or increase the <i>set_time_limit()</i> in </i>config/general.php</i>.</p>";
 			warning+="</div>";
 			document.getElementById("scanning").style.backgroundImage="none";
 			document.getElementById("scanning").innerHTML=warning;
@@ -517,6 +522,36 @@ function openExploitCreator(hoveritem, file, get, post, cookie, files, server)
 	client.open("GET", 
 		"windows/exploit.php?file="+file+"&get="+get+"&post="+post+"&cookie="+cookie+"&files="+files+"&server="+server);
 	client.send();
+}
+
+function saveCanvas(canvas, id)
+{
+	var objCanvas = document.getElementById(canvas);
+	var ctx = objCanvas.getContext('2d');
+	var c = document.createElement('canvas');
+	c.width  = ctx.canvas.width;
+	c.height = ctx.canvas.height;
+	var newctx = c.getContext('2d');
+	newctx.fillStyle = '#FFF';
+	newctx.fillRect(0,0,c.width,c.height);
+	newctx.fillStyle = "#223344";
+	newctx.fillText('created with RIPS', c.width-100, c.height-7);
+	newctx.drawImage(ctx.canvas,0,0);
+	document.getElementById("canvas"+id).innerHTML="<img src='"+c.toDataURL()+"' title='right-click to save graph' />";
+	document.getElementById("canvas"+id).style.display='block';
+	document.getElementById(canvas).style.display='none';
+	document.getElementById(canvas+'save').value='edit graph';
+	var onC='restoreCanvas("'+canvas+'", '+id+')'; 
+	document.getElementById(canvas+'save').onclick = new Function(onC);
+}
+
+function restoreCanvas(canvas, id)
+{
+	document.getElementById("canvas"+id).style.display='none';
+	document.getElementById(canvas).style.display='block';
+	document.getElementById(canvas+'save').value='save graph';
+	var onC='saveCanvas("'+canvas+'", '+id+')'; 
+	document.getElementById(canvas+'save').onclick = new Function(onC);
 }
 	
 /* DRAG WINDOW */	

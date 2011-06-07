@@ -194,12 +194,14 @@ You should have received a copy of the GNU General Public License along with thi
 		<div >
 			<input type="button" id="functiongraphbutton" class="button" onclick="showgraph('function');maxWindow(3, 650);" value="graph" style="background:white;color:black;"/>
 			<input type="button" id="functionlistbutton" class="button" onclick="showlist('function');minWindow(3, 650);" value="list" />
+			<input type="button" id="functioncanvassave" class="button" onclick="saveCanvas('functioncanvas', 3)" value="save image" />
 			<?php  if($verbosity == 5) echo '(graph not available in debug mode)'; ?>
 		</div>
 		<?php
 			createFunctionList($user_functions_offset);		
 		?>
-		<canvas id="functioncanvas" tabindex="0" width="650" height="<?php echo (count($user_functions_offset)/4)*70+200; ?>"></canvas>
+		<div id="canvas3" style="display:none"></div>
+		<canvas id="functioncanvas" tabindex="0" width="650" height="<?php echo (count($user_functions_offset)/4)*70+200; ?>"></canvas>	
 	</div>	
 	<div class="funclistfooter" onmousedown="resizeStart(event, 3)"></div>
 </div>
@@ -230,10 +232,12 @@ You should have received a copy of the GNU General Public License along with thi
 		<div >
 			<input type="button" id="filegraphbutton" class="button" onclick="showgraph('file');maxWindow(5, 650);" value="graph" style="background:white;color:black;"/>
 			<input type="button" id="filelistbutton" class="button" onclick="showlist('file');minWindow(5, 650);" value="list" />
+			<input type="button" id="filecanvassave" class="button" onclick="saveCanvas('filecanvas', 5)" value="save graph" />
 		</div>
 		<?php
 			createFileList($scanned_files, $file_sinks_count);		
 		?>
+		<div id="canvas5" style="display:none"></div>
 		<canvas id="filecanvas" tabindex="0" width="650" height="<?php echo (count($data)/4)*70+200; ?>"></canvas>
 	</div>
 	<div class="funclistfooter" onmousedown="resizeStart(event, 5)"></div>
