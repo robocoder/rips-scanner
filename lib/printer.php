@@ -2,10 +2,10 @@
 /** 
 
 RIPS - A static source code analyser for vulnerabilities in PHP scripts 
-	by Johannes Dahse (johannesdahse@gmx.de)
+	by Johannes Dahse (johannes.dahse@rub.de)
 			
 			
-Copyright (C) 2010 Johannes Dahse
+Copyright (C) 2012 Johannes Dahse
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
 
@@ -13,79 +13,149 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 
 You should have received a copy of the GNU General Public License along with this program; if not, see <http://www.gnu.org/licenses/>.	
 
-**/
-		
-	// reference function declaration with function calls
-	function makefunclink($line, $linenr, $funcname)
+**/	
+	
+	// tokens to string for comments
+	function tokenstostring($tokens)
 	{
-			$link = '<A NAME="'.$funcname.'_declare"></A>';
-			$link.= '<a href="#'.$funcname.'_call" title="jump to call">';
-			$link.= highlightline($line, $linenr).'</a>';
-			return $link;
+		$output = '';
+		for($i=0;$i<count($tokens);$i++)
+		{
+			$token = $tokens[$i];
+			if (is_string($token))
+			{	
+				if($token === ',' || $token === ';')
+					$output .= "$token ";
+				else if(in_array($token, Tokens::$S_SPACE_WRAP) || in_array($token, Tokens::$S_ARITHMETIC))
+					$output .= " $token ";
+				else	
+					$output .= $token;
+			}	
+			else if(in_array($token[0], Tokens::$T_SPACE_WRAP) || in_array($token[0], Tokens::$T_OPERATOR) || in_array($token[0], Tokens::$T_ASSIGNMENT))
+				$output .= " {$token[1]} ";
+			else
+				$output .= $token[1];
+		}
+		return $output;
 	}
 	
 	// prepare output to style with CSS
-	function highlightline($line, $line_nr, $title=false, $udftitle=false, $tainted_vars=array())
+	function highlightline($tokens=array(), $comment='', $line_nr, $title=false, $udftitle=false, $tainted_vars=array())
 	{
 		$reference = true;
-		$tokens = @token_get_all('<? '.trim($line).' ?>');
 		$output = "<span class=\"linenr\">$line_nr:</span>&nbsp;";
 		if($title)
 		{
-			$output.='<a class="link" href="'.$GLOBALS['doku'].$title.'" title="open php documentation" target=_blank>';
+			$output.='<a class="link" href="'.PHPDOC.$title.'" title="open php documentation" target=_blank>';
 			$output.="$title</a>&nbsp;";
 		} 
 		else if($udftitle)
 		{
-			$output.='<a class="link" href="#'.$udftitle.'_declare" title="jump to declaration">'.$udftitle.'</a>&nbsp;';
+			$output.='<a class="link" style="text-decoration:none;" href="#'.$udftitle.'_declare" title="jump to declaration">&uArr;</a>&nbsp;';
 		}
 		
 		$var_count = 0;
 		
-		foreach ($tokens as $token)
+		for($i=0;$i<count($tokens);$i++)
 		{
+			$token = $tokens[$i];
 			if (is_string($token))
 			{		
-				$output .= '<span class="phps-code">'.htmlentities($token, ENT_QUOTES, 'utf-8').'</span>';
+				if($token === ',' || $token === ';')
+					$output .= "<span class=\"phps-code\">$token&nbsp;</span>";
+				else if(in_array($token, Tokens::$S_SPACE_WRAP) || in_array($token, Tokens::$S_ARITHMETIC))
+					$output .= '<span class="phps-code">&nbsp;'.$token.'&nbsp;</span>';
+				else
+					$output .= '<span class="phps-code">'.htmlentities($token, ENT_QUOTES, 'utf-8').'</span>';
+					
 			} 
 			else if (is_array($token) 
 			&& $token[0] !== T_OPEN_TAG
 			&& $token[0] !== T_CLOSE_TAG) 
 			{
-				$text = htmlentities($token[1], ENT_QUOTES, 'utf-8');
-				$text = str_replace(array(' ', "\n"), array('&nbsp;', '<br/>'), $text);
-
-				if($token[0] === T_FUNCTION)
-				{
-					$reference = false;
-				}
-				if($token[0] === T_STRING && $reference 
-				&& isset($GLOBALS['user_functions_offset'][strtolower($text)]))
-				{				
-					$text = @'<span onmouseover="getFuncCode(this,\''.addslashes($GLOBALS['user_functions_offset'][strtolower($text)][0]).'\',\''.$GLOBALS['user_functions_offset'][strtolower($text)][1].'\',\''.$GLOBALS['user_functions_offset'][strtolower($text)][2].'\')" style="text-decoration:underline" class="phps-'.str_replace('_', '-', strtolower(token_name($token[0])))."\">$text</span>\n";
-				}	
-				else if ($token[0] !== T_WHITESPACE)
-				{
-					$span = '<span ';
 				
-					if($token[0] === T_VARIABLE)
+				if(in_array($token[0], Tokens::$T_SPACE_WRAP) || in_array($token[0], Tokens::$T_OPERATOR) || in_array($token[0], Tokens::$T_ASSIGNMENT))
+				{
+					$output.= '&nbsp;<span class="phps-'.str_replace('_', '-', strtolower(token_name($token[0])))."\">{$token[1]}</span>&nbsp;";
+				}	
+				else
+				{
+					if($token[0] === T_FUNCTION)
 					{
-						$var_count++;
-						$cssname = str_replace('$', '', $token[1]);
-						$span.= 'style="cursor:pointer;" name="phps-var-'.$cssname.'" onClick="markVariable(\''.$cssname.'\')" ';
-						$span.= 'onmouseover="markVariable(\''.$cssname.'\')" onmouseout="markVariable(\''.$cssname.'\')" ';
+						$reference = false;
+						$funcname = $tokens[$i+1][0] === T_STRING ? $tokens[$i+1][1] : $tokens[$i+2][1];
+						$output .= '<A NAME="'.$funcname.'_declare" class="jumplink"></A>';
+						$output .= '<a class="link" style="text-decoration:none;" href="#'.$funcname.'_call" title="jump to call">&dArr;</a>&nbsp;';
 					}	
 					
-					if($token[0] === T_VARIABLE && @in_array($var_count, $tainted_vars))
-						$span.= "class=\"phps-tainted-var\">$text</span>";
-					else
-						$span.= 'class="phps-'.str_replace('_', '-', strtolower(token_name($token[0])))."\">$text</span>";
+					$text = htmlentities($token[1], ENT_QUOTES, 'utf-8');
+					$text = str_replace(array(' ', "\n"), '&nbsp;', $text);
+
+					if($token[0] === T_FUNCTION)
+						$text.='&nbsp;';
 						
-					$text = $span;	
-				}
-				$output .= $text;
+					if($token[0] === T_STRING && $reference 
+					&& isset($GLOBALS['user_functions_offset'][strtolower($text)]))
+					{				
+						$text = @'<span onmouseover="getFuncCode(this,\''.addslashes($GLOBALS['user_functions_offset'][strtolower($text)][0]).'\',\''.$GLOBALS['user_functions_offset'][strtolower($text)][1].'\',\''.$GLOBALS['user_functions_offset'][strtolower($text)][2].'\')" style="text-decoration:underline" class="phps-'.str_replace('_', '-', strtolower(token_name($token[0])))."\">$text</span>\n";
+					}	
+					else 
+					{
+						$span = '<span ';
+					
+						if($token[0] === T_VARIABLE)
+						{
+							$var_count++;
+							$cssname = str_replace('$', '', $token[1]);
+							$span.= 'style="cursor:pointer;" name="phps-var-'.$cssname.'" onClick="markVariable(\''.$cssname.'\')" ';
+							$span.= 'onmouseover="markVariable(\''.$cssname.'\')" onmouseout="markVariable(\''.$cssname.'\')" ';
+						}	
+						
+						if($token[0] === T_VARIABLE && @in_array($var_count, $tainted_vars))
+							$span.= "class=\"phps-tainted-var\">$text</span>";	
+						else
+							$span.= 'class="phps-'.str_replace('_', '-', strtolower(token_name($token[0])))."\">$text</span>";
+							
+						$text = $span;	
+						
+						// rebuild array keys
+						if(isset($token[3]))
+						{
+							foreach($token[3] as $key)
+							{
+								if($key != '*')
+								{
+									$text .= '<span class="phps-code">[</span>';
+									if(!is_array($key))
+									{
+										if(is_numeric($key))
+											$text .= '<span class="phps-t-lnumber">' . $key . '</span>';
+										else
+											$text .= '<span class="phps-t-constant-encapsed-string">\'' . htmlentities($key, ENT_QUOTES, 'utf-8') . '\'</span>';
+									} else
+									{
+										foreach($key as $token)
+										{
+											if(is_array($token))
+												$text .= '<span class="phps-'.str_replace('_', '-', strtolower(token_name($token[0]))).'">'.htmlentities($token[1], ENT_QUOTES, 'utf-8').'</span>';
+											else
+												$text .= "<span class=\"phps-code\">{$token}</span>";
+										}
+									}
+									$text .= '<span class="phps-code">]</span>';
+								}
+							}
+						}
+					}
+					$output .= $text;
+					if(is_array($token) && (in_array($token[0], Tokens::$T_INCLUDES) || in_array($token[0], Tokens::$T_XSS) || $token[0] === 'T_EVAL'))
+						$output .= '&nbsp;';
+				}		
 			}
 		}
+		
+		if(!empty($comment))
+			$output .= '&nbsp;<span class="phps-t-comment">// '.htmlentities($comment, ENT_QUOTES, 'utf-8').'</span>';
 
 		return $output;
 	}
@@ -95,7 +165,9 @@ You should have received a copy of the GNU General Public License along with thi
 	function getVulnNodeTitle($func_name)
 	{
 		if(isset($GLOBALS['F_XSS'][$func_name])) 
-		{	$vulnname = $GLOBALS['NAME_XSS'];  }	
+		{	$vulnname = $GLOBALS['NAME_XSS'];  }
+		else if(isset($GLOBALS['F_HTTP_HEADER'][$func_name])) 
+		{	$vulnname = $GLOBALS['NAME_HTTP_HEADER'];  }		
 		else if(isset($GLOBALS['F_DATABASE'][$func_name])) 
 		{	$vulnname = $GLOBALS['NAME_DATABASE'];  }	
 		else if(isset($GLOBALS['F_FILE_READ'][$func_name])) 
@@ -129,6 +201,8 @@ You should have received a copy of the GNU General Public License along with thi
 	{
 		if(isset($GLOBALS['F_XSS'][$func_name])) 
 		{	$GLOBALS['count_xss']++; }	
+		else if(isset($GLOBALS['F_HTTP_HEADER'][$func_name])) 
+		{	$GLOBALS['count_header']++; }
 		else if(isset($GLOBALS['F_DATABASE'][$func_name])) 
 		{	$GLOBALS['count_sqli']++; }	
 		else if(isset($GLOBALS['F_FILE_READ'][$func_name])) 
@@ -166,11 +240,13 @@ You should have received a copy of the GNU General Public License along with thi
 		}
 		echo '><li>' . $tree->value;
 
-		foreach ($tree->children as $child) 
+		if($tree->children)
 		{
-			traverseBottomUp($child);
+			foreach ($tree->children as $child) 
+			{
+				traverseBottomUp($child);
+			}
 		}
-		
 		echo '</li></ul>',"\n";
 	}
 	
@@ -217,11 +293,7 @@ You should have received a copy of the GNU General Public License along with thi
 			{
 				if(!empty($dependency))
 				{
-					// function declaration in requirement is a bit tricky, extract name to form a link
-					if( strpos($dependency, 'function ') !== false && ($end=strpos($dependency, '(')) > 10 ) 
-						echo '<ul><li>'.makefunclink($dependency, $linenr, trim(substr($dependency,9,$end-9))).'</li></ul>';
-					else
-						echo '<ul><li>'.highlightline($dependency, $linenr).'</li></ul>';
+					echo '<ul><li>'.highlightline($dependency, '', $linenr).'</li></ul>';
 				}
 			}
 
@@ -269,60 +341,84 @@ You should have received a copy of the GNU General Public License along with thi
 							
 							foreach($vulnBlock->treenodes as $tree)
 							{
-								echo '<div class="codebox"><table border=0>',"\n",
-								'<tr><td valign="top" nowrap>',"\n",
-								'<div class="fileico" title="review code" ',
-								'onClick="openCodeViewer(this,\'',
-								addslashes($tree->filename), '\',\'',
-								implode(',', $tree->lines), '\');"></div>'."\n",
-								'<div id="pic',key($output),$tree->lines[0],'" class="minusico" title="minimize"',
-								' onClick="hide(\'',addslashes(key($output)),$tree->lines[0],'\')"></div><br />',"\n";
+								// we do not have a prescan yet so RIPS misses function calls before the actual declaration, so we output vulns in functions without function call too (could have happened earlier)
+								// if(empty($tree->funcdepend) || $tree->foundcallee )
+								{	
+									echo '<div class="codebox"><table border=0>',"\n",
+									'<tr><td valign="top" nowrap>',"\n",
+									'<div class="fileico" title="review code" ',
+									'onClick="openCodeViewer(this,\'',
+									addslashes($tree->filename), '\',\'',
+									implode(',', $tree->lines), '\');"></div>'."\n",
+									'<div id="pic',key($output),$tree->lines[0],'" class="minusico" title="minimize"',
+									' onClick="hide(\'',addslashes(key($output)),$tree->lines[0],'\')"></div><br />',"\n";
 
-								if(isset($GLOBALS['scan_functions'][$tree->name]))
-								{
-									echo '<div class="help" title="hotpatch" onClick="openHelp(this,\'',
-									$vulnBlock->category,'\',\'',$tree->name,'\',\'',
-									(int)!empty($tree->get),'\',\'',
-									(int)!empty($tree->post),'\',\'',
-									(int)!empty($tree->cookie),'\',\'',
-									(int)!empty($tree->files),'\',\'',
-									(int)!empty($tree->cookie),'\')"></div>',"\n";
-								}
-								
-								if(!empty($tree->get) || !empty($tree->post) 
-								|| !empty($tree->cookie) || !empty($tree->files)
-								|| !empty($tree->server) )
-								{
-									/*echo '<div class="hotpatch" title="hotpatch" ',
-									'onClick="openHotpatch(this, \'',
-									addslashes($tree->filename),
-									'\',\'',implode(',',array_unique($tree->get)),
-									'\',\'',implode(',',array_unique($tree->post)),
-									'\',\'',implode(',',array_unique($tree->cookie)),
-									'\',\'',implode(',',array_unique($tree->files)),
-									'\',\'',implode(',',array_unique($tree->server)),'\');"></div>',"\n",*/
+									if(isset($GLOBALS['scan_functions'][$tree->name]))
+									{
+										// help button
+										echo '<div class="help" title="get help" onClick="openHelp(this,\'',
+										$vulnBlock->category,'\',\'',$tree->name,'\',\'',
+										(int)!empty($tree->get),'\',\'',
+										(int)!empty($tree->post),'\',\'',
+										(int)!empty($tree->cookie),'\',\'',
+										(int)!empty($tree->files),'\',\'',
+										(int)!empty($tree->cookie),'\')"></div>',"\n";
+										
+										if(isset($GLOBALS['F_DATABASE'][$tree->name])
+										|| isset($GLOBALS['F_FILE_AFFECT'][$tree->name]) 
+										|| isset($GLOBALS['F_FILE_READ'][$tree->name]) 
+										|| isset($GLOBALS['F_LDAP'][$tree->name])
+										|| isset($GLOBALS['F_XPATH'][$tree->name])
+										|| isset($GLOBALS['F_POP'][$tree->name]) )
+										{
+											// data leak scan
+											if(!empty($vulnBlock->dataleakvar))
+											{
+												echo '<div class="dataleak" title="check data leak" onClick="leakScan(this,\'',
+												$vulnBlock->dataleakvar[1],'\',\'', // varname
+												$vulnBlock->dataleakvar[0],'\', false)"></div>',"\n"; // line
+											} else
+											{
+												$tree->title .= ' (Blind exploitation)';
+											}
+										}	
+									}
 									
-									echo '<div class="exploit" title="exploit" ',
-									'onClick="openExploitCreator(this, \'',
-									addslashes($tree->filename),
-									'\',\'',implode(',',array_unique($tree->get)),
-									'\',\'',implode(',',array_unique($tree->post)),
-									'\',\'',implode(',',array_unique($tree->cookie)),
-									'\',\'',implode(',',array_unique($tree->files)),
-									'\',\'',implode(',',array_unique($tree->server)),'\');"></div>';
+									if(!empty($tree->get) || !empty($tree->post) 
+									|| !empty($tree->cookie) || !empty($tree->files)
+									|| !empty($tree->server) )
+									{
+										/*echo '<div class="hotpatch" title="hotpatch" ',
+										'onClick="openHotpatch(this, \'',
+										addslashes($tree->filename),
+										'\',\'',implode(',',array_unique($tree->get)),
+										'\',\'',implode(',',array_unique($tree->post)),
+										'\',\'',implode(',',array_unique($tree->cookie)),
+										'\',\'',implode(',',array_unique($tree->files)),
+										'\',\'',implode(',',array_unique($tree->server)),'\');"></div>',"\n",*/
+										
+										echo '<div class="exploit" title="generate exploit" ',
+										'onClick="openExploitCreator(this, \'',
+										addslashes($tree->filename),
+										'\',\'',implode(',',array_unique($tree->get)),
+										'\',\'',implode(',',array_unique($tree->post)),
+										'\',\'',implode(',',array_unique($tree->cookie)),
+										'\',\'',implode(',',array_unique($tree->files)),
+										'\',\'',implode(',',array_unique($tree->server)),'\');"></div>';
+									}
+									// $tree->title
+									echo '</td><td><span class="vulntitle">',$tree->title,'</span>',
+									'<div class="code" id="',key($output),$tree->lines[0],'">',"\n";
+
+									if($treestyle == 1)
+										traverseBottomUp($tree);
+									else if($treestyle == 2)
+										traverseTopDown($tree);
+
+										echo '<ul><li>',"\n";
+									dependenciesTraverse($tree);
+									echo '</li></ul>',"\n",	'</div>',"\n", '</td></tr></table></div>',"\n";
 								}
-								// $tree->title
-								echo '</td><td><span class="vulntitle">',$tree->title,'</span>',
-								'<div class="code" id="',key($output),$tree->lines[0],'">',"\n";
-
-								if($treestyle == 1)
-									traverseBottomUp($tree);
-								else if($treestyle == 2)
-									traverseTopDown($tree);
-
-									echo '<ul><li>',"\n";
-								dependenciesTraverse($tree);
-								echo '</li></ul>',"\n",	'</div>',"\n", '</td></tr></table></div>',"\n";
 							}	
 							echo '</div></div><div style="height:20px"></div>',"\n";
 						}	
@@ -357,7 +453,7 @@ You should have received a copy of the GNU General Public License along with thi
 		if(!empty($user_functions_offset))
 		{
 			ksort($user_functions_offset);
-			$js = 'var graph2 = new Graph(document.getElementById("functioncanvas"));'."\n";
+			$js = 'graph2 = new Graph(document.getElementById("functioncanvas"));'."\n";
 			$x=20;
 			$y=50;
 			$i=0;
@@ -451,7 +547,7 @@ You should have received a copy of the GNU General Public License along with thi
 	{
 		if(!empty($files))
 		{
-			$js = 'var graph = new Graph(document.getElementById("filecanvas"));'."\n";
+			$js = 'graph = new Graph(document.getElementById("filecanvas"));'."\n";
 	
 			// get vuln files
 			$vulnfiles = array();

@@ -56,6 +56,7 @@ body, html {
 
 .phps-code,
 .phps-t-dollar-open-curly-braces,
+.phps-t-curly-open,
 .phps-t-open-tag,
 .phps-t-close-tag,
 .phps-t-and-equal, 
@@ -130,7 +131,14 @@ body, html {
 .phps-t-int-cast,
 .phps-t-unset-cast,
 .phps-t-boolean-or,
-.phps-t-boolean-and
+.phps-t-boolean-and,
+.phps-t-file, 
+.phps-t-line, 
+.phps-t-dir, 
+.phps-t-func-c, 
+.phps-t-class-c, 
+.phps-t-method-c, 
+.phps-t-ns-c
 	{color: #007700;}
 
 .phps-t-const,

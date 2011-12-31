@@ -1910,7 +1910,6 @@ Graph.prototype.update = function()
 
 // -------------------------------------------------- main --------------------------------------------
 
-
 var pageTemplate = new PageTemplate();
 
 function PageTemplate()
@@ -2030,61 +2029,3 @@ this.element.owner.canvas.parentNode.removeChild(input);
 this.element = null;
 }
 };
-
-
-//var myColor = ["#ECD078","#D95B43","#C02942","#542437","#53777A", "#94A9FA","#82D7E5","#BE87EB","#E886C2","#FAA597","#FAA597","#94F6BA","#6374B5"];
-var myColor = [
-"#9F42FF", // code
-"#FFCE42", // exec
-"#FF8042", // connect
-"#FF4242", // file read
-"#FDFF42", // file inc
-"#48D141", // file affect
-"#47CAC5", // ldap
-"#477FCA", // sqli
-"#4A47CA", // xpath
-"#DADFE3", // XSS
-"#DF4242", // other
-"#818C96" // pop
-];
-
-var myData = Array();
-	
-function generateDiagram()
-{
-	var canvas;
-	var ctx;
-	var lastend = 0;
-	var myTotal = 0;
-	
-	// generate data
-	for (var j = 0; j < 13; j++)
-	{
-		if(document.getElementById('vuln'+(j+1)))
-		{
-			myTotal += Number(document.getElementById('vuln'+(j+1)).innerHTML);
-			myData[j] = Number(document.getElementById('vuln'+(j+1)).innerHTML);
-		}	
-		else
-			myData[j] = 0;
-	}
-	
-	canvas = document.getElementById("diagram");
-	ctx = canvas.getContext("2d");
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	
-	for (var i = 0; i < myData.length; i++)
-	{
-		if(myData[i] != 0)
-		{
-			document.getElementById('chart'+(i+1)).style.backgroundColor = myColor[i];
-			ctx.fillStyle = myColor[i];
-			ctx.beginPath();
-			ctx.moveTo(45,35);
-			ctx.arc(45,35,35,lastend,lastend+(Math.PI*2*(myData[i]/myTotal)),false);
-			ctx.lineTo(45,35);
-			ctx.fill();
-			lastend += Math.PI*2*(myData[i]/myTotal);
-		}
-	}
-}

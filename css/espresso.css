@@ -51,7 +51,7 @@ input[type="text"],select {
 	{color: #2F5FE0; font-weight:bold;}
 	
 .code,
-.phps-code, .phps-t-dollar-open-curly-braces, .vulntitle
+.phps-code, .phps-t-curly-open, .phps-t-dollar-open-curly-braces, .vulntitle
 	{color: #BDAE9D; font-family: "Bitstream Vera Sans Mono", "Monaco", "Courier New", monospace; font-size:1em; font-size:9pt;}
 
 .phps-t-string,
@@ -131,7 +131,13 @@ input[type="text"],select {
 .phps-t-bool-cast,
 .phps-t-double-cast,
 .phps-t-int-cast,
-.phps-t-unset-cast
+.phps-t-unset-cast,
+.phps-t-file, 
+.phps-t-line, 
+.phps-t-dir, 
+.phps-t-func-c, .phps-t-class-c, 
+.phps-t-method-c, 
+.phps-t-ns-c
 	{color: #43A8ED; font-weight: bold; }
 
 .phps-t-const

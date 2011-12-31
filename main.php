@@ -2,10 +2,10 @@
 /** 
 
 RIPS - A static source code analyser for vulnerabilities in PHP scripts 
-	by Johannes Dahse (johannesdahse@gmx.de)
+	by Johannes Dahse (johannes.dahse@rub.de)
 			
 
-Copyright (C) 2010 Johannes Dahse
+Copyright (C) 2012 Johannes Dahse
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
 
@@ -24,13 +24,14 @@ You should have received a copy of the GNU General Public License along with thi
 	include('config/sinks.php');			// sensitive sinks
 	include('config/info.php');				// interesting functions
 	
-	include('functions/tokens.php');		// prepare and fix token list
-	include('functions/scan.php');			// scan for sinks in token list
-	include('functions/output.php');		// output scan result
-	include('functions/search.php');		// search functions
-	
-	include('classes/classes.php'); 		// classes
-	
+	include('lib/objects.php'); 			// objects	
+	include('lib/filer.php');				// read files from dirs and subdirs
+	include('lib/tokenizer.php');			// prepare and fix token list
+	include('lib/analyzer.php');			// string analyzers
+	include('lib/scanner.php');				// provides class for scan
+	include('lib/printer.php');				// output scan result
+	include('lib/searcher.php');			// search functions
+		
 	###############################  MAIN  ####################################
 	
 	$start = microtime(TRUE);
@@ -46,38 +47,41 @@ You should have received a copy of the GNU General Public License along with thi
 		if(is_dir($location))
 		{
 			$scan_subdirs = isset($_POST['subdirs']) ? $_POST['subdirs'] : false;
-			$data = read_recursiv($location, $scan_subdirs);
+			$files = read_recursiv($location, $scan_subdirs);
 			
-			if(count($data) > $warnfiles && !isset($_POST['ignore_warning']))
-				die('warning:'.count($data));
+			if(count($files) > WARNFILES && !isset($_POST['ignore_warning']))
+				die('warning:'.count($files));
 		}	
-		else if(is_file($location) && in_array(substr($location, strrpos($location, '.')), $filetypes))
+		else if(is_file($location) && in_array(substr($location, strrpos($location, '.')), $FILETYPES))
 		{
-			$data[0] = $location;
+			$files[0] = $location;
 		}
 		else
 		{
-			$data = array();
+			$files = array();
 		}
+		
 	
 		// SCAN
 		if(empty($_POST['search']))
 		{
-			$scan_functions = array();
 			$user_functions = array();
 			$user_functions_offset = array();
-			$file_sinks_count = array();
 			$user_input = array();
 			
-			$count_xss=$count_sqli=$count_fr=$count_fa=$count_fi=$count_exec=$count_code=$count_eval=$count_xpath=$count_ldap=$count_con=$count_other=$count_pop=$count_inc=$count_inc_fail=0;
+			$file_sinks_count = array();
+			$count_xss=$count_sqli=$count_fr=$count_fa=$count_fi=$count_exec=$count_code=$count_eval=$count_xpath=$count_ldap=$count_con=$count_other=$count_pop=$count_inc=$count_inc_fail=$count_header=0;
 			
 			$verbosity = isset($_POST['verbosity']) ? $_POST['verbosity'] : 1;
-
+			$scan_functions = array();
+			$info_functions = Info::$F_INTEREST;
+			
 			if($verbosity != 5)
 			{
 				switch($_POST['vector']) 
 				{
-					case 'client': 		$scan_functions = $F_XSS;			break;
+					case 'xss':			$scan_functions = $F_XSS;			break;
+					case 'httpheader':	$scan_functions = $F_HTTP_HEADER;	break;
 					case 'code': 		$scan_functions = $F_CODE;			break;
 					case 'file_read':	$scan_functions = $F_FILE_READ;		break;
 					case 'file_affect':	$scan_functions = $F_FILE_AFFECT;	break;		
@@ -87,16 +91,18 @@ You should have received a copy of the GNU General Public License along with thi
 					case 'xpath':		$scan_functions = $F_XPATH;			break;
 					case 'ldap':		$scan_functions = $F_LDAP;			break;
 					case 'connect': 	$scan_functions = $F_CONNECT;		break;
+					case 'other':		$scan_functions = $F_OTHER;			break;
 					case 'unserialize':	{
 										$scan_functions = array_merge($F_POP,$F_XSS);				
-										$F_INTEREST = $F_INTEREST_POP;
-										$F_USERINPUT = array('unserialize');
+										$info_functions = Info::$F_INTEREST_POP;
+										$source_functions = array('unserialize');
 										$verbosity = 2;
 										} 
 										break;
 					case 'all': 
 						$scan_functions = array_merge(
 							$F_XSS,
+							$F_HTTP_HEADER,
 							$F_CODE,
 							$F_FILE_READ,
 							$F_FILE_AFFECT,
@@ -108,7 +114,12 @@ You should have received a copy of the GNU General Public License along with thi
 							$F_CONNECT,
 							$F_OTHER
 						); break;
-					
+					case 'client':
+						$scan_functions = array_merge(
+							$F_XSS,
+							$F_HTTP_HEADER
+						);
+						break;	
 					default: // all server side
 					{ 
 						$scan_functions = array_merge(
@@ -129,22 +140,39 @@ You should have received a copy of the GNU General Public License along with thi
 			
 			if($_POST['vector'] !== 'unserialize')
 			{
-				$F_USERINPUT = $F_OTHER_INPUT;
+				$source_functions = Sources::$F_OTHER_INPUT;
 				// add file and database functions as tainting functions
 				if( $verbosity > 1 && $verbosity < 5 )
 				{
-					$F_USERINPUT = array_merge($F_OTHER_INPUT, $F_FILE_INPUT, $F_DATABASE_INPUT);
+					$source_functions = array_merge(Sources::$F_OTHER_INPUT, Sources::$F_FILE_INPUT, Sources::$F_DATABASE_INPUT);
 				}
 			}	
-			
-			foreach($data as $file_name)
+					
+			$overall_time = 0;
+			$timeleft = 0;
+			$file_amount = count($files);		
+			for($fit=0; $fit<$file_amount; $fit++)
 			{
-				$userfunction_secures = false;
-				$userfunction_taints = false;
-				$scanned_files[$file_name] = scan_file($file_name, $scan_functions, 
-				$T_FUNCTIONS, $T_ASSIGNMENT, $T_IGNORE, 
-				$T_INCLUDES, $T_XSS, $T_IGNORE_STRUCTURE, $F_INTEREST);
+				// for scanning display
+				$thisfile_start = microtime(TRUE);
+				$file_scanning = $files[$fit];
+				
+				echo ($fit) . '|' . $file_amount . '|' . $file_scanning . '|' . $timeleft . '|' . str_pad(' ',9096)."\n";
+				@ob_flush();
+				flush();
+	
+				// scan
+				$scan = new Scanner($file_scanning, $scan_functions, $info_functions, $source_functions);
+				$scan->parse();
+				$scanned_files[$file_scanning] = $scan->inc_map;
+				
+				$overall_time += microtime(TRUE) - $thisfile_start;
+				// timeleft = average_time_per_file * file_amount_left
+				$timeleft = round(($overall_time/($fit+1)) * ($file_amount - $fit+1),2);
 			}
+			echo "STATS_DONE.\n";
+			@ob_flush();
+			flush();
 			
 		}
 		// SEARCH
@@ -152,7 +180,7 @@ You should have received a copy of the GNU General Public License along with thi
 		{
 			$count_matches = 0;
 			$verbosity = 0;
-			foreach($data as $file_name)
+			foreach($files as $file_name)
 			{
 				searchFile($file_name, $_POST['regex']);
 			}
@@ -238,7 +266,7 @@ You should have received a copy of the GNU General Public License along with thi
 			createFileList($scanned_files, $file_sinks_count);		
 		?>
 		<div id="canvas5" style="display:none"></div>
-		<canvas id="filecanvas" tabindex="0" width="650" height="<?php echo (count($data)/4)*70+200; ?>"></canvas>
+		<canvas id="filecanvas" tabindex="0" width="650" height="<?php echo (count($files)/4)*70+200; ?>"></canvas>
 	</div>
 	<div class="funclistfooter" onmousedown="resizeStart(event, 5)"></div>
 </div>		
@@ -261,7 +289,7 @@ You should have received a copy of the GNU General Public License along with thi
 	// output stats
 	if(empty($_POST['search']))
 	{
-		$count_all=$count_xss+$count_sqli+$count_fr+$count_fa+$count_fi+$count_exec+$count_code+$count_eval+$count_xpath+$count_ldap+$count_con+$count_other+$count_pop;
+		$count_all=$count_xss+$count_sqli+$count_fr+$count_fa+$count_fi+$count_exec+$count_code+$count_eval+$count_xpath+$count_ldap+$count_con+$count_other+$count_pop+$count_header;
 		if($count_all > 0)
 		{
 			if($count_code > 0)
@@ -284,10 +312,12 @@ You should have received a copy of the GNU General Public License along with thi
 				statsRow(9, $NAME_XPATH, $count_xpath, $count_all);
 			if($count_xss > 0)	
 				statsRow(10, $NAME_XSS, $count_xss, $count_all);
+			if($count_header > 0)	
+				statsRow(11, $NAME_HTTP_HEADER, $count_header, $count_all);	
 			if($count_other > 0)	
-				statsRow(11, $NAME_OTHER, $count_other, $count_all);
+				statsRow(12, $NAME_OTHER, $count_other, $count_all);
 			if($count_pop > 0)	
-				statsRow(12, $NAME_POP, $count_pop, $count_all);	
+				statsRow(13, $NAME_POP, $count_pop, $count_all);	
 			echo '<tr><td nowrap width="160" onmouseover="this.style.color=\'white\';" onmouseout="this.style.color=\'#DFDFDF\';" onClick="showAllCats()" style="cursor:pointer;" title="show all categories">Sum:</td><td>',$count_all,'</td></tr>';
 		} else
 		{
@@ -299,7 +329,7 @@ You should have received a copy of the GNU General Public License along with thi
 	}
 
 	echo '</table><hr /><table class="textcolor" width="100%">',
-		'<tr><td nowrap width="160">Scanned files:</td><td nowrap colspan="2">',count($data),'</td></tr>';
+		'<tr><td nowrap width="160" onmouseover="this.style.color=\'white\';" onmouseout="this.style.color=\'#DFDFDF\';" onClick="openWindow(5);eval(document.getElementById(\'filegraph_code\').innerHTML);maxWindow(5, 650);" style="cursor:pointer;" title="open files window">Scanned files:</td><td nowrap colspan="2">',count($files),'</td></tr>';
 	if(empty($_POST['search']))
 	{
 		echo '<tr><td nowrap width="160">Include success:</td><td nowrap colspan="2">';
@@ -320,8 +350,8 @@ You should have received a copy of the GNU General Public License along with thi
 			echo '<div class="diagram"><canvas id="diagram" width="80" height="70"></canvas></div>';
 		}
 		echo '</td></tr>',
-		'<tr><td nowrap>User-defined functions:</td><td nowrap>'.(count($user_functions_offset)-(count($user_functions_offset)>0?1:0)).'</td></tr>',
-		'<tr><td nowrap>Unique sources:</td><td nowrap>'.count($user_input).'</td></tr>',
+		'<tr><td nowrap onmouseover="this.style.color=\'white\';" onmouseout="this.style.color=\'#DFDFDF\';" onClick="openWindow(3);eval(document.getElementById(\'functiongraph_code\').innerHTML);maxWindow(3, 650);" style="cursor:pointer;" title="open functions window">User-defined functions:</td><td nowrap>'.(count($user_functions_offset)-(count($user_functions_offset)>0?1:0)).'</td></tr>',
+		'<tr><td nowrap onmouseover="this.style.color=\'white\';" onmouseout="this.style.color=\'#DFDFDF\';" onClick="openWindow(4);" style="cursor:pointer;" title="open userinput window">Unique sources:</td><td nowrap>'.count($user_input).'</td></tr>',
 		'<tr><td nowrap>Sensitive sinks:</td><td nowrap>'.(is_array($file_sinks_count) ? array_sum($file_sinks_count) : 0).'</td></tr>',
 		'</table><hr />';
 		

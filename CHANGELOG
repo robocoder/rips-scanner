@@ -1,6 +1,42 @@
 RIPS CHANGELOG
 ===============
 
+
+RIPS 0.50
+----------
+	Code analysis:
+	- added about 30 new sensitive sinks and some new userinput functions
+	- RIPS now traces codeblocks, not lines anymore 
+		-> code in one line without whitespaces ("obfuscated") is now possible to analyse
+		-> this also fixes several known bugs
+	- RIPS now handles arrays and its keys a lot more accurate
+		-> arrays are handled as variables with saved keys
+		-> dynamic key values are resolved
+		-> this also fixes several known bugs
+	- RIPS is now recoded object oriented
+		-> structure is better
+		-> code easier to understand
+	- fixes bug when an old define is overwritten by a new one	
+	- ignores "@" for correct detection of connected tokens
+	- added leakscan: trace if return value of tainted sensitive sink is echo'd (non-blind/blind exploitation)
+	- fixed lots of securing detection bugs
+	- automatically scans for register_globals implementation (extract, parse_str, $$key = $value, import_request_variables, etc.) 
+	- lots of new testcases added and fixed
+	- improved reconstruction of file names to be included
+	- set_time_limit is set to 0 now
+	
+	Interface:
+	- included SaveGraph patch	
+	- added preloader information about current scanning status (thanks for the input, Michael Hoffmann)
+	- added links to the stats window to other windows	
+	- fixed bug with color highlighting in regex search results
+	- improved jumping between functions in scan result
+	- moved http response splitting to clientside vulnerability list	
+
+RIPS 0.40 SaveGraph Patch:
+----------
+	- added option to save HTML5 canvas graph as image (feature request by ksaok)
+
 RIPS 0.40:
 ----------
 	Code analysis:

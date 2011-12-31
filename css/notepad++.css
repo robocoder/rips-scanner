@@ -53,7 +53,7 @@ body, html {
 	{color: #0000FF; font-weight:bold;}
 	
 .code,
-.phps-code, .phps-t-dollar-open-curly-braces, .vulntitle
+.phps-code, .phps-t-curly-open, .phps-t-dollar-open-curly-braces, .vulntitle
 	{color: #8000FF; font-family: "Bitstream Vera Sans Mono", "Monaco", "Courier New", monospace; font-size:1em; font-size:9pt; font-weight: bold;}
 
 .phps-t-string,
@@ -133,7 +133,14 @@ body, html {
 .phps-t-bool-cast,
 .phps-t-double-cast,
 .phps-t-int-cast,
-.phps-t-unset-cast
+.phps-t-unset-cast,
+.phps-t-file, 
+.phps-t-line, 
+.phps-t-dir, 
+.phps-t-func-c, 
+.phps-t-class-c, 
+.phps-t-method-c, 
+.phps-t-ns-c
 	{color: #0000FF; font-weight:bold;}
 	
 .phps-t-open-tag,

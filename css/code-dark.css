@@ -54,6 +54,7 @@ input[type="text"],select {
 .code,
 .phps-code,
 .phps-t-dollar-open-curly-braces,
+.phps-t-curly-open,
 .phps-t-open-tag,
 .phps-t-close-tag,
 .phps-t-and-equal, 
@@ -110,7 +111,13 @@ input[type="text"],select {
 .phps-t-bool-cast,
 .phps-t-double-cast,
 .phps-t-int-cast,
-.phps-t-unset-cast
+.phps-t-unset-cast,
+.phps-t-file, 
+.phps-t-line, 
+.phps-t-dir, 
+.phps-t-func-c, .phps-t-class-c, 
+.phps-t-method-c, 
+.phps-t-ns-c
 	{color: #87AFD7;}
 
 .phps-t-variable, .phps-t-string-varname, .funclistline, .phps-t-variable-marked

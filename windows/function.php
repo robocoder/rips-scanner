@@ -3,10 +3,10 @@
 /** 
 
 RIPS - A static source code analyser for vulnerabilities in PHP scripts 
-	by Johannes Dahse (johannesdahse@gmx.de)
+	by Johannes Dahse (johannes.dahse@rub.de)
 			
 			
-Copyright (C) 2010 Johannes Dahse
+Copyright (C) 2012 Johannes Dahse
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
 

@@ -2,10 +2,10 @@
 /** 
 
 RIPS - A static source code analyser for vulnerabilities in PHP scripts 
-	by Johannes Dahse (johannesdahse@gmx.de)
+	by Johannes Dahse (johannes.dahse@rub.de)
 			
 			
-Copyright (C) 2010 Johannes Dahse
+Copyright (C) 2012 Johannes Dahse
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
 
@@ -15,17 +15,44 @@ You should have received a copy of the GNU General Public License along with thi
 
 **/
 	
+	// various settings making flush() work correctly
+	apache_setenv('no-gzip', 1);
+	ini_set('zlib.output_compression', 0);
+	ini_set('implicit_flush', 0);
+	ini_set('output_buffering', 0);
+	
 	ini_set('short_open_tag', 1);			// who knows if I use them ;)
 	ini_set('auto_detect_line_endings', 1);	// detect newlines in MAC files
 	ini_set("memory_limit","1000M");		// set memory size to 1G
-	set_time_limit(5*60);					// 5 minutes
+	set_time_limit(0);						// 5 minutes
 	error_reporting(E_ERROR | E_WARNING | E_PARSE);
+	
+	if (extension_loaded('tokenizer') === false) 
+	{
+            echo 'Please enable the PHP tokenizer extension to run RIPS.';
+            exit;
+	}
 		
-	$version = '0.40';						// RIPS version to be displayed	
-	$maxtrace = 30;							// maximum of parameter traces per PVF find
-	$warnfiles = 40;						// warn user if amount of files to scan is higher than this value
-	$basedir = '';							// default directory shown
-	$doku = 'http://php.net/';				// PHP dokumentation
+	define('VERSION', '0.50');				// RIPS version to be displayed	
+	define('MAXTRACE', 30);					// maximum of parameter traces per sensitive sink
+	define('WARNFILES', 40);				// warn user if amount of files to scan is higher than this value
+	define('BASEDIR', '');					// default directory shown
+	define('PHPDOC', 'http://php.net/');	// PHP dokumentation
+	define('MAX_ARRAY_ELEMENTS', 100);		// maximum array(1,2,3,4,...) elements to be indexed
+	define('PRELOAD_SHOW_LINE', 500);		// every X line a preloader information is added
+	
+	$FILETYPES = array(						// filetypes to scan
+		'.php', 
+		'.inc', 
+		'.phps', 
+		'.php4', 
+		'.php5', 
+		//'.html', 
+		//'.htm', 
+		'.phtml', 
+		'.tpl',  
+		'.cgi'
+	); 
 	
 	// available stylesheets (filename without .css ending)
 	// more colors at http://wiki.macromates.com/Themes/UserSubmittedThemes
@@ -35,6 +62,7 @@ You should have received a copy of the GNU General Public License along with thi
 		'twilight',
 		'espresso',
 		//'sunburst',
+		'term',
 		'barf',
 		'notepad++',
 		'ayti'
@@ -46,19 +74,6 @@ You should have received a copy of the GNU General Public License along with thi
 	$default_stylesheet = isset($_COOKIE['stylesheet']) ? $_COOKIE['stylesheet'] : 'ayti';
 	setcookie("stylesheet", $default_stylesheet);
 	
-	// filetypes to scan
-	$filetypes = array(
-		'.php', 
-		'.inc', 
-		'.phps', 
-		'.php4', 
-		'.php5', 
-		//'.html', 
-		//'.htm', 
-		//'.js',
-		'.phtml', 
-		'.tpl',  
-		'.cgi'
-	); 
+	$default_vector = 'server';
 	
 ?>	

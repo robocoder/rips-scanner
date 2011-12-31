@@ -2,10 +2,10 @@
 /** 
 
 RIPS - A static source code analyser for vulnerabilities in PHP scripts 
-	by Johannes Dahse (johannesdahse@gmx.de)
+	by Johannes Dahse (johannes.dahse@rub.de)
 			
 			
-Copyright (C) 2010 Johannes Dahse
+Copyright (C) 2012 Johannes Dahse
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
 
@@ -15,37 +15,77 @@ You should have received a copy of the GNU General Public License along with thi
 
 **/
 	
+
 	// cross-site scripting affected functions
 	// parameter = 0 means, all parameters will be traced
 	$NAME_XSS = 'Cross-Site Scripting';
 	$F_XSS = array(
-		'echo'							=> array(array(1), $F_SECURING_XSS), 
+		'echo'							=> array(array(0), $F_SECURING_XSS), 
 		'print'							=> array(array(1), $F_SECURING_XSS),
+		'exit'							=> array(array(1), $F_SECURING_XSS),
+		'die'							=> array(array(1), $F_SECURING_XSS),
 		'printf'						=> array(array(0), $F_SECURING_XSS),
 		'vprintf'						=> array(array(0), $F_SECURING_XSS)
+	);
+	
+	// HTTP header injections
+	$NAME_HTTP_HEADER = 'HTTP Response Splitting';
+    $F_HTTP_HEADER = array(
+		'header' 						=> array(array(1), array())
 	);
 	
 	// code evaluating functions  => (parameters to scan, securing functions)
 	// example parameter array(1,3) will trace only first and third parameter 
 	$NAME_CODE = 'Code Evaluation';
 	$F_CODE = array(
+		'array_diff_uassoc'				=> array(array(3), array()),
+		'array_diff_ukey'				=> array(array(3), array()),
 		'array_filter'					=> array(array(2), array()),
+		'array_intersect_uassoc'		=> array(array(3), array()),
+		'array_intersect_ukey'			=> array(array(3), array()),
 		'array_map'						=> array(array(1), array()),
+		'array_reduce'					=> array(array(2), array()),
+		'array_udiff'					=> array(array(3), array()),
+		'array_udiff_assoc'				=> array(array(3), array()),
+		'array_udiff_uassoc'			=> array(array(3,4), array()),
+		'array_uintersect'				=> array(array(3), array()),
+		'array_uintersect_assoc'		=> array(array(3), array()),
+		'array_uintersect_uassoc'		=> array(array(3,4), array()),		
 		'array_walk'					=> array(array(2), array()),
 		'array_walk_recursive'			=> array(array(2), array()),
 		'assert' 						=> array(array(1), array()),
+		'assert_options'				=> array(array(1,2), array()),
 		'call_user_func'				=> array(array(1), array()),
 		'call_user_func_array'			=> array(array(1), array()),
 		'create_function' 				=> array(array(1,2), array()),
+		'dotnet_load'					=> array(array(1), array()),
 		'eval' 							=> array(array(1), array()),
 		'iterator_apply'				=> array(array(2), array()),
 		'mb_ereg_replace'				=> array(array(1,2), $F_SECURING_PREG),
 		'mb_eregi_replace'				=> array(array(1,2), $F_SECURING_PREG),
+		'ob_start'						=> array(array(1), array()),
 		'preg_replace'					=> array(array(1,2), $F_SECURING_PREG),
 		'preg_replace_callback'			=> array(array(1,2), $F_SECURING_PREG),
 		'register_shutdown_function'	=> array(array(1), array()),
 		'register_tick_function'		=> array(array(1), array()),
-		'usort'							=> array(array(2), array())	
+		'runkit_method_add'				=> array(array(1,2,3,4), array()),
+		'runkit_method_copy'			=> array(array(1,2,3), array()),
+		'runkit_method_redefine'		=> array(array(1,2,3,4), array()),	
+		'runkit_method_rename'			=> array(array(1,2,3), array()),
+		'runkit_function_add'			=> array(array(1,2,3), array()),
+		'runkit_function_copy'			=> array(array(1,2), array()),
+		'runkit_function_redefine'		=> array(array(1,2,3), array()),
+		'runkit_function_rename'		=> array(array(1,2), array()),
+		'session_set_save_handler'		=> array(array(1,2,3,4,5), array()),
+		'set_error_handler'				=> array(array(1), array()),
+		'set_exception_handler'			=> array(array(1), array()),
+		'spl_autoload'					=> array(array(1), array()),	
+		'spl_autoload_register'			=> array(array(1), array()),
+		'sqlite_create_aggregate'		=> array(array(2,3,4), array()), 
+		'sqlite_create_function'		=> array(array(2,3), array()), 
+		'uasort'						=> array(array(2), array()),
+		'uksort'						=> array(array(2), array()),
+		'usort'							=> array(array(2), array())
 	);
 	
 	// file inclusion functions => (parameters to scan, securing functions)
@@ -56,6 +96,7 @@ You should have received a copy of the GNU General Public License along with thi
 		'php_check_syntax' 				=> array(array(1), $F_SECURING_FILE),	
 		'require' 						=> array(array(1), $F_SECURING_FILE),
 		'require_once' 					=> array(array(1), $F_SECURING_FILE),
+		'runkit_import'					=> array(array(1), $F_SECURING_FILE),
 		'set_include_path' 				=> array(array(1), $F_SECURING_FILE),
 		'virtual' 						=> array(array(1), $F_SECURING_FILE)		
 	);
@@ -80,6 +121,7 @@ You should have received a copy of the GNU General Public License along with thi
 		'fread'							=> array(array(1), $F_SECURING_FILE), 
 		'fpassthru'						=> array(array(1,2), array()), 
 		'fscanf'						=> array(array(1), $F_SECURING_FILE), 
+		'get_meta_tags'					=> array(array(1), $F_SECURING_FILE), 
 		'glob'							=> array(array(1), array()), 
 		'gzfile'						=> array(array(1), $F_SECURING_FILE), 
 		'gzgetc'						=> array(array(1), $F_SECURING_FILE),
@@ -96,6 +138,7 @@ You should have received a copy of the GNU General Public License along with thi
 		'imagecreatefromgd'				=> array(array(1), $F_SECURING_FILE),  
 		'opendir'						=> array(array(1), $F_SECURING_FILE),  
 		'parse_ini_file' 				=> array(array(1), $F_SECURING_FILE),	
+		'php_strip_whitespace'			=> array(array(1), $F_SECURING_FILE),	
 		'readfile'						=> array(array(1), $F_SECURING_FILE), 
 		'readgzfile'					=> array(array(1), $F_SECURING_FILE), 
 		'readlink'						=> array(array(1), $F_SECURING_FILE),		
@@ -133,14 +176,15 @@ You should have received a copy of the GNU General Public License along with thi
 	// OS Command executing functions => (parameters to scan, securing functions)
 	$NAME_EXEC = 'Command Execution';
 	$F_EXEC = array(
-		'backticks'						=> array(array(1), $F_SECURING_SYSTEM),
+		'backticks'						=> array(array(1), $F_SECURING_SYSTEM), # transformed during parsing
 		'exec'							=> array(array(1), $F_SECURING_SYSTEM),
 		'passthru'						=> array(array(1), $F_SECURING_SYSTEM),
 		'pcntl_exec'					=> array(array(1), $F_SECURING_SYSTEM),
 		'popen'							=> array(array(1), $F_SECURING_SYSTEM),
 		'proc_open'						=> array(array(1), $F_SECURING_SYSTEM),
 		'shell_exec'					=> array(array(1), $F_SECURING_SYSTEM),
-		'system'						=> array(array(1), $F_SECURING_SYSTEM)
+		'system'						=> array(array(1), $F_SECURING_SYSTEM),
+		'mail'							=> array(array(5), array()) // http://esec-pentest.sogeti.com/web/using-mail-remote-code-execution
 	);
 
 	// SQL executing functions => (parameters to scan, securing functions)
@@ -238,7 +282,8 @@ You should have received a copy of the GNU General Public License along with thi
 		'ftp_nlist' 					=> array(array(2), array()), 
 		'ftp_nb_fget' 					=> array(array(3), array()), 
 		'ftp_nb_get' 					=> array(array(2,3), array()), 
-		'header' 						=> array(array(1), array()),
+		'ftp_nb_put'					=> array(array(2), array()), 
+		'ftp_put'						=> array(array(2,3), array()), 
 		'imap_open'						=> array(array(1), array()),  
 		'imap_mail'						=> array(array(1), array()),
 		'mail' 							=> array(array(1,4), array()), 
@@ -255,22 +300,33 @@ You should have received a copy of the GNU General Public License along with thi
 	// other critical functions
 	$NAME_OTHER = 'Possible Flow Control'; // :X
 	$F_OTHER = array(
-		'apache_setenv'					=> array(array(1,2), array()),	
 		'dl' 							=> array(array(1), array()),	
 		'ereg'							=> array(array(2), array()), # nullbyte injection affected		
-		'eregi'							=> array(array(2), array()), # nullbyte injection affected	
-		'extract'						=> array(array(1), array()),
-		'import_request_variables'		=> array(array(1), array()),		
+		'eregi'							=> array(array(2), array()), # nullbyte injection affected			
 		'ini_set' 						=> array(array(1,2), array()),
-		'putenv'						=> array(array(1), array()),
+		'ini_restore'					=> array(array(1), array()),
+		'runkit_constant_redefine'		=> array(array(1,2), array()),
+		'runkit_method_rename'			=> array(array(1,2,3), array()),
 		'sleep'							=> array(array(1), array()),
-		'unserialize'					=> array(array(1), array())
+		'unserialize'					=> array(array(1), array()),
+		'extract'						=> array(array(1), array()),
+		'mb_parse_str'					=> array(array(1), array()),
+		'parse_str'						=> array(array(1), array()),
+		'putenv'						=> array(array(1), array()),
+		'set_include_path'				=> array(array(1), array()),
+		'apache_setenv'					=> array(array(1,2), array()),	
+		'define'						=> array(array(1), array())
 	);
 	
 	// property oriented programming with unserialize
 	$NAME_POP = 'Unserialize';
 	$F_POP = array(
-		'unserialize'					=> array(array(1), array())
+		'unserialize'					=> array(array(1), array()), // calls __destruct
+		'is_a'							=> array(array(1), array())	 // calls __autoload in php 5.3.7, 5.3.8
 	);
+	
+	
+	# interruption vulnerabilities
+	# trim(), rtrim(), ltrim(), explode(), strchr(), strstr(), substr(), chunk_split(), strtok(), addcslashes(), str_repeat() htmlentities() htmlspecialchars(), unset()
 
 ?>	

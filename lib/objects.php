@@ -2,10 +2,10 @@
 /** 
 
 RIPS - A static source code analyser for vulnerabilities in PHP scripts 
-	by Johannes Dahse (johannesdahse@gmx.de)
+	by Johannes Dahse (johannes.dahse@rub.de)
 			
 			
-Copyright (C) 2010 Johannes Dahse
+Copyright (C) 2012 Johannes Dahse
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
 
@@ -19,18 +19,30 @@ You should have received a copy of the GNU General Public License along with thi
 	class VarDeclare
 	{
 		public $id;
-    	public $value;
+		public $tokens;	
+		public $tokenscanstart;
+		public $tokenscanstop;
+		public $value;
+    	public $comment;
     	public $line;	
 		public $marker;
 		public $dependencies;
+		public $stopvar;
+		public $array_keys;
 		
-		function __construct($value = null) 
+		function __construct($tokens = array(), $comment = '') 
 		{
 			$this->id = 0;
-			$this->value = $value;
+			$this->tokens = $tokens;
+			$this->tokenscanstart = 0;
+			$this->tokenscanstop = count($tokens);
+			$this->value = '';
+			$this->comment = $comment;
 			$this->line = '';
 			$this->marker = 0;
 			$this->dependencies = array();
+			$this->stopvar = false;
+			$this->array_keys = array();
 		}
 	}
 	
@@ -41,6 +53,7 @@ You should have received a copy of the GNU General Public License along with thi
     	public $category;
     	public $treenodes;
 		public $sink;
+		public $dataleakvar;
 		
 		function __construct($category = 'unknown', $sink = '') 
 		{
@@ -48,6 +61,7 @@ You should have received a copy of the GNU General Public License along with thi
 			$this->category = $category;
 			$this->treenodes = array();
 			$this->sink = $sink;
+			$this->dataleakvar = array();
 		}
 	}
 	
@@ -65,6 +79,7 @@ You should have received a copy of the GNU General Public License along with thi
 		public $children;
 		public $funcdepend;
 		public $funcparamdepend;
+		public $foundcallee;
 		public $get;
 		public $post;
 		public $cookie;
@@ -84,6 +99,7 @@ You should have received a copy of the GNU General Public License along with thi
 			$this->children = array();
 			$this->funcdepend = '';
 			$this->funcparamdepend = null;
+			$this->foundcallee = false;
 		}
 	}
 	
@@ -112,16 +128,20 @@ You should have received a copy of the GNU General Public License along with thi
 	class FunctionDeclare
 	{
 		public $value;
+		public $tokens;
 		public $name;
 		public $line;
 		public $marker;
+		public $parameters;
 		
-		function __construct($value = null) 
+		function __construct($tokens) 
 		{
-			$this->value = $value;
+			$this->value = '';
+			$this->tokens = $tokens;
 			$this->name = '';
 			$this->line = 0;
 			$this->marker = 0;
+			$this->parameters = array();
 		}
 	}
 

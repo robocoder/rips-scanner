@@ -2,10 +2,10 @@
 /** 
 
 RIPS - A static source code analyser for vulnerabilities in PHP scripts 
-	by Johannes Dahse (johannesdahse@gmx.de)
+	by Johannes Dahse (johannes.dahse@rub.de)
 			
 			
-Copyright (C) 2010 Johannes Dahse
+Copyright (C) 2012 Johannes Dahse
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
 
@@ -26,9 +26,13 @@ You should have received a copy of the GNU General Public License along with thi
 			{
 				$GLOBALS['count_matches']++;
 				
-				$line = highlightline($lines[$i], $i+1, $search);
-				$line = preg_replace("/(".trim($search).")/i", "<span class='markline'>$1</span>", $line);
+				$tokens = @token_get_all('<? '.trim($lines[$i]).' ?>');
+				
+				$line = highlightline($tokens, '', $i+1, $search);
+				#$line = preg_replace("/[^class=\"](".trim($search).")/i", "<span class='markline'>$1</span>", $line);
+				$line = preg_replace("/(>[^<]*)(".trim($search).")/i", "$1<span class='markline'>$2</span>", $line);
 				$new_find = new VulnTreeNode($line);
+				$new_find->filename = $file_name;
 				$new_find->title = 'Regular expression match';
 				$new_find->lines[] = $i+1;
 					

@@ -2,10 +2,10 @@
 /** 
 
 RIPS - A static source code analyser for vulnerabilities in PHP scripts 
-	by Johannes Dahse (johannesdahse@gmx.de)
+	by Johannes Dahse (johannes.dahse@rub.de)
 			
 
-Copyright (C) 2010 Johannes Dahse
+Copyright (C) 2012 Johannes Dahse
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
 
@@ -44,7 +44,7 @@ include 'config/general.php';
 		<table class="menutable" width="50%" style="float:left;">
 		<tr>
 			<td nowrap><b>path / file:</b></td>
-			<td colspan="3" nowrap><input type="text" size=80 id="location" value="<?php echo isset($basedir) ? $basedir : ''; ?>" title="enter path to PHP file(s)">
+			<td colspan="3" nowrap><input type="text" size=80 id="location" value="<?php echo BASEDIR; ?>" title="enter path to PHP file(s)">
 			</td>
 			<td nowrap><input type="checkbox" id="subdirs" value="1" title="check to scan subdirectories" />subdirs</td>
 		</tr>
@@ -59,7 +59,7 @@ include 'config/general.php';
 							2 => '2. file/DB tainted +1',
 							3 => '3. show secured +1,2',
 							4 => '4. untainted +1,2,3',
-							5 => '5. debug'
+							5 => '5. debug includes'
 						);
 						
 						foreach($verbosities as $level=>$description)
@@ -77,24 +77,30 @@ include 'config/general.php';
 					<?php 
 					
 						$vectors = array(
-							'server' => 'All server side',							
-							'code' => '- Code Evaluation',
-							'exec' => '- Command Execution',
-							'connect' => '- Header Injection',							
-							'file_read' => '- File Disclosure',
-							'file_include' => '- File Inclusion',							
-							'file_affect' => '- File Manipulation',
-							'ldap' => '- LDAP Injection',
-							'database' => '- SQL Injection',
-							'xpath' => '- XPath Injection',
-							'client' => 'Cross-Site Scripting',
-							'all' => 'All',
-							'unserialize' => 'Unserialize / POP',
+							'all' 			=> 'All',
+							'server' 		=> 'All server-side',							
+							'code' 			=> '- Code Execution',
+							'exec' 			=> '- Command Execution',
+							'connect'		=> '- Header Injection',							
+							'file_read' 	=> '- File Disclosure',
+							'file_include' 	=> '- File Inclusion',							
+							'file_affect' 	=> '- File Manipulation',
+							'ldap' 			=> '- LDAP Injection',
+							'database' 		=> '- SQL Injection',
+							'xpath' 		=> '- XPath Injection',
+							'other' 		=> '- other',
+							'client' 		=> 'All client-side',
+							'xss' 			=> '- Cross-Site Scripting',
+							'httpheader'	=> '- HTTP Response Splitting',
+							'unserialize' 	=> 'Unserialize / POP'
+							//'crypto'		=> 'Crypto hints'
 						);
 						
 						foreach($vectors as $vector=>$description)
 						{
-							echo "<option value=\"$vector\">$description</option>\n";
+							echo "<option value=\"$vector\" ";
+							if($vector == $default_vector) echo 'selected';
+							echo ">$description</option>\n";
 						}
 					?>
 				</select>
@@ -120,7 +126,7 @@ include 'config/general.php';
 				</select>	
 			</td>	
 			<td align="right">
-				regex:
+				/regex/:
 			</td>
 			<td>
 				<input type="text" id="search" style="width:100%" />
@@ -140,7 +146,7 @@ include 'config/general.php';
 	</td>
 	<td width="25%" align="center" valign="center" nowrap>
 		<!-- Logo by Gareth Heyes -->
-		<div class="logo"><a id="logo" href="http://sourceforge.net/projects/rips-scanner/files/" target="_blank" title="get latest version"><?php echo $version ?></a></div>
+		<div class="logo"><a id="logo" href="http://sourceforge.net/projects/rips-scanner/files/" target="_blank" title="get latest version"><?php echo VERSION ?></a></div>
 	</td></tr>
 	</table>
 	</div>
@@ -158,23 +164,24 @@ include 'config/general.php';
 	<div style="margin-left:30px;color:#000000;font-size:14px">
 		<h3>Quickstart:</h3>
 		<p>Locate your PHP <b>path/file</b>, choose the <b>vulnerability type</b> you are looking for and click <u>scan</u>!<br />
-		Check <b>subdirs</b> to include subdirectories into the scan. Note that scanning too many large files may exceed the time limit.</p>
+		Check <b>subdirs</b> to include subdirectories into the scan. It is recommended to scan only the root directory of your project. Included files in subdirectories will be automatically scanned by RIPS when included. Enable subdirs for a more intense scan or if you have a low include success rate (shown in the result).</p>
 		<h3>Advanced:</h3>
-		<p>Debug your scan result by choosing a <b>verbosity level</b>.<br />
-		After the scan finished click <b>user input</b> to get a list of entry points, <b>functions</b> for a list of all user defined functions or <b>files</b> for a list of all scanned files and their includes. All lists are referenced to the Code Viewer.</p>
+		<p>Debug your scan result by choosing a <b>verbosity level</b> (level 1 is recommended).<br />
+		After the scan finished you can select between different types of vulnerabilities that have been found by clicking on their name in the <b>stats</b> window. You can click <b>user input</b> in the upper right to get a list of entry points, <b>functions</b> for a list and graph of all user defined functions or <b>files</b> for a list and graph of all scanned files and their includes. All lists are referenced to the Code Viewer.</p>
 		<h3>Style:</h3>
 		<p>Change the syntax highlighting schema on-the-fly by selecting a different <b>code style</b>.<br />
 		Before scanning you can choose which way the code flow should be displayed: <b>bottom-up</b> or <b>top-down</b>.</p>
 		<h3>Icons:</h3>
 		<ul>
 		<li class="userinput"><font color="black"><b>User input</b> has been found in this line. Potential entry point for vulnerability exploitation.</font></li>
-		<li class="functioninput"><font color="black">Vulnerability exploitation depends on the <b>parameters</b> passed to the function declared in this line. Have a look at the calls in the scan result.</font></li>
-		<li class="validated"><font color="black">User defined <b>securing</b> has been detected in this line. This may prevent exploitation.</font></li>
-		<li><div class="fileico"></div>&nbsp;Click the file icon to open the <b>Code Viewer</b> to review the original code. A new window will be opened with all relevant lines highlighted red.<br />
-		Highlight variables temporarily by mouseover or persistently by click. Jump into the code of a user-defined function by clicking on the call. Click <u>return</u> on the bottom of the code viewer to jump back.</li>
+		<li class="functioninput"><font color="black">Vulnerability exploitation depends on the <b>parameters</b> passed to the function declared in this line. Have a look at the calls in the scan result.<br />Click <b>&uArr;</b> or <b>&dArr;</b> to jump to the next declaration or call of this function.</font></li>
+		<li class="validated"><font color="black">User-implemented <b>securing</b> has been detected in this line. This may prevent exploitation.</font></li>
+		<li><div class="fileico"></div>&nbsp;Click the file icon to open the <b>Code Viewer</b> to review the original code. A new window will be opened with all relevant lines highlighted.<br />
+		Highlight variables temporarily by mouseover or persistently by clicking on the variable. Jump into the code of a user-defined function by clicking on the call. Click <u>return</u> on the bottom of the code viewer to jump back. This also works for nested function calls.</li>
 		<li><div class="minusico"></div>&nbsp;Click the minimize icon to <b>hide</b> a specific code trace. You may display it later by clicking the icon again.</li>
 		<li><div class="exploit"></div>&nbsp;Click the target icon to open the <b>Exploit Creator</b>. A new window will open where you can enter exploit details and create PHP Curl exploit code.</li>
 		<li><div class="help"></div>&nbsp;Click the help icon to get a <b>description</b>, example code, example exploitation, patch and related securing functions for this vulnerability type.</li>
+		<li><div class="dataleak"></div>&nbsp;Click the data leak icon to check if the output of the tainted sink <b>leaks</b> somewhere (is embedded to the HTTP response via echo/print).</li>
 		</ul>
 		<p style="font-size:12px">hints: Make sure RIPS has file permissions on your source code files. Don't leave the webinterface of RIPS open to the public internet. Tested with Firefox.<p>
 		</ul>
