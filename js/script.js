@@ -8,14 +8,14 @@ RIPS - A static source code analyser for vulnerabilities in PHP scripts
 
 /* SCAN */
 
-function scanAnimation(height)
+function scanAnimation(height, idprefix)
 {
-	var div = document.getElementById('scanned');
+	var div = document.getElementById(idprefix+'ned');
 	div.style.height = height+"px";
 }
 
 
-function handleResponse() {
+function handleResponse(idprefix) {
 	if (client.readyState != 4 && client.readyState != 3)
 		return;
 	if (client.readyState == 3 && client.status != 200)
@@ -35,22 +35,27 @@ function handleResponse() {
 
 		var lines = client.responseText.split('\n');
 		var newline = lines[lines.length-2];
-		
+
 		if(newline == 'STATS_DONE.') {				
 			console.log("done");
 			stats_done = true;
 			return;	
-		} else
+		} else if(newline != undefined)
 		{
 			data = newline.split('|');
-			document.getElementById("scanfile").innerHTML = data[2];
-			procent = Math.round((data[0]/data[1])*100);
-			
-			scanAnimation((procent * 75)/100)
-			
-			document.getElementById("scanprogress").innerHTML = '<span style="font-size:20px">' + procent + '%</span><br />(' + data[0] + '/' + data[1] + ')';
-			document.getElementById("scantimeleft").innerHTML = 'appr. timeleft: ' + ( (Math.round(data[3]/60) > 1) ? (Math.round(data[3]/60) + ' min') : (Math.round(data[3]) + ' sec') );
-			//console.log(newline);
+			if(data[0] != undefined && data[1] != undefined && data[2] != undefined && data[3] != undefined)
+			{
+				document.getElementById(idprefix+"file").innerHTML = data[2];
+				procent = Math.round((data[0]/data[1])*100);
+				
+				scanAnimation((procent * 75)/100, idprefix)
+				
+				document.getElementById(idprefix+"progress").innerHTML = '<span style="font-size:20px">' + procent + '%</span><br />(' + data[0] + '/' + data[1] + ')';
+				document.getElementById(idprefix+"timeleft").innerHTML = 'appr. timeleft: ' + ( (Math.round(data[3]/60) > 1) ? (Math.round(data[3]/60) + ' min') : (Math.round(data[3]) + ' sec') );
+			} else
+			{
+				stats_done = true;
+			}
 		}
 	}	
 
@@ -76,9 +81,7 @@ function scan(ignore_warning)
 		params+="&ignore_warning=1";
 	
 	document.getElementById("scanning").style.backgroundImage="url(css/scanning.gif)";
-
 	document.getElementById("scanning").innerHTML='scanning ...<div class="scanfile" id="scanfile"></div><div class="scanned" id="scanned"></div><div class="scanprogress" id="scanprogress"></div><div class="scantimeleft" id="scantimeleft"></div>'
-	
 	document.getElementById("scanning").style.display="block";
 	
 	prevDataLength = 0;
@@ -90,7 +93,7 @@ function scan(ignore_warning)
 	client.onreadystatechange = function () 
 	{ 
 		if(this.readyState == 3 && !stats_done)
-			handleResponse();
+			handleResponse('scan');
 		else if(this.readyState == 4 && this.status == 200 && a) 
 		{
 			if(!this.responseText.match(/^\s*warning:/))
@@ -182,29 +185,31 @@ function leakScan(hoveritem, varname, line, ignore_warning)
 	scandiv.style.marginTop="30px";
 	scandiv.style.marginLeft="150px";
 	scandiv.style.backgroundImage="url(css/scanning.gif)";
-	scandiv.innerHTML='scanning ...<div class="scanned" id="leakscanned"></div>';
+	scandiv.innerHTML='scanning ...<div class="scanfile" id="leakscanfile"></div><div class="scanned" id="leakscanned"></div><div class="scanprogress" id="leakscanprogress"></div><div class="scantimeleft" id="leakscantimeleft"></div>';
 	scandiv.id="dataleakscanning";
 	scandiv.style.display="block";
 	
 	document.getElementById("windowcontent2").appendChild(scandiv);
 	
-	var animation = window.setInterval("scanAnimation(document.getElementById('leakscanned'))", 300);
-	
 	var a = true;
-	var client = new XMLHttpRequest();
+	stats_done = false;
+	client = new XMLHttpRequest();
 	client.onreadystatechange = function () 
 	{ 
-		if(this.readyState == 4 && this.status == 200 && a) 
+		if(this.readyState == 3 && !stats_done)
+			handleResponse('leakscan');
+		else if(this.readyState == 4 && this.status == 200 && a) 
 		{
 			if(!this.responseText.match(/^\s*warning:/))
 			{
 				document.getElementById("dataleakscanning").style.display="none";
-				window.clearInterval(animation);
-				if(!this.responseText.match(/^\s*$/))
-					document.getElementById("windowcontent2").innerHTML=(this.responseText);
+
+				nostats = this.responseText.split("STATS_DONE.\n");
+				if(nostats[1])
+					document.getElementById("windowcontent2").innerHTML=(nostats[1]);
 				else
-					document.getElementById("windowcontent2").innerHTML='<br /><center>No data leak found. You need blind exploitation techniques.</center>';
-			}
+					document.getElementById("windowcontent2").innerHTML='<br /><center>No data leak found. You need blind exploitation techniques.</center>';	
+			}	
 			else
 			{
 				var amount = this.responseText.split(':')[1];
@@ -212,7 +217,7 @@ function leakScan(hoveritem, varname, line, ignore_warning)
 				warning+="<h2>warning</h2>";
 				warning+="<p>You are about to scan " + amount + " files. ";
 				warning+="Depending on the amount of codelines and includes this may take a very long time. ";
-				warning+="The author of RIPS recommends to scan only a few files once.</p>";
+				warning+="The author of RIPS recommends to scan only the root directory of your project without subdirs.</p>";
 				warning+="<p>Do you want to continue anyway?</p>";	
 				warning+="<input type=\"button\" class=\"Button\" value=\"continue\" onClick=\"document.getElementById('dataleakscanning').style.display='none';leakScan(null, '"+varname+"', '"+line+"', true);\"/>&nbsp;";
 				warning+="<input type=\"button\" class=\"Button\" value=\"cancel\" onClick=\"document.getElementById('windowcontent2').removeChild(document.getElementById('dataleakscanning'));closeWindow(2);\"/>";

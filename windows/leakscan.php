@@ -49,7 +49,7 @@ You should have received a copy of the GNU General Public License along with thi
 			$scan_subdirs = isset($_POST['subdirs']) ? $_POST['subdirs'] : false;
 			$files = read_recursiv($location, $scan_subdirs);
 			
-			if(count($files) > $warnfiles && !isset($_POST['ignore_warning']))
+			if(count($files) > WARNFILES && !isset($_POST['ignore_warning']))
 				die('warning:'.count($files));
 		}	
 		else if(is_file($location) && in_array(substr($location, strrpos($location, '.')), $filetypes))
@@ -77,11 +77,30 @@ You should have received a copy of the GNU General Public License along with thi
 			$F_SECURING_XSS = array();
 			$_POST['vector'] = 'client';
 			
-			foreach($files as $file_name)
+			$overall_time = 0;
+			$timeleft = 0;
+			$file_amount = count($files);
+			
+			for($fit=0; $fit<$file_amount; $fit++)
 			{
-				$scan = new Scanner($file_name, $scan_functions, array(), array());
+				// for scanning display
+				$thisfile_start = microtime(TRUE);
+				$file_scanning = $files[$fit];
+				
+				echo ($fit) . '|' . $file_amount . '|' . $file_scanning . '|' . $timeleft . '|' . str_pad(' ',9096)."\n";
+				@ob_flush();
+				flush();
+				
+				$scan = new Scanner($file_scanning, $scan_functions, array(), array());
 				$scan->parse();
+				
+				$overall_time += microtime(TRUE) - $thisfile_start;
+				// timeleft = average_time_per_file * file_amount_left
+				$timeleft = round(($overall_time/($fit+1)) * ($file_amount - $fit+1),2);
 			}
+			echo "STATS_DONE.\n";
+			@ob_flush();
+			flush();
 	} 
 	
 	$elapsed = microtime(TRUE) - $start;

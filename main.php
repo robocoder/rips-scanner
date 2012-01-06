@@ -337,7 +337,7 @@ You should have received a copy of the GNU General Public License along with thi
 		if($count_inc > 0)
 		{
 			echo ($count_inc_success=$count_inc-$count_inc_fail).'/'.$count_inc, 
-			' ('.round(($count_inc_success/$count_inc)*100,0).'%)'; 
+			' ('.$round_inc_success=round(($count_inc_success/$count_inc)*100,0).'%)'; 
 		} else
 		{
 			echo 'No includes.';
@@ -364,12 +364,16 @@ You should have received a copy of the GNU General Public License along with thi
 			{
 				echo '<tr><td width="160">Info:</td><td><small>',$detail,'</small></td></tr>';
 			}	
+			if($round_inc_success < 75 && !$scan_subdirs)
+			{
+				echo '<tr><td width="160">Info:</td><td><small><font color="orange">Your include success is low. Enable <i>subdirs</i> for better filename guesses.</font></small></td></tr>';
+			}
 			echo '</table><hr />';
 		}
 	}	
 		?>
 		<table class="textcolor" width="100%">
-		<tr><td nowrap width="160">Scan time:</td><td nowrap><?php printf("%.03f seconds", $elapsed); ?></td></tr>
+		<tr><td nowrap width="160">Scan time:</td><td nowrap><span id="scantime"><?php printf("%.03f seconds", $elapsed); ?></span></td></tr>
 	</table>		
 
 </div>

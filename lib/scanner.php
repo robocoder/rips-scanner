@@ -1854,7 +1854,7 @@ class Scanner
 					$this->class_name = $this->tokens[$i][1];
 					$this->vuln_classes[$this->class_name] = array();
 					$this->in_class = true;
-					$GLOBALS['info'][] = 'Code is OOP<br>(<font color="red">not supported</font>)';
+					$GLOBALS['info'][] = '<font color="red">Code is object-oriented. This is not supported yet and can lead to false negatives.</font>';
 				}
 				// build list of vars that are associated with a class
 				// $var = new Classname()

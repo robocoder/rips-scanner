@@ -15,8 +15,11 @@ You should have received a copy of the GNU General Public License along with thi
 
 **/
 	
+	#error_reporting(E_ALL);
+	error_reporting(E_ERROR | E_WARNING | E_PARSE);
 	// various settings making flush() work correctly
-	apache_setenv('no-gzip', 1);
+	if(function_exists('apache_setenv'))
+		apache_setenv('no-gzip', 1);
 	ini_set('zlib.output_compression', 0);
 	ini_set('implicit_flush', 0);
 	ini_set('output_buffering', 0);
@@ -25,7 +28,6 @@ You should have received a copy of the GNU General Public License along with thi
 	ini_set('auto_detect_line_endings', 1);	// detect newlines in MAC files
 	ini_set("memory_limit","1000M");		// set memory size to 1G
 	set_time_limit(0);						// 5 minutes
-	error_reporting(E_ERROR | E_WARNING | E_PARSE);
 	
 	if (extension_loaded('tokenizer') === false) 
 	{
@@ -33,7 +35,7 @@ You should have received a copy of the GNU General Public License along with thi
             exit;
 	}
 		
-	define('VERSION', '0.50');				// RIPS version to be displayed	
+	define('VERSION', '0.51');				// RIPS version to be displayed	
 	define('MAXTRACE', 30);					// maximum of parameter traces per sensitive sink
 	define('WARNFILES', 40);				// warn user if amount of files to scan is higher than this value
 	define('BASEDIR', '');					// default directory shown
