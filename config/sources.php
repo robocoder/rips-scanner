@@ -98,7 +98,6 @@ final class Sources
 	// other functions as input
 	public static $F_OTHER_INPUT = array(
 		'get_headers',
-		'parse_url',
 		'runkit_superglobals',
 		'import_request_variables'
 	);

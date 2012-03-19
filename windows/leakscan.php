@@ -24,7 +24,7 @@ You should have received a copy of the GNU General Public License along with thi
 	include('../config/sinks.php');			// sensitive sinks
 	include('../config/info.php');			// interesting functions
 	
-	include('../lib/objects.php'); 			// objects	
+	include('../lib/constructer.php'); 		// classes	
 	include('../lib/filer.php');			// read files from dirs and subdirs
 	include('../lib/tokenizer.php');		// prepare and fix token list
 	include('../lib/analyzer.php');			// string analyzers
@@ -52,7 +52,7 @@ You should have received a copy of the GNU General Public License along with thi
 			if(count($files) > WARNFILES && !isset($_POST['ignore_warning']))
 				die('warning:'.count($files));
 		}	
-		else if(is_file($location) && in_array(substr($location, strrpos($location, '.')), $filetypes))
+		else if(is_file($location) && in_array(substr($location, strrpos($location, '.')), $FILETYPES))
 		{
 			$files[0] = $location;
 		}
@@ -80,14 +80,14 @@ You should have received a copy of the GNU General Public License along with thi
 			$overall_time = 0;
 			$timeleft = 0;
 			$file_amount = count($files);
-			
+
 			for($fit=0; $fit<$file_amount; $fit++)
 			{
 				// for scanning display
 				$thisfile_start = microtime(TRUE);
 				$file_scanning = $files[$fit];
 				
-				echo ($fit) . '|' . $file_amount . '|' . $file_scanning . '|' . $timeleft . '|' . str_pad(' ',9096)."\n";
+				echo ($fit) . '|' . $file_amount . '|' . $file_scanning . '|' . $timeleft . '|' ."\n";
 				@ob_flush();
 				flush();
 				
@@ -138,8 +138,9 @@ You should have received a copy of the GNU General Public License along with thi
 		if(!empty($output))
 		{
 			$nr=0;
+			reset($output);
 			do
-			{				
+			{			
 				if(key($output) != "" && !empty($output[key($output)]) )
 				{		
 					foreach($output[key($output)] as $vulnBlock)

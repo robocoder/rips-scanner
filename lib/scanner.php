@@ -23,24 +23,26 @@ class Scanner
 	public $source_functions;
 
 	public $var_declares_global;	
-	public $var_declares_local;
-	public $put_in_global_scope;
 	public $globals_from_function;
 	
 	public $in_class;
 	public $class_name;
 	public $vuln_classes;
 	public $class_vars;
+	public $brace_save_class;
 		
+	public $in_function;	
 	public $function_obj;
+	public $var_declares_local;
+	public $put_in_global_scope;
+	public $brace_save_func;
 	
 	public $braces_open;
-	public $brace_save_func;
-	public $brace_save_class;
 	public $ignore_requirement;
 	public $dependencies;
 	public $dependencytokens;
 		
+	public $securedby;	
 	public $ignore_securing_function;	
 	public $userfunction_secures;
 	public $userfunction_taints;	
@@ -52,6 +54,8 @@ class Scanner
 	public $file_pointer;
 	public $lines_stack;
 	public $lines_pointer;
+	public $tif;
+	public $tif_Stack;
 	
 	public $tokens;
 		
@@ -72,9 +76,10 @@ class Scanner
 		$this->vuln_classes = array();
 		$this->class_vars = array();
 		
-		$this->in_function = false;
+		$this->in_function = 0;
 		$this->function_obj = null;
 		
+		$this->in_condition = 0;
 		$this->braces_open = 0;
 		$this->brace_save_func = -1;
 		$this->brace_save_class = -1;
@@ -82,6 +87,7 @@ class Scanner
 		$this->dependencies = array();
 		$this->dependencytokens = array();
 		
+		$this->securedby = array();
 		$this->ignore_securing_function = false;
 		$this->userfunction_secures = false;
 		$this->userfunction_taints = false;	
@@ -89,88 +95,141 @@ class Scanner
 		
 		$this->inc_file_stack = array(realpath($this->file_name));
 		$this->inc_map = array();
-		$this->include_paths = array();
-		$this->file_pointer =& end($this->inc_file_stack);
+		$this->include_paths = Analyzer::get_ini_paths(ini_get("include_path"));
+		$this->file_pointer = end($this->inc_file_stack);
+		if(!isset($GLOBALS['file_sinks_count'][$this->file_pointer]))
+			$GLOBALS['file_sinks_count'][$this->file_pointer] = 0;
 		$this->lines_stack = array();
 		$this->lines_stack[] = file($this->file_name);
-		$this->lines_pointer =& end($this->lines_stack);
-
-		// Tokens
-		$this->tokens = Tokenizer::tokenize(implode('',$this->lines_pointer));
+		$this->lines_pointer = end($this->lines_stack);
+		$this->tif = 0; // tokennr in file
+		$this->tif_stack = array();
+		
+		// preload output
+		echo $GLOBALS['fit'] . '|' . $GLOBALS['file_amount'] . '|' . $this->file_pointer . ' (tokenizing)|' . $GLOBALS['timeleft'] . '|' . "\n";
+		@ob_flush();
+		flush();
+		
+		// tokenizing
+		$tokenizer = new Tokenizer($this->file_pointer);
+		$this->tokens = $tokenizer->tokenize(implode('',$this->lines_pointer));
+		unset($tokenizer);
+		
+		// add auto includes from php.ini
+		if(ini_get('auto_prepend_file'))
+		{
+			$this->add_auto_include(ini_get('auto_prepend_file'), true);
+		}
+		if(ini_get('auto_append_file'))
+		{
+			$this->add_auto_include(ini_get('auto_append_file'), false);
+		}
+	}
+	
+	// create require tokens for auto_prepend/append_files and add to tokenlist
+	function add_auto_include($paths, $beginning)
+	{
+		$paths = Analyzer::get_ini_paths($paths);
+		$addtokens = array();
+		foreach($paths as $file)
+		{
+			$includetokens = array(
+				array(T_REQUIRE, 'require', 0),
+				array(T_CONSTANT_ENCAPSED_STRING, "'$file'", 0), 
+				';'
+			);
+			$addtokens = array_merge($addtokens, $includetokens);
+		}
+		if($beginning)
+			$this->tokens = array_merge($addtokens, $this->tokens);
+		else
+			$this->tokens = array_merge($this->tokens, $addtokens);
 	}
 	
 	// traces recursivly parameters and adds them as child to parent
 	// returns true if a parameter is tainted by userinput (1=directly tainted, 2=function param)
-	function scan_parameter($mainparent, $parent, $var_token, $last_token_id, $var_declares, $var_declares_global=array(), $userinput, $F_SECURES=array(), $return_scan=false, $ignore_securing=false, $secured=false)
+	function scan_parameter($mainparent, $parent, $var_token, $var_keys=array(), $last_token_id, $var_declares, $var_declares_global=array(), $userinput, $F_SECURES=array(), $return_scan=false, $ignore_securing=false, $secured=false)
 	{	
 		#print_r(func_get_args());echo "\n----------------\n";
-		$var_name = $var_token[1];
-		if($var_name[0] !== '$')
-			$var_name = strtoupper($var_name);
-		$vardependent = false;	
-	
-		// reconstruct array key values $a[$b]
-		if(isset($var_token[3]))
-		{
-			for($k=0;$k<count($var_token[3]); $k++)
-			{
-				if(is_array($var_token[3][$k]))
-				{
-					$var_token[3][$k] = Analyzer::get_tokens_value(
-						$this->file_pointer,
-						$var_token[3][$k], 
-						$var_declares, 
-						$var_declares_global, 
-						$last_token_id
-					);
-				}	
-			}
-		}	
+		$vardependent = false;
 		
-		// handle $GLOBALS and $_SESSIONS
-		if(isset($var_token[3]))
+		$var_name = $var_token[1];
+		// constants
+		if($var_name[0] !== '$')
 		{
-			if($var_name == '$GLOBALS' && !isset($var_declares[$var_name]) && !empty($var_token[3][0]) ) 
+			$var_name = strtoupper($var_name);
+		} 
+		// variables
+		else
+		{
+			// reconstruct array key values $a[$b]
+			if(isset($var_token[3]))
 			{
-				$var_name = '$'. str_replace(array("'",'"'), '', $var_token[3][0]);
-				// php $GLOBALS: ignore previous local vars and take only global vars
-				$var_declares = $var_declares_global;
-			}
-			else if($var_name === '$_SESSION' && !isset($var_declares[$var_name]) && !empty($var_declares_global))
+				for($k=0;$k<count($var_token[3]); $k++)
+				{
+					if(is_array($var_token[3][$k]))
+					{
+						$var_token[3][$k] = Analyzer::get_tokens_value(
+							$this->file_pointer,
+							$var_token[3][$k], 
+							$var_declares, 
+							$var_declares_global, 
+							$last_token_id
+						);
+					}	
+				}
+			}	
+			
+			// handle $GLOBALS and $_SESSIONS
+			if(isset($var_token[3]))
 			{
-				// $_SESSION data is handled as global variables
-				$var_declares = array_merge($var_declares_global, $var_declares);
+				if($var_name == '$GLOBALS' && !isset($var_declares[$var_name]) && !empty($var_token[3][0]) ) 
+				{
+					$var_name = '$'. str_replace(array("'",'"'), '', $var_token[3][0]);
+					// php $GLOBALS: ignore previous local vars and take only global vars
+					$var_declares = $var_declares_global;
+				}
+				else if($var_name === '$_SESSION' && !isset($var_declares[$var_name]) && !empty($var_declares_global))
+				{
+					// $_SESSION data is handled as global variables
+					$var_declares = array_merge($var_declares_global, $var_declares);
+				}
 			}
+		
+			// if a register_globals implementation is present shift it to the beginning of the var_declare array
+			if(isset($var_declares['register_globals']) && !in_array($var_name, Sources::$V_USERINPUT)
+			&& (!$this->in_function || in_array($var_name, $this->put_in_global_scope)))
+			{		
+				if(!isset($var_declares[$var_name]))
+				{
+					$var_declares[$var_name] = $var_declares['register_globals'];
+				}	
+				else	
+				{
+					foreach($var_declares['register_globals'] as $glob_obj)
+					$var_declares[$var_name][] = $glob_obj;
+				}	
+			}	
 		}
-	
-		// if a register_globals implementation is present shift it to the beginning of the var_declare array
-		if(isset($var_declares['register_globals']) && !in_array($var_name, Sources::$V_USERINPUT))
-		{
-			if(!isset($var_declares[$var_name]))
-			{
-				$var_declares[$var_name] = $var_declares['register_globals'];
-			}	
-			else	
-			{
-				array_push($var_declares[$var_name], $var_declares['register_globals']);
-			}	
-		}	
-
+		
 		// check if var declaration could be found for this var
-		// and if the latest var_declares id is smaller than the last_token_id, otherwise continue with function parameters
+		// and if the latest var_declares id is smaller than the last_token_id, otherwise continue with function parameters		
+#echo "trying: $var_name, isset: ".(int)(isset($var_declares[$var_name])).", ".end($var_declares[$var_name])->id." < ".$last_token_id."?\n";		
 		if( isset($var_declares[$var_name]) && (end($var_declares[$var_name])->id < $last_token_id || $userinput) )
-		{	
+		{		
 			foreach($var_declares[$var_name] as $var_declare)
 			{	
 				// check if array keys are the same (if it is an array)
 				$array_key_diff = array();
 				if( !empty($var_token[3]) && !empty($var_declare->array_keys) )	
-					$array_key_diff = array_diff_assoc($var_token[3], $var_declare->array_keys);
+					$array_key_diff = array_diff_assoc($var_token[3], $var_declare->array_keys); 
 				
 #print_r($var_declares[$var_name]);		
 #echo "<br>var:".$var_name; echo " varkeys:";print_r($var_token[3]); echo " declarekeys:";print_r($var_declare->array_keys); echo " diff:"; print_r($array_key_diff); echo " |||";
 
-				if( $var_declare->id < $last_token_id && (empty($array_key_diff) || in_array('*', $array_key_diff) || in_array('*', $var_declare->array_keys) ) )
+#if(!empty($var_declare->array_keys)) die(print_r($var_declare->array_keys) . print_r($var_keys));
+
+				if( $var_declare->id < $last_token_id && (empty($array_key_diff) || in_array('*', $array_key_diff) || in_array('*', $var_declare->array_keys)) /* && (empty($var_declare->array_keys) || empty($var_keys) || $var_declare->array_keys == $var_keys || in_array('*', $var_keys) || in_array('*', $array_key_diff) || in_array('*', $var_declare->array_keys) ) */  )
 				{	
 					$comment = '';
 					// add line to output
@@ -183,7 +242,7 @@ class Scanner
 							foreach($var_declare->dependencies as $deplinenr=>$dependency)
 							{
 								if( !isset($mainparent->dependencies[$deplinenr]) && $deplinenr != $var_declare->line )
-								{
+								{	
 									$vardependent = true;
 									$comment.= tokenstostring($dependency).', ';
 									// if dependencie has an ELSE clause, same vars before are definetely overwritten
@@ -234,7 +293,8 @@ class Scanner
 						if( is_array($tokens[$i]) )
 						{
 							// if token is variable or constant
-							if( $tokens[$i][0] === T_VARIABLE || ($tokens[$i][0] === T_STRING && $tokens[$i+1] !== '(') )
+							if( ($tokens[$i][0] === T_VARIABLE && $tokens[$i+1][0] !== T_OBJECT_OPERATOR)
+							|| ($tokens[$i][0] === T_STRING && $tokens[$i+1] !== '(') )
 							{	
 								$var_count++;
 						
@@ -247,7 +307,7 @@ class Scanner
 									// mark user function as a securing user function
 									$GLOBALS['userfunction_secures'] = true;
 									$this_one_is_secure = true;
-								
+
 									$var_trace->marker = 2;
 								} 
 								
@@ -262,12 +322,13 @@ class Scanner
 									
 									$var_trace->marker = 2;
 								}
-
+								
 								// scan in global scope
 								$userinput = $this->scan_parameter(
 									$mainparent, 
 									$var_trace, 
 									$tokens[$i], 
+									$var_keys,
 									$var_declare->id, 
 									((is_array($tokens[$i-1]) && $tokens[$i-1][0] === T_GLOBAL) || $tokens[$i][1][0] !== '$') ? $var_declares_global : $var_declares,  // global or local scope
 									$var_declares_global, 
@@ -313,7 +374,7 @@ class Scanner
 								}	
 								
 								// we could return here to not scan all parameters of the tainting function
-								// however we need to add the line manually to the output at this point
+								// however we would need to add the line manually to the output here
 							}
 							// detect securing functions
 							else if(!$ignore_securing && ( (is_array($F_SECURES) && in_array($tokens[$i][1], $F_SECURES))
@@ -322,7 +383,7 @@ class Scanner
 							{
 								$parentheses_save = $parentheses_open;
 								$in_securing = true;
-								$GLOBALS['securedbyfunc'][] = $tokens[$i][1];
+								$this->securedby[] = $tokens[$i][1];
 							}
 							//detect insecuring functions (functions that make previous securing useless)
 							else if( isset($tokens[$i][1]) && in_array($tokens[$i][1], $GLOBALS['F_INSECURING_STRING']))
@@ -331,13 +392,14 @@ class Scanner
 								$ignore_securing = true;
 							}
 							// if this is a vuln line, it has already been scanned -> return
-							else if( in_array($tokens[$i][0], Tokens::$T_FUNCTIONS) 
-							&& isset($GLOBALS['scan_functions'][$tokens[$i][1]]) 
+							else if( ((in_array($tokens[$i][0], Tokens::$T_FUNCTIONS) 
+							&& isset($GLOBALS['scan_functions'][$tokens[$i][1]]))
+							|| isset(Info::$F_INTEREST[$tokens[$i][1]]))
 							// ignore oftenly used preg_replace() and alike
 							&& !isset($GLOBALS['F_CODE'][$tokens[$i][1]]) 
 							&& !isset($GLOBALS['F_OTHER'][$tokens[$i][1]]))
 							{
-								$var_trace->value = highlightline($tokens, $comment.$var_declare->comment.' stopped, already traced', $var_declare->line);
+								$var_trace->value = highlightline($tokens, $comment.$var_declare->comment.', trace stopped', $var_declare->line);
 								$var_trace->line = $var_declare->line;
 								return $userinput;
 							}
@@ -350,6 +412,18 @@ class Scanner
 
 								$userinput = false;	// first variable before operator has alread been traced, ignore
 								$var_trace->marker = 2;
+							}
+							// func_get_args()
+							else if($tokens[$i][1] === 'func_get_args' && $this->in_function && $tokens[$i][0] === T_STRING)
+							{
+								$this->addfunctiondependend($mainparent, $parent, $return_scan, -1);
+								$userinput = 2;
+							}
+							// func_get_arg()
+							else if($tokens[$i][1] === 'func_get_arg' && $this->in_function && $tokens[$i][0] === T_STRING)
+							{
+								$this->addfunctiondependend($mainparent, $parent, $return_scan, $tokens[$i+2][1]);
+								$userinput = 2;
 							}
 						}
 						// string concat disables arithmetic
@@ -381,7 +455,7 @@ class Scanner
 					// add highlighted line to output, mark tainted vars
 					$var_trace->value = highlightline($tokens, $var_declare->comment.$comment, $var_declare->line, false, false, $tainted_vars);
 					$var_trace->line = $var_declare->line;
-					
+		
 					// we only need the last var declaration, other declarations have been overwritten
 					// exception: if elseif statements:
 					// if else at least overwrites vars before if else statement (else always triggers)
@@ -393,32 +467,23 @@ class Scanner
 		// if var comes from function parameter AND has not been overwritten with static content before (else)
 		else if($this->in_function && in_array($var_name, $this->function_obj->parameters) && ($GLOBALS['verbosity'] >= 3 || empty($secured)) )
 		{
-			// add child with function declaration
-			$func_name = $this->function_obj->name;
-			$mainparent->lines[] = $this->function_obj->lines[0];
-			if($this->function_obj->marker !== 3)
-			{
-				$this->function_obj->value = highlightline($this->function_obj->tokens, '', $this->function_obj->lines[0]);
-				// mark as potential userinput
-				$this->function_obj->marker = 3;
-			}
-			$parent->children[] = $this->function_obj;
-			
-			// add function to scanlist
-			if(!$return_scan)
-			{
-				$key = array_search($var_name, $this->function_obj->parameters);
-				$mainparent->funcdepend = $func_name;
-				$mainparent->funcparamdepend = $key+1;
-
-				// with potential parameters
-				$GLOBALS['user_functions'][$this->file_name][$func_name][0][$key] = $key+1;
-				// and with according securing functions from original find					
-				$GLOBALS['user_functions'][$this->file_name][$func_name][1] = isset($GLOBALS['scan_functions'][$mainparent->name][1]) ? $GLOBALS['scan_functions'][$mainparent->name][1] : $GLOBALS['user_functions'][$this->file_name][$mainparent->name][1];
-			}
-			
+			$key = array_search($var_name, $this->function_obj->parameters);
+			$this->addfunctiondependend($mainparent, $parent, $return_scan, $key);
 			$userinput = 2;
-		}			
+		} 
+		// register globals
+		else if(SCAN_REGISTER_GLOBALS && $var_token[0] === T_VARIABLE && !in_array($var_name, Sources::$V_USERINPUT) && (!$this->in_function || (in_array($var_name, $this->put_in_global_scope) && !in_array($var_name, $this->function_obj->parameters))) && empty($secured))
+		{
+			// add highlighted line to output, mark tainted vars
+			$var_trace = new VarDeclare('');
+			$parent->children[] = $var_trace;
+			$var_trace->value = highlightline(array(array(T_VARIABLE,$var_name,0),array(T_CONSTANT_ENCAPSED_STRING,' is not initialized and '.PHPDOC.'register_globals is enabled',0)), $var_declare->comment.$comment, 0, false, false, $tainted_vars);
+			$var_trace->line = 0;
+			$var_trace->marker = 1;
+			$userinput = true;
+			$this->addexploitparameter($mainparent, '$_GET', str_replace('$','',$var_name));
+		}
+		
 		
 		// if var is userinput, return true directly	
 		if( in_array($var_name, Sources::$V_USERINPUT) && empty($secured) )
@@ -442,13 +507,12 @@ class Scanner
 
 			if(!$overwritten)
 			{
-				$GLOBALS['securedbyfunc'][] = $secured;
 			
 				// add userinput markers to mainparent object
 				if(isset($var_token[3]))
-				{
 					$parameter_name = str_replace(array("'",'"'), '', $var_token[3][0]);
-				}
+				else
+					$parameter_name = 'x';
 				
 				// mark tainted, but only specific $_SERVER parameters
 				if($var_name !== '$_SERVER'
@@ -526,6 +590,36 @@ class Scanner
 		$GLOBALS['user_functions'][$this->file_name][$this->function_obj->name][3] = true;
 	}
 	
+	// add function declaration to parent and mark the block as dependend of this function calls
+	function addfunctiondependend($mainparent, $parent, $return_scan, $key)
+	{
+		// add child with function declaration
+		$func_name = $this->function_obj->name;
+		$mainparent->lines[] = $this->function_obj->lines[0];
+		if($this->function_obj->marker !== 3)
+		{
+			$this->function_obj->value = highlightline($this->function_obj->tokens, '', $this->function_obj->lines[0]);
+			// mark as potential userinput
+			$this->function_obj->marker = 3;
+		}
+		$parent->children[] = $this->function_obj;
+		
+		// add function to scanlist
+		if(!$return_scan)
+		{
+			$mainparent->funcdepend = $func_name;
+			// $mainparent->funcdependparam != $GLOBALS['user_functions'][$this->file_name][$func_name][0]
+			$mainparent->funcparamdepend[] = $key+1;
+
+			// with potential parameters
+			$map = $key < 0 ? 0 : $key;
+			// scan this userfunction with the vuln parameter
+			$GLOBALS['user_functions'][$this->file_name][$func_name][0][$map] = $key+1;
+			// and with according securing functions from original find					
+			$GLOBALS['user_functions'][$this->file_name][$func_name][1] = isset($GLOBALS['scan_functions'][$mainparent->name][1]) ? $GLOBALS['scan_functions'][$mainparent->name][1] : $GLOBALS['user_functions'][$this->file_name][$mainparent->name][1];
+		}
+	}
+	
 	// add a variable to the varlist
 	function variable_add($var_name, $tokens, $comment='', $tokenscanstart, $tokenscanstop, $linenr, $id, $array_keys=array(), $additional_keys=array())
 	{
@@ -545,7 +639,14 @@ class Scanner
 			if(!empty($dependency))
 			$new_var->dependencies[$deplinenr] = $dependency;
 		}
+		
+		// if $GLOBALS['x'] is used outside a function its the same as using var $x, rewrite
+		if($var_name === '$GLOBALS' && !empty($array_keys) && !$this->in_function)
+		{
+			$var_name = '$'.array_shift($array_keys);
+		}
 
+		// add additional array keys
 		if(!empty($additional_keys))
 		{
 			if(empty($array_keys))
@@ -569,7 +670,7 @@ class Scanner
 						$this->in_function ? $this->var_declares_local : $this->var_declares_global, 
 						$this->var_declares_global, 
 						$id
-					);	
+					);
 					
 					if(!empty($recstring))
 						$new_var->array_keys[] = $recstring;
@@ -600,7 +701,7 @@ class Scanner
 			if(!isset($this->var_declares_global[$var_name]))
 				$this->var_declares_global[$var_name] = array($new_var);
 			else
-				array_unshift($this->var_declares_global[$var_name], $new_var);
+				array_unshift($this->var_declares_global[$var_name], $new_var);	
 		}
 	}
 	
@@ -637,6 +738,7 @@ class Scanner
 				$new_find, 
 				$new_find, 
 				$this->tokens[$i], 
+				$this->tokens[$i][3],
 				$i,
 				$this->in_function ? $this->var_declares_local : $this->var_declares_global, 
 				$this->var_declares_global, 
@@ -652,7 +754,7 @@ class Scanner
 							
 				// add to output														
 				$new_find->title = $title;
-				$block = new VulnBlock(getVulnNodeTitle($category), $this->tokens[$i][1]);
+				$block = new VulnBlock($this->tif.'_'.$this->tokens[$i][2].'_'.basename($this->file_pointer), getVulnNodeTitle($category), $this->tokens[$i][1]);
 				$block->treenodes[] = $new_find;
 								
 				if($userinput == 1 || $GLOBALS['verbosity'] == 4)
@@ -675,41 +777,71 @@ class Scanner
 				
 				// add register_globals implementation
 				if($category === 'extract')
-				{
+				{				
 					$this->variable_add(
 						'register_globals', 
-						array_slice($this->tokens, $i-$offset, $offset+3+Analyzer::getBraceEnd($this->tokens, $i+2)), 
-						'register_globals implementation', 
-						0, 0, 
+						array_merge(array_slice($this->tokens, $i-$offset, ($end=$offset+3+Analyzer::getBraceEnd($this->tokens, $i+2))),array(array(T_COMMENT,'// is like ',0),array(T_STRING,'import_request_variables',0),'(',')')), 
+						'see above', 
+						1, $end+2, 
 						$this->tokens[$i][2], 
 						$i, 
 						isset($this->tokens[$i][3]) ? $this->tokens[$i][3] : array()
 					);	
+
 				}
 			}	
 		}	
 	}	
 		
+	// check if same vulnBlock with the same unique identifier has already been scanned	
+	function already_scanned($i)
+	{
+		$uid = $this->tif.'_'.$this->tokens[$i][2].'_'.basename($this->file_pointer);
+		foreach($GLOBALS['output'] as $file)
+		{
+			foreach($file as $vulnBlock)
+			{
+				if($vulnBlock->uid == $uid && $vulnBlock->vuln)
+				{
+					$vulnBlock->alternatives[] = $this->file_name;
+					return true;
+				}	
+			}
+		}
+		return false;
+	}
+		
+	// check if securing function is listed as securing that depends on quotes	
+	function quote_analysis_needed()
+	{
+		foreach($this->securedby as $var=>$func)
+		{
+			if(in_array($func, $GLOBALS['F_QUOTE_ANALYSIS']))
+				return true;
+		}
+		return false;
+	}
+		
 	// parse tokens of php file, build program model, follow program flow, initiate taint analysis	
 	function parse()
 	{
 		// scan all tokens
-		for($i=0,$tokencount=count($this->tokens); $i<$tokencount;  $i++)
+		for($i=0,$tokencount=count($this->tokens); $i<$tokencount;  $i++, $this->tif++)
 		{		
-			// add preloader info for big files
-			if($this->tokens[$i][2] % PRELOAD_SHOW_LINE == 1)
-			{
-				echo $GLOBALS['fit'] . '|' . $GLOBALS['file_amount'] . '|' . $this->file_pointer . ' (line ' . $this->tokens[$i][2] . ')|' . $GLOBALS['timeleft'] . '|' . str_pad(' ',9096)."\n";
-				@ob_flush();
-				flush();
-			}
-		
 			if( is_array($this->tokens[$i]) )
 			{
 				$token_name = $this->tokens[$i][0];
 				$token_value = $this->tokens[$i][1];
 				$line_nr = $this->tokens[$i][2];
 				
+				// add preloader info for big files
+				if($line_nr  % PRELOAD_SHOW_LINE == 0)
+				{
+					echo $GLOBALS['fit'] . '|' . $GLOBALS['file_amount'] . '|' . $this->file_pointer . ' (line ' . $line_nr  . ')|' . $GLOBALS['timeleft'] . '|' . "\n";
+					@ob_flush();
+					flush();
+				}
+
 				# debug
 				#echo "file:".$file_name.",line:".$line_nr.",token:".token_name($token_name).",";
 				#echo "value:".htmlentities($token_value).",";
@@ -735,9 +867,15 @@ class Scanner
 					|| ($this->tokens[$i-1][0] === T_DOUBLE_ARROW && $this->tokens[$i-2][0] === T_VARIABLE && $this->tokens[$i-3][0] === T_AS) )
 					{
 						$c=3;
-						while($this->tokens[$i-$c][0] !== T_FOREACH )
+						while($this->tokens[$i-$c][0] !== T_FOREACH) 
 						{
 							$c++;
+							
+							if(($i-$c)<0 || $this->tokens[$i-$c] === ';')
+							{
+								addError('Could not find FOREACH token before AS token', array_slice($this->tokens, $i-5, 10), $this->tokens[$i-1][2], $this->file_pointer);
+								break;	
+							}
 						}
 
 						$this->variable_add(
@@ -774,6 +912,12 @@ class Scanner
 								$firstsemi = $c;
 							}
 							$c++;
+							
+							if(!isset($this->tokens[$i+$c]))
+							{
+								addError('Could not find closing parenthesis of for-statement.', array_slice($this->tokens, $i-2, 10), $this->tokens[$i-2][2], $this->file_pointer);
+								break;	
+							}
 						}
 
 						// overwrite value of first var because it is looped
@@ -829,7 +973,7 @@ class Scanner
 									$keytokens = array();
 									$valuetokens = array();
 								}
-								// watch function calls in function call
+								// watch function calls in array braces
 								else if( $this->tokens[$i + $d] === '(' )
 								{
 									$newbraceopen++;
@@ -838,7 +982,7 @@ class Scanner
 								{
 									$newbraceopen--;
 								}
-								// => detected, tokens before are keyname, next one value
+								// "=>" detected, tokens before are keyname, next one value
 								else if( $this->tokens[$i + $d][0] === T_DOUBLE_ARROW )
 								{
 									$keytokens = $valuetokens;
@@ -850,6 +994,12 @@ class Scanner
 									$valuetokens[] = $this->tokens[$i + $d];
 								}
 								$d++;
+								
+								if(!isset($this->tokens[$i+$d]))
+								{
+									addError('Could not find closing parenthesis of array()-declaration.', array_slice($this->tokens, $i, 10), $this->tokens[$i+2][2], $this->file_pointer);
+									break;	
+								}
 							}
 							$vardeclare['end'] = Analyzer::getBraceEnd($this->tokens, $i)+1;
 						// $var = anything;	
@@ -886,7 +1036,7 @@ class Scanner
 								$GLOBALS['user_input'][$token_value.'['.Analyzer::get_tokens_value(
 									$this->file_pointer,
 									$this->tokens[$i][3][0],
-									$this->var_declares_global,
+									$this->in_function ? $this->var_declares_local : $this->var_declares_global,
 									$this->var_declares_global, 
 									$i
 								).']'][$this->file_pointer][] = $line_nr;
@@ -909,7 +1059,7 @@ class Scanner
 				// do not check if next token is '(' because: require $inc; does not use ()
 				else if( in_array($token_name, Tokens::$T_FUNCTIONS) 
 				|| (in_array($token_name, Tokens::$T_XSS) && ($_POST['vector'] == 'client' || $_POST['vector'] == 'xss' || $_POST['vector'] == 'all')) )
-				{	
+				{					
 					/*************************
 							T_STRING			
 					*************************/					
@@ -919,9 +1069,15 @@ class Scanner
 						if($token_value === 'define')
 						{
 							$c=1;
-							while($this->tokens[$i+$c] !== ',' )
+							while($this->tokens[$i+$c] !== ',')
 							{
 								$c++;
+								
+								if($this->tokens[$i+$c] === ';' || !isset($this->tokens[$i+$c]))
+								{
+									addError('Second parameter of define() is missing.', array_slice($this->tokens, $i, $c), $this->tokens[$i][2], $this->file_pointer);
+									break;	
+								}
 							}
 								
 							$this->variable_add(
@@ -933,30 +1089,34 @@ class Scanner
 								$i
 							);	
 						}
-						// ini_set('include_path', 'foo/bar')
-						else if($token_value === 'ini_set' 
-						&& ($this->tokens[$i+2][1] === "'include_path'" || $this->tokens[$i+2][1] === "'include_path'") )
+						// ini_set()
+						else if($token_value === 'ini_set') 
 						{
-							$path = Analyzer::get_tokens_value(
-								$this->file_pointer,
-								array_slice($this->tokens, $i+4,Analyzer::getBraceEnd($this->tokens, $i+4)+1), 
-								$this->var_declares_local, 
-								$this->var_declares_global, 
-								$i
-							);
-							$this->include_paths = explode(':', $path);
+							$setting = str_replace(array("'", '"'), '', $this->tokens[$i+2][1]);
+							// ini_set('include_path', 'foo/bar')
+							if ($setting === 'include_path')
+							{
+								$path = Analyzer::get_tokens_value(
+									$this->file_pointer,
+									array_slice($this->tokens, $i+4,Analyzer::getBraceEnd($this->tokens, $i+4)+1), 
+									$this->in_function ? $this->var_declares_local : $this->var_declares_global, 
+									$this->var_declares_global, 
+									$i
+								);
+								$this->include_paths = array_unique(array_merge($this->include_paths, Analyzer::get_ini_paths($path)));
+							}
 						}
 						// set_include_path('foo/bar')
 						else if($token_value === 'set_include_path')
 						{
 							$path = Analyzer::get_tokens_value(
 								$this->file_pointer,
-								array_slice($this->tokens, $i+1, Analyzer::getBraceEnd($this->tokens, $i+1)+1), 
-								$this->var_declares_local, 
+								array_slice($this->tokens, $i+1,Analyzer::getBraceEnd($this->tokens, $i+1)+1), 
+								$this->in_function ? $this->var_declares_local : $this->var_declares_global, 
 								$this->var_declares_global, 
 								$i
 							);
-							$this->include_paths = explode(':', $path);
+							$this->include_paths = array_unique(array_merge($this->include_paths, Analyzer::get_ini_paths($path)));
 						}
 						// treat error handler as called function
 						else if($token_value === 'set_error_handler')
@@ -989,6 +1149,12 @@ class Scanner
 									);
 								}
 								$f++;
+								
+								if($this->tokens[$i+$f] === ';' || !isset($this->tokens[$i+$f]))
+								{
+									addError('Closing parenthesis of compact() is missing.', array_slice($this->tokens, $i, $f), $this->tokens[$i][2], $this->file_pointer);
+									break;	
+								}
 							}
 						}	
 						// preg_match($regex, $source, $matches), save $matches as var declare	
@@ -998,7 +1164,7 @@ class Scanner
 							$parameter = 1;
 							$newbraceopen = 1;
 							
-							while( !($newbraceopen === 0 || $this->tokens[$i + $c] === ';') )
+							while( $newbraceopen !== 0 )
 							{
 								if( is_array($this->tokens[$i + $c]) 
 								&& $this->tokens[$i + $c][0] === T_VARIABLE && $parameter == 3)
@@ -1028,6 +1194,11 @@ class Scanner
 								else if( $this->tokens[$i + $c] === ')' )
 								{
 									$newbraceopen--;
+								}						
+								else if($this->tokens[$i+$c] === ';' || !isset($this->tokens[$i+$c]))
+								{
+									addError('Closing parenthesis of '.$token_value.'() is missing.', array_slice($this->tokens, $i, $c), $this->tokens[$i][2], $this->file_pointer);
+									break;	
 								}
 								$c++;
 							}
@@ -1067,7 +1238,7 @@ class Scanner
 								$classvar = $this->tokens[$i-2][1];
 								if($classvar[0] !== '$')
 									$classvar = '$'.$classvar;
-								$class = ($classvar === '$this' ? $this->class_name : $this->class_vars[$classvar]);
+								$class = ($classvar === '$this' || $classvar === '$self') ? $this->class_name : $this->class_vars[$classvar];
 							}	
 							// CLASS::func()
 							else if($this->tokens[$i-1][0] === T_DOUBLE_COLON)
@@ -1112,7 +1283,7 @@ class Scanner
 					*************************/
 					// include tokens from included files
 					else if( in_array($token_name, Tokens::$T_INCLUDES) && !$this->in_function)
-					{	
+					{						
 						$GLOBALS['count_inc']++;
 						// include('xxx')
 						if ( (($this->tokens[$i+1] === '(' 
@@ -1142,162 +1313,209 @@ class Scanner
 							$inc_file = Analyzer::get_tokens_value(
 								$this->file_pointer,
 								array_slice($this->tokens, $i+1, $c=Analyzer::getBraceEnd($this->tokens, $i+1)+1), 
-								$this->var_declares_global, 
+								$this->in_function ? $this->var_declares_local : $this->var_declares_global, 
 								$this->var_declares_global, 
 								$i
 							);
+
+							// in case the get_var_value added several php files, take the first
+							$several = explode('.php', $inc_file);
+							if(count($several) > 1)
+								$try_file = $several[0] . '.php';
 				
 							$skip = $c+1; // important to save $c+1 here
 						}
-						
+
 						$try_file = $inc_file;
-						
+
+						// try absolute include path
+						foreach($this->include_paths as $include_path)
+						{
+							if(is_file("$include_path/$try_file"))
+							{
+								$try_file = "$include_path/$try_file";	
+								break;
+							}
+						}
+
 						// if dirname(__FILE__) appeared it was an absolute path
 						if(!is_file($try_file))
 						{
 							// check relativ path
 							$try_file = dirname($this->file_name). '/' . $inc_file;
-							// in case the get_var_value added several php files, take the first
-							$several = explode('.php', $try_file);
-							if(count($several) > 1)
-								$try_file = $several[0] . '.php';
 							
-							// if file can not be found check include_path if set
-							if(!is_file($try_file)) 
+							
+							if(!is_file($try_file))
 							{
-								if(isset($this->include_paths[0]))
-								{
-									foreach($this->include_paths as $include_path)
-									{
-										if(is_file(dirname($this->file_name).'/'.$include_path.'/'.$inc_file))
-										{
-											$try_file = dirname($this->file_name).'/'.$include_path.'/'.$inc_file;
-											$debug_include_tactic = 'include path';
-											break;
-										}
-									}
-								}
+								$other_try_file = dirname($this->file_pointer). '/' . $inc_file;
 								
-								// if still not a valid file, look a directory above
-								if(!is_file($try_file))
+								// if file can not be found check include_path if set
+								if(!is_file($other_try_file)) 
 								{
-									$try_file = str_replace('\\', '/', $try_file);
-									$pos = strlen($try_file);
-									// replace each found / with /../, start from the end of file name
-									for($c=1; $c<substr_count($try_file, '/'); $c++)
+									if(isset($this->include_paths[0]))
 									{
-										$pos = strripos(substr($try_file,1,$pos), '/');
-										if(is_file(substr_replace($try_file, '/../', $pos+1, 1)))
+										foreach($this->include_paths as $include_path)
 										{
-											$try_file = substr_replace($try_file, '/../', $pos+1, 1);
-											$debug_include_tactic = 'traversaled path';
-											break;
-										}
-									}
-								
-									// if still not a valid file, guess it
-									if(!is_file($try_file))
-									{
-										$searchfile = basename($try_file);
-										if(!strstr($searchfile, '$_USERINPUT'))
-										{
-											foreach($GLOBALS['files'] as $cfile)
+											if(is_file(dirname($this->file_name).'/'.$include_path.'/'.$inc_file))
 											{
-												if(basename($cfile) == $searchfile)
-												{
-													$try_file = $cfile;
-													$debug_include_tactic = 'guessed file';
-													break;
-												}
+												$try_file = dirname($this->file_name).'/'.$include_path.'/'.$inc_file;
+												break;
+											}
+											else if(is_file(dirname($this->file_pointer).'/'.$include_path.'/'.$inc_file))
+											{
+												$try_file = dirname($this->file_pointer).'/'.$include_path.'/'.$inc_file;
+												break;
 											}
 										}
 									}
-								}
-							} else
-							{
-								$debug_include_tactic = 'relative path';
-							}
-						} else
-						{
-							$debug_include_tactic = 'absolute path';
+									
+									// if still not a valid file, look a directory above
+									if(!is_file($try_file))
+									{
+										$try_file = str_replace('\\', '/', $try_file);
+										$pos = strlen($try_file);
+										// replace each found / with /../, start from the end of file name
+										for($c=1; $c<substr_count($try_file, '/'); $c++)
+										{
+											$pos = strripos(substr($try_file,1,$pos), '/');
+											if(is_file(substr_replace($try_file, '/../', $pos+1, 1)))
+											{
+												$try_file = substr_replace($try_file, '/../', $pos+1, 1);
+												break;
+											}
+										}
+									
+										if(!is_file($try_file))
+										{
+											$try_file = str_replace('\\', '/', $other_try_file);
+											$pos = strlen($try_file);
+											// replace each found / with /../, start from the end of file name
+											for($c=1; $c<substr_count($try_file, '/'); $c++)
+											{
+												$pos = strripos(substr($try_file,1,$pos), '/');
+												if(is_file(substr_replace($try_file, '/../', $pos+1, 1)))
+												{
+													$try_file = substr_replace($try_file, '/../', $pos+1, 1);
+													break;
+												}
+											}
+									
+											// if still not a valid file, guess it
+											if(!is_file($try_file))
+											{
+												$searchfile = basename($try_file);
+												if(!strstr($searchfile, '$_USERINPUT'))
+												{
+													foreach($GLOBALS['files'] as $cfile)
+													{
+														if(basename($cfile) == $searchfile)
+														{
+															$try_file = $cfile;
+															break;
+														}
+													}
+												}
+											}
+										
+										}
+									}
+								} 
+							} 
 						}
 						
-						$inc_success = false;
-						
-						// if file name has not been included
-						if( !in_array(realpath($try_file), $this->inc_file_stack) )
-						{
-							// try to open include file name
-							if ( $inc_lines = @file( $try_file ) )
-							{		
-								$inc_success = true;
-								$include = " successfully analysed ($debug_include_tactic)"; 
-							
-								// Tokens
-								$inc_tokens = Tokenizer::tokenize(implode('',$inc_lines));
+						$try_file_unreal = $try_file;
+						$try_file = realpath($try_file);
 
-								// insert included tokens in current tokenlist and mark end
-								$this->tokens = array_merge(
-									array_slice($this->tokens, 0, $i+$skip), 			// before include
-									$inc_tokens, 										// included tokens
-									array(array(T_INCLUDE_END, 0, $inc_file)), 			// extra END-identifier
-									array_slice($this->tokens, $i+$skip) 				// after include
-								);
+						// file is valid
+						if(!empty($try_file_unreal) && !empty($try_file) && $inc_lines = @file( $try_file_unreal ))
+						{
+							// file name has not been included
+							if(!in_array($try_file, $this->inc_map))
+							{	
+								// Tokens
+								$tokenizer = new Tokenizer($try_file);
+								$inc_tokens = $tokenizer->tokenize(implode('',$inc_lines));
+								unset($tokenizer);
+
+								// if(include('file')) { - include tokens after { and not into the condition :S
+								if($this->in_condition)
+								{
+									$this->tokens = array_merge(
+										array_slice($this->tokens, 0, $this->in_condition+1), 	// before include in condition
+										$inc_tokens, 											// included tokens
+										array(array(T_INCLUDE_END, 0, 1)), 						// extra END-identifier
+										array_slice($this->tokens, $this->in_condition+1) 		// after condition
+									);
+								} else
+								{
+									// insert included tokens in current tokenlist and mark end
+									$this->tokens = array_merge(
+										array_slice($this->tokens, 0, $i+$skip), 			// before include
+										$inc_tokens, 										// included tokens
+										array(array(T_INCLUDE_END, 0, 1)), 					// extra END-identifier
+										array_slice($this->tokens, $i+$skip) 				// after include
+									);
+								}
 								
 								$tokencount = count($this->tokens);
 								
 								// set lines pointer to included lines, save last pointer
 								// (the following tokens will be the included ones)
 								$this->lines_stack[] = $inc_lines;
-								$this->lines_pointer =& end($this->lines_stack);
+								$this->lines_pointer = end($this->lines_stack);
+								
+								// tokennr in file
+								$this->tif_stack[] = $this->tif;
+								$this->tif = -$skip;
 								
 								// set the current file pointer
-								$this->file_pointer =& realpath($try_file);
+								$this->file_pointer = $try_file;
+								if(!isset($GLOBALS['file_sinks_count'][$this->file_pointer]))
+									$GLOBALS['file_sinks_count'][$this->file_pointer] = 0;
+
+								echo $GLOBALS['fit'] . '|' . $GLOBALS['file_amount'] . '|' . $this->file_pointer . '|' . $GLOBALS['timeleft'] . '|' ."\n";
+								@ob_flush();
+								flush();
 														
 								$this->comment = basename($inc_file);
 								
-								$this->inc_file_stack[] = realpath($try_file);	
+								$this->inc_file_stack[] = $try_file;	
 
 								// build include map for file list
 								$this->inc_map[] = $try_file; // all basic includes
 							} 
-							// included file name could not be reversed 
-							// (probably dynamic with function calls)
-							else
-							{
-								$include = " could not analyse file, tried: $try_file";
-								$GLOBALS['count_inc_fail']++;
-							}
 						}
+						// included file name could not be reversed 
+						// (probably dynamic with function calls)
 						else
 						{
-							$include = " $inc_file has already been included";
-						}
-						
-						// add information about include success in debug mode
-						if( $GLOBALS['verbosity'] == 5 )
-						{
-							// add include command to output
-							$found_value = highlightline(array_slice($this->tokens,$i,$skip), $this->comment."\t".$include, $line_nr, $token_value);
-							$new_find = new InfoTreeNode($found_value);
-							$new_find->lines[] = $line_nr;
-							$new_find->filename = ($inc_success && isset($this->inc_file_stack[count($this->inc_file_stack)-2])) ? $this->inc_file_stack[count($this->inc_file_stack)-2] : $this->file_pointer;
-							
-							if(isset($GLOBALS['output'][$this->file_name]['inc']))
+							$GLOBALS['count_inc_fail']++;
+							// add information about include error in debug mode
+							if( $GLOBALS['verbosity'] == 5 )
 							{
-								$GLOBALS['output'][$this->file_name]['inc']->treenodes[] = $new_find;
-							}
-							else
-							{
-								$new_block = new VulnBlock('Debug');
-								$new_block->treenodes[] = $new_find;
-								$new_block->vuln = true;
-								$GLOBALS['output'][$this->file_name]['inc'] = $new_block;
+								// add include command to output
+								$found_value = highlightline(array_slice($this->tokens,$i,$skip), $this->comment, $line_nr, $token_value);
+								$new_find = new InfoTreeNode($found_value);
+								$new_find->lines[] = $line_nr;
+								$new_find->filename = $this->file_pointer;
+								$new_find->title =  "Include error: tried to include: ".$try_file_unreal;
+								
+								if(isset($GLOBALS['output'][$this->file_name]['inc']))
+								{
+									$GLOBALS['output'][$this->file_name]['inc']->treenodes[] = $new_find;
+								}
+								else
+								{
+									$new_block = new VulnBlock($this->tif.'_'.$this->tokens[$i][2].'_'.basename($this->file_pointer), 'Debug');
+									$new_block->treenodes[] = $new_find;
+									$new_block->vuln = true;
+									$GLOBALS['output'][$this->file_name]['inc'] = $new_block;
+								}
 							}
 						}
 						
 					}	
-					
+
 					/*************************
 						TAINT ANALYSIS			
 					*************************/	
@@ -1305,361 +1523,384 @@ class Scanner
 					// not a function of a class or a function of a vulnerable class
 					&& (empty($class) || (($this->in_function && is_array($function_obj->parameters) && in_array($classvar, $function_obj->parameters)) || @in_array($token_value, $this->vuln_classes[$class]))) )
 					{	
-						// build new find					 
-						$new_find = new VulnTreeNode();
-						$new_find->name = $token_value;
-						$new_find->lines[] = $line_nr;
-						
-						// count sinks
-						$GLOBALS['file_sinks_count'][$this->file_pointer]++;
-
-						if($this->in_function)
+						if(!$this->already_scanned($i))
 						{
-							$GLOBALS['user_functions_offset'][$this->function_obj->name][6]++;
-						} else
-						{
-							$GLOBALS['user_functions_offset']['__main__'][6]++;
-						}
-						
-						// add dependencies
-						foreach($this->dependencies as $deplinenr=>$dependency)
-						{
-							if(!empty($dependency))
-								$new_find->dependencies[$deplinenr] = $dependency;
-						}
-					
-						$parameter = 1;
-						$var_count = 0;
-						$vulnparams = array();
-						$has_vuln_parameters = false;
-						$parameter_has_userinput = false;
-						$parameter_func_depend = false;
-						$secured_by_start = false;
-						// function calls without quotes (require $inc;) --> no brace count
-						$parentheses_open = ($this->tokens[$i+1] === '(') ? 1 : -2; // -2: detection of braces doesnt matter
-						$parentheses_save = -1;
-						$in_securing = false;
-						$ignore_securing = false;
-						$c = ($this->tokens[$i+1] === '(') ? 2 : 1; // important
-						$tainted_vars = array();
-						
-						$reconstructstr = '';
-						$addtitle='';
-						$GLOBALS['securedbyfunc'] = array();
-
-						// get all variables in parameter list between (...)
-						// not only until ';' because: system(get($a),$b,strstr($c));
-						while( !($parentheses_open === 0 || $this->tokens[$i + $c] === ';') )
-						{
-							$this_one_is_secure = false;
-							if( is_array($this->tokens[$i + $c]) )
-							{	
-								// scan variables and constants
-								if( $this->tokens[$i + $c][0] === T_VARIABLE 
-								|| ($this->tokens[$i + $c][0] === T_STRING && $this->tokens[$i + $c+1] !== '(') )
-								{
-									$var_count++;
-									// scan only potential vulnerable parameters of function call
-									if ( in_array($parameter, $this->scan_functions[$token_value][0]) 
-									|| (isset($this->scan_functions[$token_value][0][0])
-										&& $this->scan_functions[$token_value][0][0] === 0) ) // all parameters accepted
-									{			
-										$has_vuln_parameters = true;
-
-										if((is_array($this->tokens[$i+$c-1]) 
-										&& in_array($this->tokens[$i+$c-1][0], Tokens::$T_CASTS))
-										|| (is_array($this->tokens[$i+$c+1]) 
-										&& in_array($this->tokens[$i+$c+1][0], Tokens::$T_ARITHMETIC)) )		
-										{
-											$secured_by_start = true;
-											$this_one_is_secure = true;
-										}
-		
-										// trace back parameters and look for userinput, trace constants globally
-										$userinput = $this->scan_parameter(
-											$new_find, 
-											$new_find, 
-											$this->tokens[$i+$c], 
-											$i+$c,
-											($this->in_function && $this->tokens[$i + $c][1][0] === '$') ? $this->var_declares_local : $this->var_declares_global, 
-											$this->var_declares_global,  
-											false, 
-											$this->scan_functions[$token_value][1], 
-											false, // no return-scan
-											$ignore_securing, 
-											($this_one_is_secure || $in_securing)
-										);
-											
-										$reconstructstr.= Analyzer::get_var_value(
-											$this->file_pointer,
-											$this->tokens[$i+$c], 
-											($this->in_function && $this->tokens[$i + $c][1][0] === '$') ? $this->var_declares_local : $this->var_declares_global, 
-											$this->var_declares_global, 
-											$i+$c
-										);	
-
-										if($userinput /*&& (!$this_one_is_secure || $GLOBALS['verbosity'] == 3)*/ )
-										{
-											$vulnparams[] = $parameter;
-											if($userinput == 1)
-												$parameter_has_userinput = true;
-											else if($userinput == 2)
-												$parameter_func_depend = true;
-											$tainted_vars[] = $var_count;
-										}	
-									} 
-									
-									// mark userinput for quote analysis
-									if(in_array($this->tokens[$i + $c][1], Sources::$V_USERINPUT))
-									{
-										$reconstructstr.='$_USERINPUT';
-									}
-								}
-								// userinput from return value of a function
-								else if( $this->tokens[$i + $c][0] === T_STRING 
-								&& in_array($this->tokens[$i + $c][1], $this->source_functions) 
-								// scan only potential vulnerable parameters of function call
-								&& ( in_array($parameter, $this->scan_functions[$token_value][0]) 
-								|| (isset($this->scan_functions[$token_value][0][0])
-								&& $this->scan_functions[$token_value][0][0] === 0) ) )// all parameters accepted
-								{	
-									$has_vuln_parameters = true;
-									$parameter_has_userinput = true;
-									$new_find->marker = 1; 
-									$reconstructstr.='$_USERINPUT';
-									$new_find->title = 'Userinput returned by function <i>'.$this->tokens[$i + $c][1].'</i> reaches sensitive sink';
-								}	
-								//detect insecuring functions (functions that make previous securing useless)
-								else if( $this->tokens[$i + $c][0] === T_STRING 
-								&& isset($this->tokens[$i+$c][1]) && in_array($this->tokens[$i+$c][1], $GLOBALS['F_INSECURING_STRING']) 
-								&& $parentheses_save == -1)
-								{
-									$parentheses_save = $parentheses_open;
-									$ignore_securing = true;
-								}
-								// detect securing functions embedded into the sensitive sink
-								else if( !$ignore_securing && ($this->tokens[$i + $c][0] === T_STRING 
-								&& ( (is_array($this->scan_functions[$token_value][1]) 
-								&& in_array($this->tokens[$i+$c][1], $this->scan_functions[$token_value][1]))
-								|| in_array($this->tokens[$i+$c][1], $GLOBALS['F_SECURING_STRING']) ) ) 
-								|| (in_array($this->tokens[$i+$c][0], Tokens::$T_CASTS) && $this->tokens[$i+$c+1] === '('))
-								{
-									$GLOBALS['securedbyfunc'][] = $this->tokens[$i+$c][1];
-									$parentheses_save = $parentheses_open;
-									$in_securing = true;
-									$secured_by_start = true;
-								}
-								// add strings to reconstructed string for quotes analysis
-								else if( $this->tokens[$i + $c][0] === T_CONSTANT_ENCAPSED_STRING )
-								{
-									$reconstructstr.= substr($this->tokens[$i + $c][1], 1, -1);
-								}
-								else if( $this->tokens[$i + $c][0] === T_ENCAPSED_AND_WHITESPACE )
-								{
-									$reconstructstr.= $this->tokens[$i + $c][1];
-								}
-							}	
-							// count parameters
-							else if( $parentheses_open === 1 && $this->tokens[$i + $c] === ',' )
-							{
-								$parameter++;
-							}
-							// watch function calls in function call
-							else if( $this->tokens[$i + $c] === '(' )
-							{
-								$parentheses_open++;
-							}
-							else if( $this->tokens[$i + $c] === ')' )
-							{
-								$parentheses_open--;
-								if($parentheses_open === $parentheses_save)
-								{
-									$parentheses_save = -1;
-									$in_securing = false;
-									$ignore_securing = false;
-								}	
-							}
-							$c++;
-						}	
-
-						// quote analysis for securing functions F_QUOTE_ANALYSIS
-						// they only protect when return value is embedded into quotes
-						if( count($GLOBALS['securedbyfunc']) == substr_count($reconstructstr, '$_USERINPUT')  > 0 )
-						{
-							$parts = explode('$_USERINPUT', $reconstructstr);
-							foreach($GLOBALS['securedbyfunc'] as $var=>$securefunction)
-							{
-								if(in_array($securefunction, $GLOBALS['F_QUOTE_ANALYSIS']))
-								{
-									// extract the string before the userinput
-									$checkstring = '';
-									$d=0;
-									foreach($parts as $part)
-									{
-										$checkstring.=$part;
-										if($d>=$var)
-											break;
-										$d++;	
-									}
-
-									// even amount of quotes (or none) in string 
-									// --> no quotes around userinput
-									// --> securing function is	useless
-									if(substr_count($checkstring, "'") % 2 === 0
-									&& substr_count($checkstring, '"') % 2 === 0)
-									{
-										$has_vuln_parameters = true;
-										$parameter_has_userinput = true;
-										$new_find->title = "Userinput reaches sensitive sink due to insecure usage of $securefunction() without quotes";
-									}
-								}
-							}	
-						}
-						
-						// add find to output if function call has variable parameters (With userinput)
-						if( ($has_vuln_parameters && ($parameter_has_userinput || $parameter_func_depend)) || $GLOBALS['verbosity'] == 4 || isset($this->scan_functions[$token_value][3]) ) 
-						{
-							$vulnstart=$i;
-							$vulnadd=1;
-							// prepend $var assignment
-							if(isset($vardeclare))
-							{
-								$vulnstart = $vardeclare['start'];
-								$vulnadd = $vardeclare['end']-$vardeclare['start']-$c+1;//3;
-							}	
-							// prepend echo statement
-							else if(isset($GLOBALS['F_XSS'][$this->tokens[$i-1][1]]))
-							{
-								$vulnstart = $i-1;
-								$vulnadd = 2;
-							}	
-							// prepend class var
-							else if($this->tokens[$i-1][0] === T_DOUBLE_COLON || $this->tokens[$i-1][0] === T_OBJECT_OPERATOR)
-							{
-								$vulnstart = $i-2;
-								$vulnadd = 2;
-							}
-						
-							if(isset($GLOBALS['user_functions'][$this->file_name][$token_value]))
-							{
-								$found_line = '<A NAME="'.$token_value.'_call" class="jumplink"></A>';
-								$found_line.= highlightline(array_slice($this->tokens,$vulnstart,$c+$vulnadd),$this->comment, $line_nr, false, $token_value);
-							} else
-							{
-								$found_line = highlightline(array_slice($this->tokens,$vulnstart,$c+$vulnadd),$this->comment, $line_nr, $token_value, false, $tainted_vars);
-							}
+							// build new find					 
+							$new_find = new VulnTreeNode();
+							$new_find->name = $token_value;
+							$new_find->lines[] = $line_nr;
 							
-							$new_find->value = $found_line;
-							$new_find->filename = $this->file_pointer;
-						
-							if($secured_by_start)
-								$new_find->marker = 2; 
-
-							// only show vuln user defined functions 
-							// if call with userinput has been found
-							if( isset($GLOBALS['user_functions'][$this->file_name][$token_value]) )
-								$GLOBALS['user_functions'][$this->file_name][$token_value]['called'] = true;
+							// add dependencies (already here, because checked during var trace
+							foreach($this->dependencies as $deplinenr=>$dependency)
+							{
+								if(!empty($dependency))
+									$new_find->dependencies[$deplinenr] = $dependency;
+							}	
 							
+							// count sinks
+							$GLOBALS['file_sinks_count'][$this->file_pointer]++;
+
 							if($this->in_function)
 							{
-								$this->ignore_securing_function = true;
-								// mark function in class as vuln
-								if($this->in_class)
-								{
-									$this->vuln_classes[$this->class_name][] = $this->function_obj->name;
-								}						
+								$GLOBALS['user_functions_offset'][$this->function_obj->name][6]++;
+							} else
+							{
+								$GLOBALS['user_functions_offset']['__main__'][6]++;
 							}
+
+							$parameter = 1;
+							$var_counter = 0;
+							$vulnparams = array(0);
+							$has_vuln_parameters = false;
+							$parameter_has_userinput = false;
+							$parameter_func_depend = false;
+							$secured_by_start = false;
+							// function calls without quotes (require $inc;) --> no brace count
+							$parentheses_open = ($this->tokens[$i+1] === '(') ? 1 : -2; // -2: detection of braces doesnt matter
+							$parentheses_save = -1;
+							$in_securing = false;
+							$ignore_securing = false;
+							$c = ($this->tokens[$i+1] === '(') ? 2 : 1; // important
+							$tainted_vars = array();
 							
-							// putenv with userinput --> getenv is treated as userinput
-							if($token_value === 'putenv')
+							$reconstructstr = '';
+							$addtitle='';
+							$this->securedby = array();
+
+							// get all variables in parameter list between (...)
+							// not only until ';' because: system(get($a),$b,strstr($c));
+							while( $parentheses_open !== 0 && $this->tokens[$i + $c] !== ';' )
 							{
-								$this->source_functions[] = 'getenv';
-								$new_find->title = 'User can set PHP enviroment variables. Adding getenv() to tainting functions';
-							}
-							else if($token_value === 'apache_setenv')
-							{
-								$this->source_functions[] = 'apache_getenv';
-								$new_find->title = 'User can set Apache enviroment variables. Adding apache_getenv() to tainting functions';
-							}
-							else if($token_value === 'extract' || $token_value === 'parse_str' || $token_value === 'mb_parse_str')
-							{
-								// add register_globals implementation
-								$this->variable_add(
-									'register_globals', 
-									array_slice($this->tokens,$vulnstart,$c+$vulnadd), 
-									'register_globals implementation', 
-									0, 0, 
-									$line_nr, 
-									$i, 
-									isset($this->tokens[$i][3]) ? $this->tokens[$i][3] : array()
-								);	
-							}
-						
-							// add to output							
-							if(isset($GLOBALS['user_functions'][$this->file_name][$token_value]) 
-							&& !empty($GLOBALS['output'][$this->file_name]))
-							{	
-								foreach($GLOBALS['output'][$this->file_name] as $block)
-								{
-									$calleesadded = array();
-									foreach($block->treenodes as $tree)
+								$this_one_is_secure = false;
+								if( is_array($this->tokens[$i + $c]) )
+								{	
+									// scan variables and constants
+									if( ($this->tokens[$i + $c][0] === T_VARIABLE && $this->tokens[$i + $c +1][0] !==T_OBJECT_OPERATOR)
+									|| ($this->tokens[$i + $c][0] === T_STRING && $this->tokens[$i + $c+1] !== '(') )
 									{
-										if($tree->funcdepend === $token_value 
-										&& (in_array($tree->funcparamdepend, $vulnparams) || isset($this->scan_functions[$token_value][3]) ))
-										{
-											// if funcdependend already found and added, just add foundcallee=true and continue
-											// dont add tree again, it is already added to the vulnblock
-											if(in_array($tree->funcdepend, $calleesadded))
+										$var_counter++;
+										// scan only potential vulnerable parameters of function call
+										if ( in_array($parameter, $this->scan_functions[$token_value][0]) 
+										|| (isset($this->scan_functions[$token_value][0][0])
+											&& $this->scan_functions[$token_value][0][0] === 0) ) // all parameters accepted
+										{			
+											$has_vuln_parameters = true;
+
+											if((is_array($this->tokens[$i+$c-1]) 
+											&& in_array($this->tokens[$i+$c-1][0], Tokens::$T_CASTS))
+											|| (is_array($this->tokens[$i+$c+1]) 
+											&& in_array($this->tokens[$i+$c+1][0], Tokens::$T_ARITHMETIC)) || $in_securing )		
 											{
-												$tree->foundcallee = true;
-												continue;
+												$secured_by_start = true;
+												$this_one_is_secure = true;
 											}
-										
-											if(isset($this->scan_functions[$token_value][3]))
-												$new_find->title = 'Call triggers vulnerability in function <i>'.$token_value.'()</i>';
-											else if(empty($new_find->title))
-												$new_find->title = 'Userinput is passed through function parameters.';
-												
-											$block->treenodes[] = $new_find;
-											if(!$block->vuln && ($parameter_has_userinput || isset($this->scan_functions[$token_value][3]) || $GLOBALS['verbosity'] == 4))
-											{
-												$block->vuln = true;
-												increaseVulnCounter($block->sink);
-											}	
+			
+											if($in_securing && !$ignore_securing)
+												$this->securedby[] = $securing_function;
+			
+											// trace back parameters and look for userinput, trace constants globally
+											$userinput = $this->scan_parameter(
+												$new_find, 
+												$new_find, 
+												$this->tokens[$i+$c], 
+												$this->tokens[$i+$c][3],
+												$i+$c,
+												($this->in_function && $this->tokens[$i + $c][1][0] === '$') ? $this->var_declares_local : $this->var_declares_global, 
+												$this->var_declares_global,  
+												false, 
+												$this->scan_functions[$token_value][1], 
+												false, // no return-scan
+												$ignore_securing, 
+												($this_one_is_secure || $in_securing)
+											);										
 											
-											$tree->foundcallee = true;
-											$calleesadded[] = $token_value;
+											$reconstructstr.= Analyzer::get_var_value(
+												$this->file_pointer,
+												$this->tokens[$i+$c], 
+												($this->in_function && $this->tokens[$i + $c][1][0] === '$') ? $this->var_declares_local : $this->var_declares_global, 
+												$this->var_declares_global, 
+												$i+$c,
+												$this->source_functions
+											);	
+											
+											
+											if($userinput /*&& (!$this_one_is_secure || $GLOBALS['verbosity'] == 3)*/ )
+											{
+												$vulnparams[] = $parameter;
+												if($userinput == 1)
+													$parameter_has_userinput = true;
+												else if($userinput == 2)
+													$parameter_func_depend = true;
+												$tainted_vars[] = $var_counter;
+											} 
+										} 
+										
+										// mark userinput for quote analysis
+										if(in_array($this->tokens[$i + $c][1], Sources::$V_USERINPUT))
+										{
+											$reconstructstr.='$_USERINPUT';
+										}
+									}
+									// userinput from return value of a function
+									else if( $this->tokens[$i + $c][0] === T_STRING 
+									&& in_array($this->tokens[$i + $c][1], $this->source_functions) 
+									// scan only potential vulnerable parameters of function call
+									&& ( in_array($parameter, $this->scan_functions[$token_value][0]) 
+									|| (isset($this->scan_functions[$token_value][0][0])
+									&& $this->scan_functions[$token_value][0][0] === 0) ) )// all parameters accepted
+									{	
+										$has_vuln_parameters = true;
+										$parameter_has_userinput = true;
+										$new_find->marker = 1; 
+										$reconstructstr.='$_USERINPUT';
+										$new_find->title = 'Userinput returned by function <i>'.$this->tokens[$i + $c][1].'</i> reaches sensitive sink';
+										$this->addtriggerfunction($new_find);
+									}	
+									//detect insecuring functions (functions that make previous securing useless)
+									else if( $this->tokens[$i + $c][0] === T_STRING 
+									&& isset($this->tokens[$i+$c][1]) && in_array($this->tokens[$i+$c][1], $GLOBALS['F_INSECURING_STRING']) 
+									&& $parentheses_save == -1)
+									{
+										$parentheses_save = $parentheses_open;
+										$ignore_securing = true;
+									}
+									// detect securing functions embedded into the sensitive sink
+									else if( !$ignore_securing && ($this->tokens[$i + $c][0] === T_STRING 
+									&& ( (is_array($this->scan_functions[$token_value][1]) 
+									&& in_array($this->tokens[$i+$c][1], $this->scan_functions[$token_value][1]))
+									|| in_array($this->tokens[$i+$c][1], $GLOBALS['F_SECURING_STRING']) ) ) 
+									|| (in_array($this->tokens[$i+$c][0], Tokens::$T_CASTS) && $this->tokens[$i+$c+1] === '('))
+									{
+										$securing_function = $this->tokens[$i+$c][1];
+										$parentheses_save = $parentheses_open;
+										$in_securing = true;
+										$secured_by_start = true;
+									}
+									// add strings to reconstructed string for quotes analysis
+									else if( $this->tokens[$i + $c][0] === T_CONSTANT_ENCAPSED_STRING )
+									{
+										$reconstructstr.= substr($this->tokens[$i + $c][1], 1, -1);
+									}
+									else if( $this->tokens[$i + $c][0] === T_ENCAPSED_AND_WHITESPACE )
+									{
+										$reconstructstr.= $this->tokens[$i + $c][1];
+									}
+								}	
+								// count parameters
+								else if( $parentheses_open === 1 && $this->tokens[$i + $c] === ',' )
+								{
+									$parameter++;
+								}
+								// watch function calls in function call
+								else if( $this->tokens[$i + $c] === '(' )
+								{
+									$parentheses_open++;
+								}
+								else if( $this->tokens[$i + $c] === ')' )
+								{
+									$parentheses_open--;
+									if($parentheses_open === $parentheses_save)
+									{
+										$parentheses_save = -1;
+										$in_securing = false;
+										$securing_function = '';
+										$ignore_securing = false;
+									}	
+								}
+								else if(!isset($this->tokens[$i+$c]))
+								{
+									addError('Closing parenthesis of '.$token_value.'() is missing.', array_slice($this->tokens, $i, 10), $this->tokens[$i][2], $this->file_pointer);
+									break;	
+								}
+								$c++;
+							}	
+
+							// quote analysis for securing functions F_QUOTE_ANALYSIS
+							// they only protect when return value is embedded into quotes
+							if( $this->quote_analysis_needed() && substr_count($reconstructstr, '$_USERINPUT')  > 0 )
+							{
+								// idea: explode on $_USERINPUT and count quotes in SQL query before
+								// if not even, then the $_USERINPUT is in an open quote
+								$parts = explode('$_USERINPUT', $reconstructstr);
+								foreach($this->securedby as $var=>$securefunction)
+								{
+									if(in_array($securefunction, $GLOBALS['F_QUOTE_ANALYSIS']))
+									{
+										// extract the string before the userinput
+										$checkstring = '';
+										$d=1;
+										foreach($parts as $part)
+										{
+											$checkstring.=$part;
+											if($d>=$var)
+												break;
+											$d++;	
+										}
+
+										// even amount of quotes (or none) in string 
+										// --> no quotes around userinput
+										// --> securing function is	useless
+										if(substr_count($checkstring, "'") % 2 === 0
+										&& substr_count($checkstring, '"') % 2 === 0)
+										{
+											$has_vuln_parameters = true;
+											$parameter_has_userinput = true;
+											$new_find->title .= "Userinput reaches sensitive sink due to insecure usage of $securefunction() without quotes";
 										}
 									}
 								}
-							} else
-							{
-								if(empty($new_find->title))
-									$new_find->title = 'Userinput reaches sensitive sink.';
-								$block = new VulnBlock(getVulnNodeTitle($token_value), $token_value);
-								$block->treenodes[] = $new_find;
-								if($parameter_has_userinput || $GLOBALS['verbosity'] == 4)
-								{
-									$block->vuln = true;
-									increaseVulnCounter($token_value);
-								}	
-								// if sink in var declare, offer a data leak scan - save infos for that
-								if(isset($vardeclare))
-									$block->dataleakvar = array($vardeclare['linenr'], $vardeclare['name']);
-									
-								$GLOBALS['output'][$this->file_name][] = $block;
 							}
 							
-						}
+							// add find to output if function call has variable parameters (With userinput)
+							if( ($has_vuln_parameters && ($parameter_has_userinput || $parameter_func_depend)) || $GLOBALS['verbosity'] == 4 || isset($this->scan_functions[$token_value][3]) ) 
+							{
+								$vulnstart=$i;
+								$vulnadd=1;
+								// prepend $var assignment
+								if(isset($vardeclare))
+								{
+									$vulnstart = $vardeclare['start'];
+									$vulnadd = $vardeclare['end']-$vardeclare['start']-$c+1;//3;
+								}	
+								// prepend echo statement
+								else if(isset($GLOBALS['F_XSS'][$this->tokens[$i-1][1]]))
+								{
+									$vulnstart = $i-1;
+									$vulnadd = 2;
+								}	
+								// prepend class var
+								else if($this->tokens[$i-1][0] === T_DOUBLE_COLON || $this->tokens[$i-1][0] === T_OBJECT_OPERATOR)
+								{
+									$vulnstart = $i-2;
+									$vulnadd = 2;
+								}
+							
+								if(isset($GLOBALS['user_functions'][$this->file_name][$token_value]))
+								{
+									$found_line = '<A NAME="'.$token_value.'_call" class="jumplink"></A>';
+									$found_line.= highlightline(array_slice($this->tokens,$vulnstart,$c+$vulnadd),$this->comment, $line_nr, false, $token_value);
+								} else
+								{
+									$found_line = highlightline(array_slice($this->tokens,$vulnstart,$c+$vulnadd),$this->comment, $line_nr, $token_value, false, $tainted_vars);
+								}
+								
+								$new_find->value = $found_line;
+								$new_find->filename = $this->file_pointer;
+							
+								if($secured_by_start)
+									$new_find->marker = 2; 
 
-						// if classvar depends on function parameter, add this parameter to list
-						if( isset($this->classvar) && $this->in_function && in_array($this->classvar, $this->function_obj->parameters) ) 
-						{
-							$param = array_search($this->classvar, $this->function_obj->parameters);
-							$GLOBALS['user_functions'][$this->file_name][$this->function_obj->name][0][$param] = $param+1;
+								// only show vuln user defined functions 
+								// if call with userinput has been found
+								if( isset($GLOBALS['user_functions'][$this->file_name][$token_value]) )
+									$GLOBALS['user_functions'][$this->file_name][$token_value]['called'] = true;
+								
+								if($this->in_function)
+								{
+									$this->ignore_securing_function = true;
+									// mark function in class as vuln
+									if($this->in_class)
+									{
+										$this->vuln_classes[$this->class_name][] = $this->function_obj->name;
+									}						
+								}
+								
+								// putenv with userinput --> getenv is treated as userinput
+								if($token_value === 'putenv')
+								{
+									$this->source_functions[] = 'getenv';
+									$GLOBALS['source_functions'][] = 'getenv';
+									$new_find->title = 'User can set PHP enviroment variables. Adding getenv() to tainting functions';
+								}
+								else if($token_value === 'apache_setenv')
+								{
+									$this->source_functions[] = 'apache_getenv';
+									$GLOBALS['source_functions'][] = 'apache_getenv';
+									$new_find->title = 'User can set Apache enviroment variables. Adding apache_getenv() to tainting functions';
+								}
+								else if($token_value === 'extract' || $token_value === 'parse_str' || $token_value === 'mb_parse_str')
+								{
+									// add register_globals implementation
+									$this->variable_add(
+										'register_globals', 
+										array_slice($this->tokens,$vulnstart,$c+$vulnadd), 
+										'register_globals implementation', 
+										0, 0, 
+										$line_nr, 
+										$i, 
+										isset($this->tokens[$i][3]) ? $this->tokens[$i][3] : array()
+									);							
+								}
+							
+								// add to output							
+								if(isset($GLOBALS['user_functions'][$this->file_name][$token_value]))
+								{	
+									if(!empty($GLOBALS['output'][$this->file_name]))
+									{
+										foreach($GLOBALS['output'][$this->file_name] as $block)
+										{
+											$calleesadded = array();
+											foreach($block->treenodes as $tree)
+											{
+												if($tree->funcdepend === $token_value 
+												&& (array_intersect($tree->funcparamdepend, $vulnparams) || isset($this->scan_functions[$token_value][3]) ))
+												{
+													// if funcdependend already found and added, just add foundcallee=true and continue
+													// dont add tree again, it is already added to the vulnblock
+													if(in_array($tree->funcdepend, $calleesadded))
+													{
+														$tree->foundcallee = true;
+														continue;
+													}
+												
+													if(isset($this->scan_functions[$token_value][3]))
+														$new_find->title = 'Call triggers vulnerability in function <i>'.$token_value.'()</i>';
+													else if(empty($new_find->title))
+														$new_find->title = 'Userinput is passed through function parameters.';
+														
+													$block->treenodes[] = $new_find;
+													if(!$block->vuln && ($parameter_has_userinput || isset($this->scan_functions[$token_value][3]) || $GLOBALS['verbosity'] == 4))
+													{
+														$block->vuln = true;
+														increaseVulnCounter($block->sink);
+													}	
+													
+													$tree->foundcallee = true;
+													$calleesadded[] = $token_value;
+												}
+											}
+										}
+										// else: dont use the result
+									}
+								} else
+								{
+									if(empty($new_find->title))
+										$new_find->title = 'Userinput reaches sensitive sink.';
+									$block = new VulnBlock($this->tif.'_'.$this->tokens[$i][2].'_'.basename($this->file_pointer), getVulnNodeTitle($token_value), $token_value);
+									$block->treenodes[] = $new_find;
+									if($parameter_has_userinput || $GLOBALS['verbosity'] == 4)
+									{
+										$block->vuln = true;
+										increaseVulnCounter($token_value);
+									}	
+									// if sink in var declare, offer a data leak scan - save infos for that
+									if(isset($vardeclare))
+										$block->dataleakvar = array($vardeclare['linenr'], $vardeclare['name']);
+
+									$GLOBALS['output'][$this->file_name][] = $block;
+								}
+								
+							}
+
+							// if classvar depends on function parameter, add this parameter to list
+							if( isset($this->classvar) && $this->in_function && in_array($this->classvar, $this->function_obj->parameters) ) 
+							{
+								$param = array_search($this->classvar, $this->function_obj->parameters);
+								$GLOBALS['user_functions'][$this->file_name][$this->function_obj->name][0][$param] = $param+1;
+							} 
+						
 						} 
 					} // taint analysis		
-
 				}	
 				
 				/*************************
@@ -1673,12 +1914,17 @@ class Scanner
 					
 					$c=1;
 					// get variables in loop condition
-					while($this->tokens[$i+$c] !== '{' )
+					while($this->tokens[$i+$c] !== '{')
 					{
 						if($this->tokens[$i+$c][0] === T_VARIABLE)
 						{
 							$this->tokens[$i+$c][3][] = '*';
 						} 
+						else if(!isset($this->tokens[$i+$c]))
+						{
+							addError('Could not find opening brace after '.$token_value.'-statement.', array_slice($this->tokens, $i, 10), $this->tokens[$i][2], $this->file_pointer);
+							break;	
+						}
 						$c++;
 					}
 				}
@@ -1689,7 +1935,13 @@ class Scanner
 					while($this->tokens[$i+$c] !== '{')
 					{
 						$c++;
+						if(!isset($this->tokens[$i+$c]))
+						{
+							addError('Could not find opening brace after '.$token_value.'-statement.', array_slice($this->tokens, $i, 10), $this->tokens[$i][2], $this->file_pointer);
+							break;	
+						}
 					}
+					$this->in_condition = $i+$c;
 					$this->dependencytokens = array_slice($this->tokens,$i,$c);
 				}
 				
@@ -1699,69 +1951,80 @@ class Scanner
 				// check if token is a function declaration
 				else if($token_name === T_FUNCTION)
 				{
-					$this->in_function = true;
-				
-					// the next token is the "function name()"
-					$i++;
-					$function_name = isset($this->tokens[$i][1]) ? $this->tokens[$i][1] : $this->tokens[$i+1][1];
-					$ref_name = ($this->in_class ? $this->class_name.'::' : '') . $function_name;
-					
-					// add POP gadgets to info
-					if(isset($this->info_functions[$function_name]))
+					if($this->in_function)
 					{
-						$GLOBALS['info'][] = $ref_name;
-						
-						// add gadget to output
-						$found_line = highlightline(array_slice($this->tokens,$i-1,4),$this->comment, 
-													$line_nr, $function_name, false, $function_name);
-						$new_find = new InfoTreeNode($found_line);
-						$new_find->title = "POP gadget $ref_name"; 
-						$new_find->lines[] = $line_nr;
-						$new_find->filename = $this->file_pointer;
-		
-						if(isset($GLOBALS['output'][$this->file_name]['gadgets']))
-							$GLOBALS['output'][$this->file_name]['gadgets']->treenodes[] = $new_find;
-						else
+						#addError('New function declaration in function declaration of '.$this->function_obj->name.'() found. This is valid PHP syntax but not supported by RIPS now.', array_slice($this->tokens, $i, 10), $this->tokens[$i][2], $this->file_pointer);
+					}	
+					else
+					{
+						$this->in_function++;
+					
+						// the next token is the "function name()"
+						$i++;
+						$function_name = isset($this->tokens[$i][1]) ? $this->tokens[$i][1] : $this->tokens[$i+1][1];
+						$ref_name = ($this->in_class ? $this->class_name.'::' : '') . $function_name;
+											
+						// add POP gadgets to info
+						if(isset($this->info_functions[$function_name]))
 						{
-							$block = new VulnBlock('POP gadgets');
-							$block->vuln = true;
-							$block->treenodes[] = $new_find;
-							$GLOBALS['output'][$this->file_name]['gadgets'] = $block;
-						}
+							$GLOBALS['info'][] = $ref_name;
 							
-					} 
-					
-					$c=3;
-					while($this->tokens[$i+$c] !== '{' && $this->tokens[$i+$c] !== ';')
-					{
-						$c++;
-					}
-					
-					// write to user_functions offset list for referencing in output
-					$GLOBALS['user_functions_offset'][$ref_name][0] = $this->file_pointer;
-					$GLOBALS['user_functions_offset'][$ref_name][1] = $line_nr-1;
-					// save function as object
-					$this->function_obj = new FunctionDeclare($this->dependencytokens = array_slice($this->tokens,$i-1,$c+1));
-					$this->function_obj->lines[] = $line_nr; 
-					$this->function_obj->name = $function_name;
-	
-					// save all function parameters
-					$this->function_obj->parameters = array();
-					$e=1;
-					// until function test(...) {
-					//  OR
-					// interface test { public function test(...); }
-					while( $this->tokens[$i+$e] !== '{' && $this->tokens[$i+$e] !== ';' )
-					{	
-						if( is_array($this->tokens[$i + $e]) && $this->tokens[$i + $e][0] === T_VARIABLE )
+							// add gadget to output
+							$found_line = highlightline(array_slice($this->tokens,$i-1,4),$this->comment, 
+														$line_nr, $function_name, false, $function_name);
+							$new_find = new InfoTreeNode($found_line);
+							$new_find->title = "POP gadget $ref_name"; 
+							$new_find->lines[] = $line_nr;
+							$new_find->filename = $this->file_pointer;
+			
+							if(isset($GLOBALS['output'][$this->file_name]['gadgets']))
+								$GLOBALS['output'][$this->file_name]['gadgets']->treenodes[] = $new_find;
+							else
+							{
+								$block = new VulnBlock($this->tif.'_'.$this->tokens[$i][2].'_'.basename($this->file_pointer), 'POP gadgets');
+								$block->vuln = true;
+								$block->treenodes[] = $new_find;
+								$GLOBALS['output'][$this->file_name]['gadgets'] = $block;
+							}
+								
+						} 
+						
+						$c=3;
+						while($this->tokens[$i+$c] !== '{' && $this->tokens[$i+$c] !== ';')
 						{
-							$this->function_obj->parameters[] = $this->tokens[$i + $e][1];
+							$c++;
 						}
-						$e++;
+						
+						// abstract functions ended
+						if($this->tokens[$i+$c] === ';')
+							$this->in_function--;
+
+						// write to user_functions offset list for referencing in output
+						$GLOBALS['user_functions_offset'][$ref_name][0] = $this->file_pointer;
+						$GLOBALS['user_functions_offset'][$ref_name][1] = $line_nr-1;
+						// save function as object
+						$this->function_obj = new FunctionDeclare($this->dependencytokens = array_slice($this->tokens,$i-1,$c+1));
+						$this->function_obj->lines[] = $line_nr; 
+						$this->function_obj->name = $function_name;
+
+						// save all function parameters
+						$this->function_obj->parameters = array();
+						$e=1;
+						// until function test(...) {
+						//  OR
+						// interface test { public function test(...); }
+						while( $this->tokens[$i+$e] !== '{' && $this->tokens[$i+$e] !== ';' )
+						{	
+							if( is_array($this->tokens[$i + $e]) && $this->tokens[$i + $e][0] === T_VARIABLE )
+							{
+								$this->function_obj->parameters[] = $this->tokens[$i + $e][1];
+							}
+							$e++;
+						}
+						// now skip the params from rest of scan,
+						// or function test($a=false, $b=false) will be detected as var declaration
+						$i+=$e-1; // -1, because '{' must be evaluated again
 					}
-					// now skip the params from rest of scan,
-					// or function test($a=false, $b=false) will be detected as var declaration
-					$i+=$e-1; // -1, because '{' must be evaluated again
 				}
 				// add globaled variables (global $a, $b, $c;) to var list	
 				else if($token_name === T_GLOBAL && $this->in_function)
@@ -1792,7 +2055,7 @@ class Scanner
 					}
 				}				
 				// watch returns before vuln function gets called
-				else if($token_name === T_RETURN && $this->in_function )
+				else if($token_name === T_RETURN && $this->in_function==1 )
 				{
 					$GLOBALS['userfunction_taints'] = false;
 					$GLOBALS['userfunction_secures'] = false;
@@ -1810,6 +2073,7 @@ class Scanner
 									$new_find, 
 									$new_find, 
 									$this->tokens[$i+$c], 
+									$this->tokens[$i+$c][3],
 									$i+$c,
 									$this->var_declares_local,  
 									$this->var_declares_global,									
@@ -1865,8 +2129,7 @@ class Scanner
 				// copy vuln functions from extended classes
 				else if($token_name === T_EXTENDS && $this->in_class)
 				{
-					$extend_class_name = $this->tokens[$i+1][1];
-					$this->vuln_classes[$this->class_name] = $this->vuln_classes[$extend_class_name];
+					$this->vuln_classes[$this->class_name] = $this->vuln_classes[ $this->tokens[$i+1][1] ];
 				}
 				
 				/*************************
@@ -1876,9 +2139,14 @@ class Scanner
 				else if($token_name === T_LIST)
 				{		
 					$d=2;
-					while( $this->tokens[$i+$d] !== ')')
+					while( $this->tokens[$i+$d] !== ')' && $this->tokens[$i+$d] !== ';')
 					{
 						$d++;
+						if($this->tokens[$i+$d] === ';' || !isset($this->tokens[$i+$d]))
+						{
+							addError('Closing parenthesis of list() is missing.', array_slice($this->tokens, $i, 10), $this->tokens[$i][2], $this->file_pointer);
+							break;	
+						}
 					}
 					$tokenscanstart = 0;
 					if($this->tokens[$i+$d+1] === '=' || in_array($this->tokens[$i+$d+1][0], Tokens::$T_ASSIGNMENT))
@@ -1906,10 +2174,11 @@ class Scanner
 				else if( $token_name === T_INCLUDE_END)
 				{
 					array_pop($this->lines_stack);
-					$this->lines_pointer =& end($this->lines_stack);	
+					$this->lines_pointer = end($this->lines_stack);	
 					array_pop($this->inc_file_stack);
-					$this->file_pointer =& end($this->inc_file_stack);
+					$this->file_pointer = end($this->inc_file_stack);
 					$this->comment = basename($this->file_pointer) == basename($this->file_name) ? '' : basename($this->file_pointer);
+					$this->tif = array_pop($this->tif_stack);
 				}					
 				
 			} else // token is not an array
@@ -1920,11 +2189,13 @@ class Scanner
 				// keep track of { program blocks }
 				// get current dependencies in program flow
 				if($this->tokens[$i] === '{' 
-				&& ($this->tokens[$i-1] === ')' || $this->tokens[$i-1] === ':'
+				&& ($this->tokens[$i-1] === ')' || $this->tokens[$i-1] === ':' || $this->tokens[$i-1] === ';' // case x:{ or case x;{ 
 				|| (is_array($this->tokens[$i-1])
 				&& ($this->tokens[$i-1][0] === T_DO  // do {
 				|| $this->tokens[$i-1][0] === T_ELSE // else {
-				|| $this->tokens[$i-1][0] === T_STRING)) ) ) // class bla {
+				|| $this->tokens[$i-1][0] === T_STRING // class bla {
+				|| $this->tokens[$i-1][0] === T_TRY // try {
+				|| $this->tokens[$i-1][0] === T_CATCH)) ) ) // catch{
 				{
 					// save brace amount at start of function
 					if($this->in_function && $this->brace_save_func < 0) 
@@ -1937,10 +2208,11 @@ class Scanner
 					{
 						$this->brace_save_class = $this->braces_open;
 					}
+					
+					$this->in_condition = 0;
 
 					if(empty($e))
-					{
-						
+					{					
 						if(!$this->ignore_requirement)
 						{
 							if(!empty($this->dependencytokens) 
@@ -1983,17 +2255,16 @@ class Scanner
 						// reset vars for next function declaration
 						$this->brace_save_func = -1;
 						$this->ignore_securing_function = false;
-						$this->in_function = false;
+						$this->in_function--;
 						$this->function_obj = null;
 						$this->var_declares_local = array();
 						$this->put_in_global_scope = array();
 						// load new found vulnerable user functions to current scanlist
 						if(isset($GLOBALS['user_functions'][$this->file_name]))
 						{
-							$this->scan_functions = array_merge($this->scan_functions, $GLOBALS['user_functions'][$this->file_name]);	
-						
+							$this->scan_functions = array_merge($this->scan_functions, $GLOBALS['user_functions'][$this->file_name]);
 						}
-					}
+					} 
 					
 					// end of class found
 					if($this->in_class && $this->brace_save_class === $this->braces_open)

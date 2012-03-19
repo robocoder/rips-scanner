@@ -19,7 +19,8 @@ final class Info
 {	
 	// interesting functions, output and comment them if seen
 	public static $F_INTEREST = array(
-		'phpinfo'						=> 'phpinfo()',
+		'phpinfo'						=> 'phpinfo() detected',
+		'registerPHPFunctions'			=> 'registerPHPFunctions() allows code exec in XML',
 		'session_start'					=> 'uses sessions',
 		#'session_destroy'				=> 'session_destroy(), delete arbitrary file in PHP 5.1.2',
 		'dbase_open' 					=> 'using DBMS dBase',

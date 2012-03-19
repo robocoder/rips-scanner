@@ -22,18 +22,20 @@ include('../config/general.php');
 	function highlightline($line, $line_nr, $marklines, $in_comment)
 	{
 		$tokens = @token_get_all('<? '.$line.' ?>');
-		
-		$output = (in_array($line_nr, $marklines)) ? '<tr><td nowrap class="markline">' : '<tr><td nowrap>';
+		$output = (in_array($line_nr, $marklines)) ? '<tr><td nowrap class="markline">' : '<tr><td nowrap class="codeline">';
 
 		for($i=0; $i<count($tokens); $i++)
-		{		
-			if((is_array($tokens[$i]) && ($tokens[$i][0] === T_COMMENT || $tokens[$i][0] === T_DOC_COMMENT)
+		{				
+			if(is_array($tokens[$i]) && ($tokens[$i][0] === T_COMMENT || $tokens[$i][0] === T_DOC_COMMENT)
 			&& ($tokens[$i][1][0] === '/' && $tokens[$i][1][1] === '*' && substr(trim($tokens[$i][1]),-2,2) !== '*/')) 
-			|| ($tokens[$i] === '/' && $tokens[$i-1] === '*'))
 			{ 
-				$in_comment = !$in_comment;
+				$in_comment = true;
 				if(is_array($tokens[$i]))
 					$tokens[$i][1] = str_replace('?'.'>', '', $tokens[$i][1]);
+			}
+			if($tokens[$i] === '/' && $tokens[$i-1] === '*')
+			{
+				$in_comment = false;
 			}
 
 			if($i == count($tokens)-1 && $tokens[$i-1][0] !== T_CLOSE_TAG)
@@ -70,7 +72,7 @@ include('../config/general.php');
 						$text.= 'style="cursor:pointer;" name="phps-var-'.$cssname.'" onClick="markVariable(\''.$cssname.'\')" ';
 						$text.= 'onmouseover="markVariable(\''.$cssname.'\')" onmouseout="markVariable(\''.$cssname.'\')" ';
 					}	
-					else if($tokens[$i][0] === T_STRING && $tokens[$i+1] === '(')
+					else if($tokens[$i][0] === T_STRING && $tokens[$i+1] === '(' && $tokens[$i-2][0] !== T_FUNCTION)
 					{
 						$text.= 'onmouseover="mouseFunction(\''.strtolower($tokens[$i][1]).'\', this)" onmouseout="this.style.textDecoration=\'none\'" ';
 						$text.= 'onclick="openFunction(\''.strtolower($tokens[$i][1])."','$line_nr');\" ";
@@ -87,6 +89,10 @@ include('../config/general.php');
 				$output .= $text;
 			}
 		}
+		
+		if(strstr($line, '*/'))
+			$in_comment = false;
+		
 		echo $output.'</td></tr>';
 		return $in_comment;
 	}
@@ -105,7 +111,7 @@ include('../config/general.php');
 		echo '<tr><td><table>';
 		for($i=1, $max=count($lines); $i<=$max;$i++) 
 			echo "<tr><td class=\"linenrcolumn\"><span class=\"linenr\">$i</span><A id='".($i+2).'\'></A></td></tr>';
-		echo '</table></td><td><table width="100%">';
+		echo '</table></td><td id="codeonly"><table id="codetable" width="100%">';
 		
 		$in_comment = false;
 		for($i=0; $i<$max; $i++)

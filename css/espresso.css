@@ -1,3 +1,8 @@
+#scrollwindow {
+	background-color: grey;
+	opacity:0.22;
+}	
+
 .menu {
 	background-color: #351F12;
 }
@@ -49,10 +54,15 @@ input[type="text"],select {
 	
 .link
 	{color: #2F5FE0; font-weight:bold;}
+
+.code, .vulntitle {
+	font-size:9pt;
+	font-family: "Bitstream Vera Sans Mono", "Monaco", "Courier New", monospace;
+}
 	
 .code,
 .phps-code, .phps-t-curly-open, .phps-t-dollar-open-curly-braces, .vulntitle
-	{color: #BDAE9D; font-family: "Bitstream Vera Sans Mono", "Monaco", "Courier New", monospace; font-size:1em; font-size:9pt;}
+	{color: #BDAE9D; }
 
 .phps-t-string,
 .phps-t-eval,
@@ -98,6 +108,8 @@ input[type="text"],select {
 .phps-t-inc,
 .phps-t-dec,
 .phps-t-object-operator,
+.phps-t-double-colon,
+.phps-t-paamayim-nekudotayim,
 .phps-t-if,
 .phps-t-switch,
 .phps-t-exclaim,
@@ -117,6 +129,8 @@ input[type="text"],select {
 .phps-t-global,
 .phps-t-logical-and,
 .phps-t-logical-or,
+.phps-t-boolean-or,
+.phps-t-boolean-and,
 .phps-t-else,
 .phps-t-elseif,
 .phps-t-use,

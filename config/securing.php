@@ -58,6 +58,7 @@ You should have received a copy of the GNU General Public License along with thi
 		'sha1',
 		'crypt',
 		'crc32',
+		'hash',
 		'base64_encode',
 		'ord',
 		'sizeof',
@@ -114,6 +115,8 @@ You should have received a copy of the GNU General Public License along with thi
 	
 	// securing functions for file handling
 	$F_SECURING_FILE = array(
+		'basename',
+		'pathinfo'
 	);
 	
 	// securing functions for OS command execution

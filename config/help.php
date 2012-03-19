@@ -25,11 +25,11 @@ $HELP_XSS = array(
 );
 
 $HELP_HTTP_HEADER = array(
-'description' => 'An attacker can inject arbitrary headers to the HTTP response header. This can be abused for a redirect when injecting a "Location:" header or help within a session fixation attack when the "Set-Cookie:" header is added. Additionally, the HTTP response can be overwritten and JavaScript can be injected leading to Cross-Site Scripting attacks.',
+'description' => 'An attacker can inject arbitrary headers to the HTTP response header. This can be abused for a redirect when injecting a "Location:" header or help within a session fixation attack when the "Set-Cookie:" header is added. Additionally, the HTTP response can be overwritten and JavaScript can be injected leading to Cross-Site Scripting attacks. In PHP version below 4.4.2 or 5.1.2 the characters \n\r (LF CR) can be used for header line termination (cross-browser). In PHP below 5.4 the character \r (CR) can still be used for header line termination (Chrome, IE).',
 'link' => 'https://www.owasp.org/index.php/HTTP_Response_Splitting',
 'code' => '<?php header("Location: ".$_GET["url"]); ?>',
 'poc' => '/index.php?url=a%0a%0dContent-Type:%20text/html%0a%0d%0a%0d<script>alert(1)</script>',
-'patchtext' => 'Update PHP to version 4.4.2 or 5.1.2 to prevent header injection or implement a whitelist.',
+'patchtext' => 'Update PHP to prevent header injection or implement a whitelist.',
 'patch' => '<?php if(!in_array($_GET["url"], $whitelist)) exit; ?>'
 );
 

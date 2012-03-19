@@ -49,19 +49,23 @@ You should have received a copy of the GNU General Public License along with thi
 	// group vulnerable parts to one vulnerability trace
 	class VulnBlock
 	{
+		public $uid;
 		public $vuln;
     	public $category;
     	public $treenodes;
 		public $sink;
 		public $dataleakvar;
+		public $alternates;
 		
-		function __construct($category = 'unknown', $sink = '') 
+		function __construct($uid = '', $category = 'match', $sink = '') 
 		{
+			$this->uid = $uid;
 			$this->vuln = false;
 			$this->category = $category;
 			$this->treenodes = array();
 			$this->sink = $sink;
 			$this->dataleakvar = array();
+			$this->alternates = array();
 		}
 	}
 	

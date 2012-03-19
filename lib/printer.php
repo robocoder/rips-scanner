@@ -15,6 +15,25 @@ You should have received a copy of the GNU General Public License along with thi
 
 **/	
 	
+	// add parsing error to output
+	function addError($message, $tokens, $line_nr, $filename)
+	{
+		$GLOBALS['info'][] = '<font color="red">Parsing error occured. Use verbosity level=debug for details.</font>';
+		if($GLOBALS['verbosity'] == 5)
+		{
+			$value = highlightline($tokens, '', $line_nr);
+			$new_find = new InfoTreeNode($value);
+			$new_find->title = 'Parse error: '.$message;
+			$new_find->lines[] = $line_nr;
+			$new_find->filename = $filename;
+								
+			$new_block = new VulnBlock('error', 'Debug');
+			$new_block->treenodes[] = $new_find;
+			$new_block->vuln = true;
+			$GLOBALS['output'][$filename]['error'] = $new_block;
+		}	
+	}
+	
 	// tokens to string for comments
 	function tokenstostring($tokens)
 	{
@@ -137,7 +156,18 @@ You should have received a copy of the GNU General Public License along with thi
 										foreach($key as $token)
 										{
 											if(is_array($token))
-												$text .= '<span class="phps-'.str_replace('_', '-', strtolower(token_name($token[0]))).'">'.htmlentities($token[1], ENT_QUOTES, 'utf-8').'</span>';
+											{
+												$text .= '<span ';
+												
+												if($token[0] === T_VARIABLE)
+												{
+													$cssname = str_replace('$', '', $token[1]);
+													$text.= 'style="cursor:pointer;" name="phps-var-'.$cssname.'" onClick="markVariable(\''.$cssname.'\')" ';
+													$text.= 'onmouseover="markVariable(\''.$cssname.'\')" onmouseout="markVariable(\''.$cssname.'\')" ';
+												}	
+												
+												$text .= 'class="phps-'.str_replace('_', '-', strtolower(token_name($token[0]))).'">'.htmlentities($token[1], ENT_QUOTES, 'utf-8').'</span>';
+											}	
 											else
 												$text .= "<span class=\"phps-code\">{$token}</span>";
 										}
@@ -318,6 +348,7 @@ You should have received a copy of the GNU General Public License along with thi
 		if(!empty($output))
 		{
 			$nr=0;
+			reset($output);
 			do
 			{				
 				if(key($output) != "" && !empty($output[key($output)]) && fileHasVulns($output[key($output)]))
@@ -334,7 +365,7 @@ You should have received a copy of the GNU General Public License along with thi
 							echo '<div class="vulnblock">',
 							'<div id="pic',$vulnBlock->category,$nr,'" class="minusico" name="pic',$vulnBlock->category,'" style="margin-top:5px" title="minimize"',
 							' onClick="hide(\'',$vulnBlock->category,$nr,'\')"></div><div class="vulnblocktitle">',$vulnBlock->category,'</div>',
-							'</div><div name="allcats"><div class="vulnblock" style="border-top:0px;" name="',$vulnBlock->category,'" id="',$vulnBlock->category,$nr,'">';
+							'</div><div name="allcats"><div class="vulnblock" style="border-top:0px" name="',$vulnBlock->category,'" id="',$vulnBlock->category,$nr,'">';
 							
 							if($treestyle == 2)
 								krsort($vulnBlock->treenodes);
@@ -420,6 +451,17 @@ You should have received a copy of the GNU General Public License along with thi
 									echo '</li></ul>',"\n",	'</div>',"\n", '</td></tr></table></div>',"\n";
 								}
 							}	
+							
+							if(!empty($vulnBlock->alternatives))
+							{
+								echo '<div class="codebox"><table><tr><td><ul><li><span class="vulntitle">Vulnerability is also triggered in:</span>';
+								foreach($vulnBlock->alternatives as $alternative)
+								{
+									echo '<ul><li>'.$alternative.'</li></ul>';
+								}
+								echo '</li></ul></td></table></div>';
+							}
+							
 							echo '</div></div><div style="height:20px"></div>',"\n";
 						}	
 					}
@@ -453,30 +495,36 @@ You should have received a copy of the GNU General Public License along with thi
 		if(!empty($user_functions_offset))
 		{
 			ksort($user_functions_offset);
-			$js = 'graph2 = new Graph(document.getElementById("functioncanvas"));'."\n";
+			if($GLOBALS['file_amount'] <= WARNFILES)
+				$js = 'graph2 = new Graph(document.getElementById("functioncanvas"));'."\n";
+			else
+				$js = 'canvas = document.getElementById("functioncanvas");ctx = canvas.getContext("2d");ctx.fillStyle="#ff0000";ctx.fillText("Graphs have been disabled for a high file amount (>'.WARNFILES.').", 20, 30);';
 			$x=20;
 			$y=50;
 			$i=0;
 			
-			// create JS graph elements
-			foreach($user_functions_offset as $func_name => $info)
-			{				
-				if($func_name !== '__main__')
-				{
-					$x = ($i%4==0) ? $x=20 : $x=$x+160;
-					$y = ($i%4==0) ? $y=$y+70 : $y=$y;
-					$i++;
-					
-					$func_varname = str_replace('::', '', $func_name);
-					
-					$js.= "var e$func_varname = graph2.addElement(pageTemplate, { x:$x, y:$y }, '".addslashes($func_name)."( )', '', '".(isset($info[5]) ? $info[5] : 0)."', '".(isset($info[6]) ? $info[6] : 0)."', 0);\n";
-				} else
-				{	
-					$js.='var e__main__ = graph2.addElement(pageTemplate, { x:260, y:20 }, "__main__", "", "'.(isset($info[5]) ? $info[5] : 0).'", "'.(isset($info[6]) ? $info[6] : 0).'", 0);'."\n";
-				}	
+			if($GLOBALS['file_amount'] <= WARNFILES)
+			{
+				// create JS graph elements
+				foreach($user_functions_offset as $func_name => $info)
+				{				
+					if($func_name !== '__main__')
+					{
+						$x = ($i%4==0) ? $x=20 : $x=$x+160;
+						$y = ($i%4==0) ? $y=$y+70 : $y=$y;
+						$i++;
+						
+						$func_varname = str_replace('::', '', $func_name);
+						
+						$js.= "var e$func_varname = graph2.addElement(pageTemplate, { x:$x, y:$y }, '".addslashes($func_name)."( )', '', '".(isset($info[5]) ? $info[5] : 0)."', '".(isset($info[6]) ? $info[6] : 0)."', 0);\n";
+					} else
+					{	
+						$js.='var e__main__ = graph2.addElement(pageTemplate, { x:260, y:20 }, "__main__", "", "'.(isset($info[5]) ? $info[5] : 0).'", "'.(isset($info[6]) ? $info[6] : 0).'", 0);'."\n";
+					}	
+				}
 			}
 			
-			echo '<div id="functionlistdiv" style="display:none"><table><tr><th align="left">declaration</th><th align="left">calls</th></tr>';
+			echo '<div id="functionlistdiv"><table><tr><th align="left">declaration</th><th align="left">calls</th></tr>';
 			foreach($user_functions_offset as $func_name => $info)
 			{
 				if($func_name !== '__main__')
@@ -495,19 +543,20 @@ You should have received a copy of the GNU General Public License along with thi
 				}
 				echo implode(',',array_unique($calls)).'</td></tr>';
 				
-				if(isset($info[4]))
+				if(isset($info[4]) && $GLOBALS['file_amount'] <= WARNFILES)
 				{
 					foreach($info[4] as $call)
 					{
 						if(!is_array($call))
 						{
-							$color = ($info[4][$call]) ? '#F00' : '#000';
+							$color = (isset($info[4][$call])) ? '#F00' : '#000';
 							$js.="try{graph2.addConnection(e$call.getConnector(\"links\"), e$func_name.getConnector(\"parents\"), '$color');}catch(e){}\n";
 						}	
 					}
 				}
 			}
-			$js.='graph2.update();';
+			if($GLOBALS['file_amount'] <= WARNFILES)
+				$js.='graph2.update();';
 			echo '</table></div>',"\n<div id='functiongraph_code' style='display:none'>$js</div>\n";
 		} else
 		{
@@ -547,7 +596,10 @@ You should have received a copy of the GNU General Public License along with thi
 	{
 		if(!empty($files))
 		{
-			$js = 'graph = new Graph(document.getElementById("filecanvas"));'."\n";
+			if($GLOBALS['file_amount'] <= WARNFILES)
+				$js = 'graph = new Graph(document.getElementById("filecanvas"));'."\n";
+			else	
+				$js = 'canvas = document.getElementById("filecanvas");ctx = canvas.getContext("2d");ctx.fillStyle="#ff0000";ctx.fillText("Graphs have been disabled for a high file amount (>'.WARNFILES.').", 20, 30);';
 	
 			// get vuln files
 			$vulnfiles = array();
@@ -607,7 +659,8 @@ You should have received a copy of the GNU General Public License along with thi
 							$userinput++;
 					}			
 					
-					$js.= "var e$varname = graph.addElement($style, { x:$x, y:$y }, '".addslashes($filename)."', '', '".$userinput."', '".$file_sinks[$file]."', ".(in_array($file, $vulnfiles) ? 1 : 0).");\n";
+					if($GLOBALS['file_amount'] <= WARNFILES)
+						$js.= "var e$varname = graph.addElement($style, { x:$x, y:$y }, '".addslashes($filename)."', '', '".$userinput."', '".$file_sinks[$file]."', ".(in_array($file, $vulnfiles) ? 1 : 0).");\n";
 
 				} else
 				{
@@ -619,7 +672,7 @@ You should have received a copy of the GNU General Public License along with thi
 			}	
 			
 			// build file list and add connection to includes
-			echo '<div id="filelistdiv" style="display:none"><table>';
+			echo '<div id="filelistdiv"><table>';
 			foreach($files as $file => $includes)
 			{				
 				$file = realpath($file);
@@ -647,13 +700,15 @@ You should have received a copy of the GNU General Public License along with thi
 						echo '<li><div class="funclistline" title="',$include,'" ',
 						'onClick="openCodeViewer(3, \'',addslashes($include),'\', \'0\')">',$includename,'</div></li>',"\n";
 						
-						$js.="try{graph.addConnection(e$incvarname.getConnector(\"links\"), e$parent.getConnector(\"parents\"), '#000');}catch(e){}\n";
+						if($GLOBALS['file_amount'] <= WARNFILES)
+							$js.="try{graph.addConnection(e$incvarname.getConnector(\"links\"), e$parent.getConnector(\"parents\"), '#000');}catch(e){}\n";
 					}
 					echo '</ul></td></tr>',"\n";
 				}	
 
 			}
-			$js.='graph.update();';
+			if($GLOBALS['file_amount'] <= WARNFILES)
+				$js.='graph.update();';
 			echo '</table></div>',"\n<div id='filegraph_code' style='display:none'>$js</div>\n";
 		}
 	}

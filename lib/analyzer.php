@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License along with thi
 class Analyzer
 {	
 	// reconstructs string from a list of tokens
-	function get_tokens_value($file_name, $tokens, $var_declares, $var_declares_global, $tokenid, $start=0, $stop=0)
+	function get_tokens_value($file_name, $tokens, $var_declares, $var_declares_global, $tokenid, $start=0, $stop=0, $source_functions=array())
 	{
 		$value = '';
 		if(!$stop) $stop = count($tokens);
@@ -35,18 +35,32 @@ class Analyzer
 					if(!in_array($tokens[$i][1], Sources::$V_USERINPUT))
 					{						
 						// constant CONSTANTS
-						if ($tokens[$i][1] === 'DIRECTORY_SEPARATOR' || $tokens[$i][1] === 'PATH_SEPARATOR')
+						if ($tokens[$i][1] === 'DIRECTORY_SEPARATOR')
 							$value .= '/';
+						else if ($tokens[$i][1] === 'PATH_SEPARATOR')	
+							$value .= ';';
 						// global $varname -> global scope, CONSTANTS
 						else if( (isset($tokens[$i-1]) && is_array($tokens[$i-1]) && $tokens[$i-1][0] === T_GLOBAL) || $tokens[$i][1][0] !== '$' )
 							$value .= self::get_var_value($file_name, $tokens[$i], $var_declares_global, $var_declares_global, $tokenid);
 						// local scope
 						else
-							$value .= self::get_var_value($file_name, $tokens[$i], $var_declares, $var_declares_global, $tokenid);
+							$value .= self::get_var_value($file_name, $tokens[$i], $var_declares, $var_declares_global, $tokenid); 
 					} else
 					{
+						if(isset($tokens[$i][3]))
+							$parameter_name = str_replace(array("'",'"'), '', $tokens[$i][3][0]);
+						else
+							$parameter_name = '';
+							
 						// mark userinput for quote analysis
-						$value.='$_USERINPUT';
+						if( ($tokens[$i][1] !== '$_SERVER' || (empty($parameter_name) || in_array($parameter_name, Sources::$V_SERVER_PARAMS)))
+						&& !((is_array($tokens[$i-1]) 
+						&& in_array($tokens[$i-1][0], Tokens::$T_CASTS))
+						|| (is_array($tokens[$i+1]) 
+						&& in_array($tokens[$i+1][0], Tokens::$T_ARITHMETIC))) )
+							$value.='$_USERINPUT';
+						else
+							$value.='1';
 					}
 				}
 				// add strings 
@@ -74,6 +88,25 @@ class Analyzer
 				{
 					$value .= $tokens[$i][1];
 				}
+				// if in foreach($bla as $key=>$value) dont trace $key, $value back
+				else if( $tokens[$i][0] === T_AS )
+				{
+					break;
+				}
+				// function calls
+				else if($tokens[$i][0] === T_STRING && $tokens[$i+1] === '(')
+				{
+					// stop if strings are fetched from database/file (otherwise SQL query will be added)
+					if (in_array($tokens[$i][1], Sources::$F_DATABASE_INPUT) || in_array($tokens[$i][1], Sources::$F_FILE_INPUT) || isset(Info::$F_INTEREST[$tokens[$i][1]]))
+					{
+						break;
+					}
+					// add userinput for functions that return userinput
+					else if(in_array($tokens[$i][1], $source_functions))
+					{
+						$value .= '$_USERINPUT';
+					}
+				}	
 			}
 		}
 
@@ -82,7 +115,7 @@ class Analyzer
 	}
 	
 	// traces values of variables and reconstructs string 
-	function get_var_value($file_name, $var_token, $var_declares, $var_declares_global, $last_token_id)
+	function get_var_value($file_name, $var_token, $var_declares, $var_declares_global, $last_token_id, $source_functions=array())
 	{
 		$var_value = '';
 
@@ -100,8 +133,8 @@ class Analyzer
 				if( isset($var_token[3]) && !empty($var_declare->array_keys) )		
 					$array_key_diff = array_diff_assoc($var_token[3], $var_declare->array_keys);	
 
-				if( $var_declare->id < $last_token_id && !$array_key_diff)											
-					$var_value .= self::get_tokens_value($file_name, $var_declare->tokens, $var_declares, $var_declares_global, $var_declare->id, $var_declare->tokenscanstart, $var_declare->tokenscanstop);
+				if( $var_declare->id < $last_token_id && empty($array_key_diff))											
+					$var_value .= self::get_tokens_value($file_name, $var_declare->tokens, $var_declares, $var_declares_global, $var_declare->id, $var_declare->tokenscanstart, $var_declare->tokenscanstop, $source_functions);
 
 				if($var_value)
 					break;
@@ -130,6 +163,13 @@ class Analyzer
 			$c++;
 		}
 		return $c;
+	}
+	
+	function get_ini_paths($path)
+	{
+		if(!preg_match('/([;\\\\]|\W*[C-Z]{1}:)/', $path))	
+			$path = str_replace(':', ';', $path);
+		return explode(';', $path);
 	}
 }	
 	

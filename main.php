@@ -24,7 +24,7 @@ You should have received a copy of the GNU General Public License along with thi
 	include('config/sinks.php');			// sensitive sinks
 	include('config/info.php');				// interesting functions
 	
-	include('lib/objects.php'); 			// objects	
+	include('lib/constructer.php'); 		// classes	
 	include('lib/filer.php');				// read files from dirs and subdirs
 	include('lib/tokenizer.php');			// prepare and fix token list
 	include('lib/analyzer.php');			// string analyzers
@@ -157,7 +157,7 @@ You should have received a copy of the GNU General Public License along with thi
 				$thisfile_start = microtime(TRUE);
 				$file_scanning = $files[$fit];
 				
-				echo ($fit) . '|' . $file_amount . '|' . $file_scanning . '|' . $timeleft . '|' . str_pad(' ',9096)."\n";
+				echo ($fit) . '|' . $file_amount . '|' . $file_scanning . '|' . $timeleft . '|' . "\n";
 				@ob_flush();
 				flush();
 	
@@ -170,6 +170,7 @@ You should have received a copy of the GNU General Public License along with thi
 				// timeleft = average_time_per_file * file_amount_left
 				$timeleft = round(($overall_time/($fit+1)) * ($file_amount - $fit+1),2);
 			}
+			#die("done");
 			echo "STATS_DONE.\n";
 			@ob_flush();
 			flush();
@@ -197,7 +198,16 @@ You should have received a copy of the GNU General Public License along with thi
 		<input id="maxbutton1" type="button" class="maxbutton" value="&nabla;" onClick="maxWindow(1, 800)" title="maximize" />
 		<input type="button" class="closebutton" value="x" onClick="closeWindow(1)" title="close" />
 	</div>
-	<div id="windowcontent1" class="windowcontent"></div>
+
+	<div style="position:relative;width:100%;">
+	<div id="scrolldiv">
+		<div id="scrollwindow"></div>
+		<div id="scrollcode"></div>
+	</div>
+	<div id="windowcontent1" class="windowcontent" onscroll="scroller()"></div>
+	<div style="clear:left;"></div>
+	</div>
+	
 	<div id="return" class="return" onClick="returnLastCode()">&crarr; return</div>
 	<div class="windowfooter" onmousedown="resizeStart(event, 1)"></div>
 </div>
@@ -220,10 +230,10 @@ You should have received a copy of the GNU General Public License along with thi
 	</div>
 	<div id="windowcontent3" class="funclistcontent">
 		<div >
-			<input type="button" id="functiongraphbutton" class="button" onclick="showgraph('function');maxWindow(3, 650);" value="graph" style="background:white;color:black;"/>
-			<input type="button" id="functionlistbutton" class="button" onclick="showlist('function');minWindow(3, 650);" value="list" />
-			<input type="button" id="functioncanvassave" class="button" onclick="saveCanvas('functioncanvas', 3)" value="save image" />
-			<?php  if($verbosity == 5) echo '(graph not available in debug mode)'; ?>
+			<input type="button" id="functionlistbutton" class="button" onclick="showlist('function');minWindow(3, 650);" value="list" style="background:white;color:black;" />
+			<input type="button" id="functiongraphbutton" class="button" onclick="showgraph('function');maxWindow(3, 650);" value="graph"/>
+			<input type="button" id="functioncanvassave" class="button" onclick="saveCanvas('functioncanvas', 3)" value="save graph" />
+			<?php  if($verbosity == 5) echo '<br>(graph not available in debug mode)'; ?>
 		</div>
 		<?php
 			createFunctionList($user_functions_offset);		
@@ -258,8 +268,8 @@ You should have received a copy of the GNU General Public License along with thi
 	</div>
 	<div id="windowcontent5" class="funclistcontent">
 		<div >
-			<input type="button" id="filegraphbutton" class="button" onclick="showgraph('file');maxWindow(5, 650);" value="graph" style="background:white;color:black;"/>
-			<input type="button" id="filelistbutton" class="button" onclick="showlist('file');minWindow(5, 650);" value="list" />
+			<input type="button" id="filelistbutton" class="button" onclick="showlist('file');minWindow(5, 650);" value="list" style="background:white;color:black;"/>
+			<input type="button" id="filegraphbutton" class="button" onclick="showgraph('file');maxWindow(5, 650);" value="graph"/>
 			<input type="button" id="filecanvassave" class="button" onclick="saveCanvas('filecanvas', 5)" value="save graph" />
 		</div>
 		<?php
@@ -271,8 +281,8 @@ You should have received a copy of the GNU General Public License along with thi
 	<div class="funclistfooter" onmousedown="resizeStart(event, 5)"></div>
 </div>		
 
-<div id="funccode" onmouseout="closeFuncCode()">
-	<div id="funccodetitle"></div>
+<div id="funccode" onclick="closeFuncCode()">
+	<div id="funccodetitle" onmouseout="closeFuncCode()"></div>
 	<div id="funccodecontent"></div>
 </div>
 
@@ -356,7 +366,7 @@ You should have received a copy of the GNU General Public License along with thi
 		'</table><hr />';
 		
 		// output info gathering
-		if(!empty($info))
+		if( !empty($info) || ($count_inc>0 && $round_inc_success < 75 && !$scan_subdirs && count($files)>1) )
 		{
 			$info = array_unique($info);
 			echo '<table class="textcolor" width="100%">';
@@ -364,7 +374,7 @@ You should have received a copy of the GNU General Public License along with thi
 			{
 				echo '<tr><td width="160">Info:</td><td><small>',$detail,'</small></td></tr>';
 			}	
-			if($round_inc_success < 75 && !$scan_subdirs)
+			if($count_inc>0 && $round_inc_success < 75 && !$scan_subdirs && count($files)>1)
 			{
 				echo '<tr><td width="160">Info:</td><td><small><font color="orange">Your include success is low. Enable <i>subdirs</i> for better filename guesses.</font></small></td></tr>';
 			}

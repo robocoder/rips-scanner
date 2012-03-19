@@ -1,3 +1,8 @@
+#scrollwindow {
+	background-color: grey;
+	opacity:0.22;
+}	
+
 .userinput, .persistent {
 	list-style-type: disc;
 	color:white; 
@@ -39,9 +44,14 @@
 .link
 	{color: #CF6A4C; font-weight:bold;}
 	
+.code, .vulntitle {
+	font-size:9pt;
+	font-family: "Bitstream Vera Sans Mono", "Monaco", "Courier New", monospace;
+}	
+	
 .code,
 .phps-code, .phps-t-curly-open, .phps-t-dollar-open-curly-braces, .vulntitle
-	{color: white; font-family: "Bitstream Vera Sans Mono", "Monaco", "Courier New", monospace; font-size:1em; font-size:9pt;}
+	{color: white;  }
 
 .phps-t-string,
 .phps-t-eval,
@@ -85,6 +95,8 @@
 .phps-t-is-not-equal,	
 .phps-t-is-not-identical,
 .phps-t-object-operator,
+.phps-t-double-colon,
+.phps-t-paamayim-nekudotayim,
 .phps-t-if,
 .phps-t-isset,
 .phps-t-exclaim,
@@ -104,6 +116,8 @@
 .phps-t-global,
 .phps-t-logical-and,
 .phps-t-logical-or,
+.phps-t-boolean-or,
+.phps-t-boolean-and,
 .phps-t-else,
 .phps-t-elseif,
 .phps-t-switch,

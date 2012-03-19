@@ -116,7 +116,7 @@ function scan(ignore_warning)
 				var warning = "<div class=\"warning\">";
 				warning+="<h2>warning</h2>";
 				warning+="<p>You are about to scan " + amount + " files. ";
-				warning+="Depending on the amount of codelines and includes this may take a very long time. ";
+				warning+="Depending on the amount of codelines and includes this may take a while.";
 				warning+="The author of RIPS recommends to scan only the root directory of your project without subdirs.</p>";
 				warning+="<p>Do you want to continue anyway?</p>";	
 				warning+="<input type=\"button\" class=\"Button\" value=\"continue\" onClick=\"scan(true);\"/>&nbsp;";
@@ -205,10 +205,11 @@ function leakScan(hoveritem, varname, line, ignore_warning)
 				document.getElementById("dataleakscanning").style.display="none";
 
 				nostats = this.responseText.split("STATS_DONE.\n");
+				
 				if(nostats[1])
 					document.getElementById("windowcontent2").innerHTML=(nostats[1]);
 				else
-					document.getElementById("windowcontent2").innerHTML='<br /><center>No data leak found. You need blind exploitation techniques.</center>';	
+					document.getElementById("windowcontent2").innerHTML='<br /><center>No data leak found. You need blind exploitation techniques.</center>';
 			}	
 			else
 			{
@@ -216,7 +217,7 @@ function leakScan(hoveritem, varname, line, ignore_warning)
 				var warning = "<div class=\"warning\">";
 				warning+="<h2>warning</h2>";
 				warning+="<p>You are about to scan " + amount + " files. ";
-				warning+="Depending on the amount of codelines and includes this may take a very long time. ";
+				warning+="Depending on the amount of codelines and includes this may take a while. ";
 				warning+="The author of RIPS recommends to scan only the root directory of your project without subdirs.</p>";
 				warning+="<p>Do you want to continue anyway?</p>";	
 				warning+="<input type=\"button\" class=\"Button\" value=\"continue\" onClick=\"document.getElementById('dataleakscanning').style.display='none';leakScan(null, '"+varname+"', '"+line+"', true);\"/>&nbsp;";
@@ -391,6 +392,7 @@ function returnLastCode()
 	if(stack.length < 1)
 		document.getElementById('return').style.display='none';
 	document.getElementById('windowcontent1').innerHTML = recover[0];
+	document.getElementById("scrollcode").innerHTML=document.getElementById("codeonly").innerHTML;
 	document.getElementById(recover[1]).scrollIntoView();
 	document.body.scrollTop = document.body.scrollTop - 100;
 }
@@ -408,14 +410,19 @@ function closeWindow(id)
 	document.getElementById("window"+id).style.display="none";
 }
 
-var lastheight = 200;
-var lastwidth = 400;
+var lastheight = "200px";
+var lastwidth = "400px";
 function maxWindow(id, newwidth)
 {
 	lastheight = document.getElementById("window"+id).style.height;
 	lastwidth = document.getElementById("window"+id).style.width;
 	document.getElementById("window"+id).style.height = 400;
-	document.getElementById("window"+id).style.width = newwidth;
+	document.getElementById("window"+id).style.width = newwidth+"px";
+	if(id==1)
+	{
+		document.getElementById("windowcontent1").style.width = newwidth-84 + "px";
+		scroller();
+	}	
 }
 
 function minWindow(id, oldwidth)
@@ -454,6 +461,27 @@ function showlist(type)
 	document.getElementById(type+'listbutton').style.color="black";
 	document.getElementById(type+'graphbutton').style.background="#454545";
 	document.getElementById(type+'graphbutton').style.color="white";
+}
+
+function scroller() 
+{
+	var content = document.getElementById('windowcontent1');
+	var win = document.getElementById('scrollwindow');
+	var code1 = document.getElementById('scrollcode');
+	try {
+		var code2 = document.getElementById('codetable');
+		if(code2.clientHeight<code1.clientHeight)
+			var code = code2;
+		else
+			var code = code1;
+	} catch(e)
+	{
+		code = code1;
+	}
+	
+	win.style.height=(0.1 * content.clientHeight) + 'px';
+	code1.scrollTop=((content.scrollTop / (content.scrollHeight-content.clientHeight)) * ((code.scrollHeight-code.clientHeight)));
+	win.style.top=((content.scrollTop / (content.scrollHeight-content.clientHeight)) * (code.clientHeight-win.clientHeight)) + 'px';
 }
 
 /* LOAD WINDOWS */
@@ -631,6 +659,7 @@ function openCodeViewer(hoveritem, file, lines)
 			else
 				document.body.scrollTop = document.body.scrollTop - 100;
 			
+			document.getElementById("scrollcode").innerHTML=document.getElementById("codeonly").innerHTML;
 			a=false;
 		} 
 		else if (this.readyState == 4 && this.status != 200) 
@@ -734,7 +763,10 @@ function dragstart(id) {
 }
 
 function dragstop() {
-  dragobjekt=null;
+
+dragobjekt=null;
+if(document.getElementById("scrollcode") != null)
+scroller();
 }
 
 function drag(ereignis) {
@@ -791,6 +823,8 @@ function getPos(e)
 		newHeight=(newHeight<5?5:newHeight);
 
 		document.getElementById("window"+windowid).style.width = newWidth + "px";
+		if(windowid == 1)
+			document.getElementById("windowcontent1").style.width = newWidth-84 + "px";
 		document.getElementById("window"+windowid).style.height = newHeight + "px";
 	}
 }

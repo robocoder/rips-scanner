@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License along with thi
 **/
 	
 	#error_reporting(E_ALL);
-	error_reporting(E_ERROR | E_WARNING | E_PARSE);
+	error_reporting(E_ERROR | E_PARSE);
 	// various settings making flush() work correctly
 	if(function_exists('apache_setenv'))
 		apache_setenv('no-gzip', 1);
@@ -31,17 +31,20 @@ You should have received a copy of the GNU General Public License along with thi
 	
 	if (extension_loaded('tokenizer') === false) 
 	{
-            echo 'Please enable the PHP tokenizer extension to run RIPS.';
-            exit;
+		echo 'Please enable the PHP tokenizer extension to run RIPS.';
+		exit;
 	}
 		
-	define('VERSION', '0.51');				// RIPS version to be displayed	
+	define('VERSION', '0.52');				// RIPS version to be displayed	
 	define('MAXTRACE', 30);					// maximum of parameter traces per sensitive sink
-	define('WARNFILES', 40);				// warn user if amount of files to scan is higher than this value
+	define('WARNFILES', 50);				// warn user if amount of files to scan is higher than this value
 	define('BASEDIR', '');					// default directory shown
-	define('PHPDOC', 'http://php.net/');	// PHP dokumentation
-	define('MAX_ARRAY_ELEMENTS', 100);		// maximum array(1,2,3,4,...) elements to be indexed
+	define('PHPDOC', 'http://php.net/');	// PHP documentation link
+	define('MAX_ARRAY_ELEMENTS', 50);		// maximum array(1,2,3,4,...) elements to be indexed
+	define('MAX_ARRAY_KEYS', 10);			// maximum array key $array[1][2][3][4]..
 	define('PRELOAD_SHOW_LINE', 500);		// every X line a preloader information is added
+	
+	define('SCAN_REGISTER_GLOBALS', false);	// EXPERIMENTAL: scan as if register_globals=on
 	
 	$FILETYPES = array(						// filetypes to scan
 		'.php', 
@@ -59,11 +62,11 @@ You should have received a copy of the GNU General Public License along with thi
 	// available stylesheets (filename without .css ending)
 	// more colors at http://wiki.macromates.com/Themes/UserSubmittedThemes
 	$stylesheets = array(
+		'print',
 		'phps',
 		'code-dark',
 		'twilight',
 		'espresso',
-		//'sunburst',
 		'term',
 		'barf',
 		'notepad++',

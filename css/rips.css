@@ -200,6 +200,8 @@ a#logo {
 #funccodecontent {
 	border: 1px solid #888;
 	opacity: .96;
+	max-height: 250px;
+	overflow-y: scroll;
 }
 
 #funccodetitle {
@@ -230,6 +232,37 @@ a#logo {
 	white-space:nowrap;
 }
 
+#scrolldiv {
+	border-left: 2px solid black;
+	width:84px;
+	height:100%;
+	position:relative;
+	float:left;
+	background-color: black;
+}	
+
+#scrollwindow {
+	height:50px; 
+	width:100%; 
+	position:absolute;
+}
+
+#scrollcode {
+	width:85px; 
+	height:100%;
+	overflow:hidden; 
+}
+
+#scrollcode table {
+	font-size:.15em;
+}
+#scrollcode td {
+	padding: 0px;
+	margin: 0px;
+	line-height:0.02;
+	height:0.02em;
+}
+
 .closebutton, .maxbutton {
 	height:15px; 
 	width:15px;
@@ -251,7 +284,14 @@ a#logo {
 	border-left: 2px solid black;
 	border-right: 2px solid black;
 	height: 100%;
-	width: 100%;	
+	width:100%;
+}
+
+#windowcontent1 {
+	float:left;
+	margin-left:84px;
+	position:absolute;
+	width:516px;
 }
 
 .return {
@@ -331,6 +371,7 @@ table {
 	font-size: 14;
 }
 
+
 .menutable {
 	color: #C0C0C0;
 }
@@ -398,10 +439,8 @@ a {
 	border:1px solid black;
 }
 
-.filecanvas {
-	width:100%;
-	height:100%;
-	position:relative;
+#filecanvas , #functioncanvas{
+	display:none;
 }
 
 .jumplink {

@@ -1,3 +1,8 @@
+#scrollwindow {
+	background-color: grey;
+	opacity:0.22;
+}	
+
 body, html {
 	color: #111111;
 }
@@ -51,10 +56,16 @@ body, html {
 	
 .link
 	{color: #0000FF; font-weight:bold;}
+
+
+.code, .vulntitle {
+	font-size:9pt;
+	font-family: "Bitstream Vera Sans Mono", "Monaco", "Courier New", monospace;
+}
 	
 .code,
 .phps-code, .phps-t-curly-open, .phps-t-dollar-open-curly-braces, .vulntitle
-	{color: #8000FF; font-family: "Bitstream Vera Sans Mono", "Monaco", "Courier New", monospace; font-size:1em; font-size:9pt; font-weight: bold;}
+	{color: #8000FF;  font-weight: bold;}
 
 .phps-t-string,
 .phps-t-eval
@@ -79,6 +90,8 @@ body, html {
 .phps-t-inc,
 .phps-t-dec,
 .phps-t-object-operator,
+.phps-t-double-colon,
+.phps-t-paamayim-nekudotayim,
 .phps-t-double-arrow,
 .phps-t-boolean-or,
 .phps-t-boolean-and
@@ -111,6 +124,8 @@ body, html {
 .phps-t-or,
 .phps-t-logical-and,
 .phps-t-logical-or,
+.phps-t-boolean-or,
+.phps-t-boolean-and,
 .phps-t-case,
 .phps-t-default,
 .phps-t-break,
@@ -174,4 +189,4 @@ body, html {
 .phps-t-comment,
 .phps-t-ml-comment,
 .phps-t-doc-comment
-	{color: #008000}
+	{color: #63C763; font-weight:normal;}
