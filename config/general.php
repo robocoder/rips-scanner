@@ -35,7 +35,7 @@ You should have received a copy of the GNU General Public License along with thi
 		exit;
 	}
 		
-	define('VERSION', '0.52');				// RIPS version to be displayed	
+	define('VERSION', '0.53');				// RIPS version to be displayed	
 	define('MAXTRACE', 30);					// maximum of parameter traces per sensitive sink
 	define('WARNFILES', 50);				// warn user if amount of files to scan is higher than this value
 	define('BASEDIR', '');					// default directory shown

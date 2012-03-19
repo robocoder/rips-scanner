@@ -1420,6 +1420,10 @@ class Scanner
 										}
 									}
 								} 
+								else
+								{
+									$try_file = $other_try_file;
+								}
 							} 
 						}
 						

@@ -205,7 +205,9 @@ You should have received a copy of the GNU General Public License along with thi
 		else if(isset($GLOBALS['F_FILE_AFFECT'][$func_name])) 
 		{	$vulnname = $GLOBALS['NAME_FILE_AFFECT']; }		
 		else if(isset($GLOBALS['F_FILE_INCLUDE'][$func_name])) 
-		{	$vulnname = $GLOBALS['NAME_FILE_INCLUDE'];  }	 		
+		{	$vulnname = $GLOBALS['NAME_FILE_INCLUDE'];  }	
+		else if(isset($GLOBALS['F_CONNECT'][$func_name])) 
+		{	$vulnname = $GLOBALS['NAME_CONNECT']; }		
 		else if(isset($GLOBALS['F_EXEC'][$func_name])) 
 		{	$vulnname = $GLOBALS['NAME_EXEC'];  }
 		else if(isset($GLOBALS['F_CODE'][$func_name])) 
@@ -214,8 +216,6 @@ You should have received a copy of the GNU General Public License along with thi
 		{	$vulnname = $GLOBALS['NAME_XPATH'];	 } 
 		else if(isset($GLOBALS['F_LDAP'][$func_name])) 
 		{	$vulnname = $GLOBALS['NAME_LDAP'];}
-		else if(isset($GLOBALS['F_CONNECT'][$func_name])) 
-		{	$vulnname = $GLOBALS['NAME_CONNECT']; }	
 		else if(isset($GLOBALS['F_POP'][$func_name])) 
 		{	$vulnname = $GLOBALS['NAME_POP'];  }
 		else if(isset($GLOBALS['F_OTHER'][$func_name])) 
@@ -240,7 +240,9 @@ You should have received a copy of the GNU General Public License along with thi
 		else if(isset($GLOBALS['F_FILE_AFFECT'][$func_name])) 
 		{	$GLOBALS['count_fa']++; }		
 		else if(isset($GLOBALS['F_FILE_INCLUDE'][$func_name])) 
-		{	$GLOBALS['count_fi']++; }	 		
+		{	$GLOBALS['count_fi']++; }	
+		else if(isset($GLOBALS['F_CONNECT'][$func_name])) 
+		{	$GLOBALS['count_con']++; }
 		else if(isset($GLOBALS['F_EXEC'][$func_name])) 
 		{	$GLOBALS['count_exec']++; }
 		else if(isset($GLOBALS['F_CODE'][$func_name])) 
@@ -248,9 +250,7 @@ You should have received a copy of the GNU General Public License along with thi
 		else if(isset($GLOBALS['F_XPATH'][$func_name])) 
 		{	$GLOBALS['count_xpath']++; } 
 		else if(isset($GLOBALS['F_LDAP'][$func_name])) 
-		{	$GLOBALS['count_ldap']++; }
-		else if(isset($GLOBALS['F_CONNECT'][$func_name])) 
-		{	$GLOBALS['count_con']++; }	
+		{	$GLOBALS['count_ldap']++; }	
 		else if(isset($GLOBALS['F_POP'][$func_name])) 
 		{	$GLOBALS['count_pop']++; }
 		else if(isset($GLOBALS['F_OTHER'][$func_name])) 
