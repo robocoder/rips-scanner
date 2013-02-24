@@ -19,6 +19,7 @@ include 'config/general.php';
 
 ?><html>
 <head>
+	<meta charset="UTF-8">
 	<link rel="stylesheet" type="text/css" href="css/rips.css" />
 	<?php
 
@@ -35,7 +36,7 @@ include 'config/general.php';
 	<script src="js/netron.js"></script>
 	<title>RIPS - A static source code analyser for vulnerabilities in PHP scripts</title>
 </head>
-<body onload="draginit();" onmousemove="getPos(event);" onmouseup="mouseButtonPos='up';">
+<body>
 
 <div class="menu">
 	<div style="float:left; width:100%;">

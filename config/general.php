@@ -35,9 +35,9 @@ You should have received a copy of the GNU General Public License along with thi
 		exit;
 	}
 		
-	define('VERSION', '0.53');				// RIPS version to be displayed	
+	define('VERSION', '0.54');				// RIPS version to be displayed	
 	define('MAXTRACE', 30);					// maximum of parameter traces per sensitive sink
-	define('WARNFILES', 50);				// warn user if amount of files to scan is higher than this value
+	define('WARNFILES', 50);				// warn user if amount of files to scan is higher than this value, also limits the graphs so they dont get too confusing and prevents browser hanging
 	define('BASEDIR', '');					// default directory shown
 	define('PHPDOC', 'http://php.net/');	// PHP documentation link
 	define('MAX_ARRAY_ELEMENTS', 50);		// maximum array(1,2,3,4,...) elements to be indexed
@@ -54,6 +54,7 @@ You should have received a copy of the GNU General Public License along with thi
 		'.php5', 
 		//'.html', 
 		//'.htm', 
+		//'.txt',
 		'.phtml', 
 		'.tpl',  
 		'.cgi'

@@ -53,7 +53,7 @@ class Analyzer
 							$parameter_name = '';
 							
 						// mark userinput for quote analysis
-						if( ($tokens[$i][1] !== '$_SERVER' || (empty($parameter_name) || in_array($parameter_name, Sources::$V_SERVER_PARAMS)))
+						if( ($tokens[$i][1] !== '$_SERVER' || (empty($parameter_name) || in_array($parameter_name, Sources::$V_SERVER_PARAMS) || substr($parameter_name,0,5) === 'HTTP_'))
 						&& !((is_array($tokens[$i-1]) 
 						&& in_array($tokens[$i-1][0], Tokens::$T_CASTS))
 						|| (is_array($tokens[$i+1]) 

@@ -98,7 +98,7 @@ You should have received a copy of the GNU General Public License along with thi
 		'ingres_escape_string',
 		'maxdb_escape_string',
 		'maxdb_real_escape_string',
-		//'mysql_escape_string',
+		'mysql_escape_string',
 		'mysql_real_escape_string',
 		'mysqli_escape_string',
 		'mysqli_real_escape_string',

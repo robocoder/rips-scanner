@@ -431,7 +431,7 @@ function minWindow(id, oldwidth)
 	document.getElementById("window"+id).style.width = lastwidth;
 }
 
-function top(wid)
+function toTop(wid)
 {
 	var windows = document.getElementsByName("window");
 	for(var i=0; i<windows.length; i++)

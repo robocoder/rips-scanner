@@ -170,6 +170,7 @@ You should have received a copy of the GNU General Public License along with thi
 		//'stat'						=> array(array(1), array()),
 		'scandir'						=> array(array(1), $F_SECURING_FILE),
 		'show_source'					=> array(array(1), $F_SECURING_FILE),
+		'simplexml_load_file'			=> array(array(1), $F_SECURING_FILE),
 		'stream_get_contents'			=> array(array(1), $F_SECURING_FILE),
 		'stream_get_line'				=> array(array(1), $F_SECURING_FILE),
 		'xdiff_file_bdiff'				=> array(array(1,2), $F_SECURING_FILE),
@@ -200,10 +201,12 @@ You should have received a copy of the GNU General Public License along with thi
 		'eio_rmdir'						=> array(array(1), $F_SECURING_FILE),
 		'eio_write'						=> array(array(1,2), array()),
 		'eio_unlink'					=> array(array(1), $F_SECURING_FILE),
+		'error_log'						=> array(array(3), $F_SECURING_FILE),
 		'event_buffer_write'			=> array(array(2), array()),
 		'file_put_contents'				=> array(array(1,2), $F_SECURING_FILE),
 		'fputcsv'						=> array(array(1,2), $F_SECURING_FILE),
 		'fputs'							=> array(array(1,2), $F_SECURING_FILE),	
+		'fprintf'						=> array(array(0), array()),	
 		'ftruncate'						=> array(array(1), $F_SECURING_FILE),
 		'fwrite'						=> array(array(1,2), $F_SECURING_FILE),		
 		'gzwrite'						=> array(array(1,2), array()),
@@ -218,6 +221,7 @@ You should have received a copy of the GNU General Public License along with thi
 		'shmop_write'					=> array(array(2), array()),
 		'touch'							=> array(array(1), $F_SECURING_FILE),
 		'unlink'						=> array(array(1), $F_SECURING_FILE),
+		'vfprintf'						=> array(array(0), array()),	
 		'xdiff_file_bdiff'				=> array(array(3), $F_SECURING_FILE),
 		'xdiff_file_bpatch'				=> array(array(3), $F_SECURING_FILE),
 		'xdiff_file_diff_binary'		=> array(array(3), $F_SECURING_FILE),
@@ -242,6 +246,7 @@ You should have received a copy of the GNU General Public License along with thi
 		'shell_exec'					=> array(array(1), $F_SECURING_SYSTEM),
 		'system'						=> array(array(1), $F_SECURING_SYSTEM),
 		'mail'							=> array(array(5), array()), // http://esec-pentest.sogeti.com/web/using-mail-remote-code-execution
+		'mb_send_mail'					=> array(array(5), array()),
 		'w32api_invoke_function'		=> array(array(1), array()),
 		'w32api_register_function'		=> array(array(2), array()),
 	);
@@ -343,9 +348,13 @@ You should have received a copy of the GNU General Public License along with thi
 		'ftp_nb_get' 					=> array(array(2,3), array()), 
 		'ftp_nb_put'					=> array(array(2), array()), 
 		'ftp_put'						=> array(array(2,3), array()), 
+		'get_headers'					=> array(array(1), array()),
 		'imap_open'						=> array(array(1), array()),  
 		'imap_mail'						=> array(array(1), array()),
 		'mail' 							=> array(array(1,4), array()), 
+		'mb_send_mail'					=> array(array(1,4), array()), 
+		'ldap_connect'					=> array(array(1), array()),
+		'msession_connect'				=> array(array(1), array()),
 		'pfsockopen'					=> array(array(1), array()),   
 		'session_register'				=> array(array(0), array()),  
 		'socket_bind'					=> array(array(2), array()),  
@@ -383,6 +392,9 @@ You should have received a copy of the GNU General Public License along with thi
 		'unserialize'					=> array(array(1), array()), // calls __destruct
 		'is_a'							=> array(array(1), array())	 // calls __autoload in php 5.3.7, 5.3.8
 	);
+	
+	// XML
+	//simplexml_load_string
 	
 	
 	# interruption vulnerabilities

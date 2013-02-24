@@ -153,7 +153,7 @@ class Scanner
 		#print_r(func_get_args());echo "\n----------------\n";
 		$vardependent = false;
 		
-		$var_name = $var_token[1];
+		$var_name = $var_token[1]; 
 		// constants
 		if($var_name[0] !== '$')
 		{
@@ -207,11 +207,14 @@ class Scanner
 				else	
 				{
 					foreach($var_declares['register_globals'] as $glob_obj)
-					$var_declares[$var_name][] = $glob_obj;
+					{
+						if($glob_obj->id < $last_token_id)
+							$var_declares[$var_name][] = $glob_obj;
+					}
 				}	
 			}	
 		}
-		
+
 		// check if var declaration could be found for this var
 		// and if the latest var_declares id is smaller than the last_token_id, otherwise continue with function parameters		
 #echo "trying: $var_name, isset: ".(int)(isset($var_declares[$var_name])).", ".end($var_declares[$var_name])->id." < ".$last_token_id."?\n";		
@@ -297,7 +300,7 @@ class Scanner
 							|| ($tokens[$i][0] === T_STRING && $tokens[$i+1] !== '(') )
 							{	
 								$var_count++;
-						
+
 								// check if typecasted
 								if((is_array($tokens[$i-1]) 
 								&& in_array($tokens[$i-1][0], Tokens::$T_CASTS))
@@ -338,7 +341,7 @@ class Scanner
 									$ignore_securing, 
 									($this_one_is_secure || $in_securing || $in_arithmetic)
 								);
-								
+
 								// consider securing applied to parent variable
 								if($secured && $GLOBALS['verbosity'] < 3 && !$last_userinput) 
 								{
@@ -507,7 +510,6 @@ class Scanner
 
 			if(!$overwritten)
 			{
-			
 				// add userinput markers to mainparent object
 				if(isset($var_token[3]))
 					$parameter_name = str_replace(array("'",'"'), '', $var_token[3][0]);
@@ -516,7 +518,8 @@ class Scanner
 				
 				// mark tainted, but only specific $_SERVER parameters
 				if($var_name !== '$_SERVER'
-				|| in_array($parameter_name, Sources::$V_SERVER_PARAMS) )
+				|| in_array($parameter_name, Sources::$V_SERVER_PARAMS) 
+				|| substr($parameter_name,0,5) === 'HTTP_')
 				{
 					$userinput = true;
 					$parent->marker = 1;			
@@ -530,7 +533,8 @@ class Scanner
 						{
 							for($t=0;$t<count($dtokens);$t++)
 							{						
-								if($dtokens[$t][0] === T_VARIABLE && in_array($dtokens[$t][1], Sources::$V_USERINPUT) && ($dtokens[$t][1] !== '$_SERVER' || in_array($dtokens[$t][3][0], Sources::$V_SERVER_PARAMS)))
+								if($dtokens[$t][0] === T_VARIABLE && in_array($dtokens[$t][1], Sources::$V_USERINPUT) && ($dtokens[$t][1] !== '$_SERVER' || in_array($dtokens[$t][3][0], Sources::$V_SERVER_PARAMS)
+								|| substr($dtokens[$t][3][0],0,5) === 'HTTP_'))
 								{
 									$this->addexploitparameter($mainparent, $dtokens[$t][1], str_replace(array('"',"'"), '', $dtokens[$t][3][0]));		
 								}
@@ -546,7 +550,7 @@ class Scanner
 				}
 			}
 		} 
-				
+		
 		return $userinput;
 	}
 	
@@ -1059,7 +1063,8 @@ class Scanner
 				// do not check if next token is '(' because: require $inc; does not use ()
 				else if( in_array($token_name, Tokens::$T_FUNCTIONS) 
 				|| (in_array($token_name, Tokens::$T_XSS) && ($_POST['vector'] == 'client' || $_POST['vector'] == 'xss' || $_POST['vector'] == 'all')) )
-				{					
+				{			
+					$class='';
 					/*************************
 							T_STRING			
 					*************************/					
@@ -1217,6 +1222,52 @@ class Scanner
 								isset($this->tokens[$i][3]) ? $this->tokens[$i][3] : array()
 							);	
 						}
+						// parse_str()
+						else if($token_value === 'parse_str')
+						{
+							$c = 2;
+							$parameter = 1;
+							$newbraceopen = 1;
+							
+							while( $newbraceopen !== 0 )
+							{
+								if( is_array($this->tokens[$i + $c]) 
+								&& $this->tokens[$i + $c][0] === T_VARIABLE && $parameter == 2)
+								{
+									// add variable declaration to beginning of varlist
+									// fake assignment parameter so it will not get traced			
+									$this->variable_add(
+										$this->tokens[$i + $c][1], 
+										array_slice($this->tokens,$i,Analyzer::getBraceEnd($this->tokens,$i+2)+3), 
+										' parse_str() ', 
+										0, $c-1, 
+										$this->tokens[$i + $c][2], 
+										$i, 
+										isset($this->tokens[$i+$c][3]) ? $this->tokens[$i+$c][3] : array()
+									);
+								}
+								// count parameters
+								else if( $newbraceopen === 1 && $this->tokens[$i + $c] === ',' )
+								{
+									$parameter++;
+								}
+								// watch function calls in function call
+								else if( $this->tokens[$i + $c] === '(' )
+								{
+									$newbraceopen++;
+								}
+								else if( $this->tokens[$i + $c] === ')' )
+								{
+									$newbraceopen--;
+								}						
+								else if($this->tokens[$i+$c] === ';' || !isset($this->tokens[$i+$c]))
+								{
+									addError('Closing parenthesis of '.$token_value.'() is missing.', array_slice($this->tokens, $i, $c), $this->tokens[$i][2], $this->file_pointer);
+									break;	
+								}
+								$c++;
+							}
+						}
 						
 						//add interesting function calls to info gathering	
 						if( isset($this->info_functions[$token_value]) )
@@ -1231,7 +1282,6 @@ class Scanner
 						// add function call to user-defined function list
 						else
 						{
-							$class='';
 							// $classvar->bla()
 							if($this->tokens[$i-1][0] === T_OBJECT_OPERATOR)
 							{
@@ -1617,7 +1667,7 @@ class Scanner
 												$ignore_securing, 
 												($this_one_is_secure || $in_securing)
 											);										
-											
+
 											$reconstructstr.= Analyzer::get_var_value(
 												$this->file_pointer,
 												$this->tokens[$i+$c], 

@@ -194,7 +194,7 @@ You should have received a copy of the GNU General Public License along with thi
 ?>	
 <div id="window1" name="window" style="width:600px; height:250px;">
 	<div class="windowtitlebar">
-		<div id="windowtitle1" onClick="top(1)" onmousedown="dragstart(1)" class="windowtitle"></div>
+		<div id="windowtitle1" onClick="toTop(1)" onmousedown="dragstart(1)" class="windowtitle"></div>
 		<input id="maxbutton1" type="button" class="maxbutton" value="&nabla;" onClick="maxWindow(1, 800)" title="maximize" />
 		<input type="button" class="closebutton" value="x" onClick="closeWindow(1)" title="close" />
 	</div>
@@ -214,7 +214,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 <div id="window2" name="window" style="width:600px; height:250px;">
 	<div class="windowtitlebar">
-		<div id="windowtitle2" onClick="top(2)" onmousedown="dragstart(2)" class="windowtitle"></div>
+		<div id="windowtitle2" onClick="toTop(2)" onmousedown="dragstart(2)" class="windowtitle"></div>
 		<input type="button" class="closebutton" value="x" onClick="closeWindow(2)" title="close" />
 	</div>
 	<div id="windowcontent2" class="windowcontent"></div>
@@ -223,7 +223,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 <div id="window3" name="window" style="width:300px; height:300px;">
 	<div class="funclisttitlebar">
-		<div id="windowtitle3" onClick="top(3)" onmousedown="dragstart(3)" class="funclisttitle">
+		<div id="windowtitle3" onClick="toTop(3)" onmousedown="dragstart(3)" class="funclisttitle">
 		user defined functions and calls
 		</div>
 		<input type="button" class="closebutton" value="x" onClick="closeWindow(3)" title="close" />
@@ -246,7 +246,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 <div id="window4" name="window" style="width:300px; height:300px;">
 	<div class="funclisttitlebar">
-		<div id="windowtitle4" onClick="top(4)" onmousedown="dragstart(4)" class="funclisttitle">
+		<div id="windowtitle4" onClick="toTop(4)" onmousedown="dragstart(4)" class="funclisttitle">
 		user input
 		</div>
 		<input type="button" class="closebutton" value="x" onClick="closeWindow(4)" title="close" />
@@ -261,7 +261,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 <div id="window5" name="window" style="width:300px; height:300px;">
 	<div class="funclisttitlebar">
-		<div id="windowtitle4" onClick="top(5)" onmousedown="dragstart(5)" class="funclisttitle">
+		<div id="windowtitle4" onClick="toTop(5)" onmousedown="dragstart(5)" class="funclisttitle">
 		scanned files and includes
 		</div>
 		<input type="button" class="closebutton" value="x" onClick="closeWindow(5)" title="close" />
