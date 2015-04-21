@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License along with thi
 **/
 
 include 'config/general.php';
+if (defined("MODE_CLI"))	
+	parse_str(implode('&', array_slice($argv, 1)), $_POST);				// parse commandline into $_POST
 
 ?><html>
 <head>
@@ -162,7 +164,12 @@ include 'config/general.php';
 </div>
 
 <div id="result">
-	
+<?php
+if(defined("MODE_CLI") && !empty($_POST['loc'])){
+	require("main.php");
+}
+else {
+?>
 	<div style="margin-left:30px;color:#000000;font-size:14px">
 		<h3>Quickstart:</h3>
 		<p>Locate your local PHP source code <b>path/file</b> (e.g. <em>/var/www/project1/</em> or <em>/var/www/index.php</em>), choose the <b>vulnerability type</b> you are looking for and click <u>scan</u>!<br />
@@ -197,7 +204,9 @@ include 'config/general.php';
 		<li>Only tested with Firefox.</li>
 		</ul>
 	</div>
-	
+<?php
+}
+?>
 </div>
 
 </body>

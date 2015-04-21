@@ -14,13 +14,16 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the GNU General Public License along with this program; if not, see <http://www.gnu.org/licenses/>.	
 
 **/
+	if (php_sapi_name() === 'cli')
+		define("MODE_CLI",1);
 	
 	#error_reporting(E_ALL);
 	error_reporting(E_ERROR | E_PARSE);
 	// various settings making flush() work correctly
 	if(function_exists('apache_setenv'))
 		apache_setenv('no-gzip', 1);
-	ini_set('zlib.output_compression', 0);
+	if (!defined("MODE_CLI"))
+	    ini_set('zlib.output_compression', 0);
 	ini_set('implicit_flush', 0);
 	ini_set('output_buffering', 0);
 	
@@ -37,7 +40,10 @@ You should have received a copy of the GNU General Public License along with thi
 		
 	define('VERSION', '0.54');				// RIPS version to be displayed	
 	define('MAXTRACE', 30);					// maximum of parameter traces per sensitive sink
-	define('WARNFILES', 50);				// warn user if amount of files to scan is higher than this value, also limits the graphs so they dont get too confusing and prevents browser hanging
+	if (!defined("MODE_CLI"))
+		define('WARNFILES', 50);			// warn user if amount of files to scan is higher than this value, also limits the graphs so they dont get too confusing and prevents browser hanging
+	else
+		define('WARNFILES', 500000);		// only warn if more than 500k files
 	define('BASEDIR', '');					// default directory shown
 	define('PHPDOC', 'http://php.net/');	// PHP documentation link
 	define('MAX_ARRAY_ELEMENTS', 50);		// maximum array(1,2,3,4,...) elements to be indexed
