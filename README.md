@@ -40,14 +40,14 @@ see php-rips scan form for details.
  stylesheet			....html output stylesheet [ayti|...]
 ```
 
-### Jenkins-CI Integration Notes
+#### Jenkins-CI Integration Notes
 
 1. download & install the [html publisher plugin](https://wiki.jenkins-ci.org/display/JENKINS/HTML+Publisher+Plugin)
 2. configure scm to clone both this repository and the source you want to scan to distinct folders
 3. add build step: execute shell
 
   ```
-	 # config - remove this if you configer it via jenkins parameterized builds
+	 # config - remove this if you configure it via jenkins parameterized builds
 	 PATH_RIPS=rips-scanner
 	 PATH_REPORT=report
 	 FILE_REPORT=report.html
@@ -84,4 +84,3 @@ see php-rips scan form for details.
 
 ## Development
 RIPS 0.5 development is abandoned. A complete rewrite is in development. Follow @FluxReiners for updates. 
-
