@@ -157,7 +157,9 @@ You should have received a copy of the GNU General Public License along with thi
 					
 			$overall_time = 0;
 			$timeleft = 0;
-			$file_amount = count($files);		
+			$file_amount = count($files);	
+			if (defined("MODE_CLI"))
+				echo "\n<div id=\"scan_metadata\" style=\"display: none;\">";		//respond with json struct	
 			for($fit=0; $fit<$file_amount; $fit++)
 			{
 				// for scanning display
@@ -179,6 +181,8 @@ You should have received a copy of the GNU General Public License along with thi
 			}
 			#die("done");
 			echo "STATS_DONE.\n";
+			if (defined("MODE_CLI"))
+				echo "\n</div>";		//respond with json struct
 			@ob_flush();
 			flush();
 			
