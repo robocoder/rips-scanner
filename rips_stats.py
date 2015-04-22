@@ -35,7 +35,7 @@ def extract_td_single(column_name,data):
     return ''
 
 def main(args, options=[]):
-    errcode = -1
+    errcode = 0
     stats={}
     
     for file in args:
@@ -57,7 +57,7 @@ def main(args, options=[]):
                 print "[**] extracting data"
                 # reduce searchspace
                 x = re.findall(r'Sum:</td><td>(\d+)</td>', data)
-                stats['hits'] = int(x[0]) if x else -1
+                stats['hits'] = int(x[0]) if x else 0    # if Sum: is missing, there were not vulns.
                 stats['cats'] = re.findall(r'catshow\(\'([^\']+)', data)
                 stats['num_cats']=len(stats['cats'])
                 x = re.findall(r'<span id="scantime">(\d+\.\d+) seconds</span>',data)
