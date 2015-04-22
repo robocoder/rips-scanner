@@ -45,6 +45,7 @@ def main(args, options=[]):
             continue
         with open(file,'r') as f:
             data = None
+            # performance - reduce regex searchspace; extract stats div
             for line in f.readlines():
                 if data:
                     data += line
@@ -55,7 +56,6 @@ def main(args, options=[]):
                     break
             if data:
                 print "[**] extracting data"
-                # reduce searchspace
                 x = re.findall(r'Sum:</td><td>(\d+)</td>', data)
                 stats['hits'] = int(x[0]) if x else 0    # if Sum: is missing, there were not vulns.
                 stats['cats'] = re.findall(r'catshow\(\'([^\']+)', data)
