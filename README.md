@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # RIPS
 A static source code analyser for vulnerabilities in PHP scripts
 
@@ -19,35 +20,35 @@ Follow the instructions on the main page.
 
 ## Command-line Interface - CLI
 
-### run index.php and provide any $_POST param via command-line as key=value
-
-```
-php index.php [<key>=<value>, ...]
-```
-
 #### usage
 
-see php-rips scan form for details.
+see original php-rips scan html form (index.php) for more options.
 
 ```
-php index.php [options]
+php index.php [option=value]
 
-loc 				... target scan file/folder <path>
-subdir				... recurse subdirs [0|1]
-ignore_warning		... [0|1]
-vector				... scan vectors [all|..]
-verbosity			... log verbosity [0-9]
-treestyle			... html output style [0|1]
-stylesheet			....html output stylesheet [ayti|...]
+options:
+  loc 				... target scan file/folder <path>
+  subdir				... recurse subdirs [0|1]
+  ignore_warning		... [0|1]
+  vector				... scan vectors [all|..]
+  verbosity			... log verbosity [0-9]
+  treestyle			... html output style [0|1]
+  stylesheet			....html output stylesheet [ayti|...]
+  
+example: recursively scan ./code for all vuln. classes
+  php index.php loc=./code subdirs=1 vector=all verbosity=2
 ```
+
+Note: in cli-mode argv wil be parsed into $_POST therefore allowing you to set any POST-Vars.
 
 #### Jenkins-CI Integration Notes
 
-1. download & install the [html publisher plugin](https://wiki.jenkins-ci.org/display/JENKINS/HTML+Publisher+Plugin)
-2. configure scm to clone both this repository and the source you want to scan to distinct folders
+1. install the [html publisher plugin](https://wiki.jenkins-ci.org/display/JENKINS/HTML+Publisher+Plugin)
+2. configure (multiple) scm to clone both this repository and the source you want to scan to distinct folders
 3. add build step: execute shell
 
-```
+```bash
 # config - remove this if you configure it via jenkins parameterized builds
 PATH_RIPS=rips-scanner
 PATH_REPORT=report
@@ -57,7 +58,7 @@ RIPS_RECURSE_SUBDIR=1
 RIPS_VECTOR=all
 RIPS_VERBOSITY=2
 # copy dependencies
-mkdir report
+mkdir -p report
 cp -r rips-scanner/css report
 cp -r rips-scanner/js report
 # run analysis
@@ -72,7 +73,7 @@ echo "========================================================="
   
 4. add build step: execute python
   
-```
+```python
 import os, sys
 import rips_stats as rips
 if __name__=="__main__":
