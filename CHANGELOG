@@ -1,6 +1,14 @@
 RIPS CHANGELOG
 ===============
 
+RIPS 0.55
+----------
+	- updated configuration (sources, sinks, sanitization)
+	- added session fixation detection
+	- seperated reflection injection from code injection
+	- changed defaults (subdirs, vuln type)
+	- referenced user survey
+
 RIPS 0.54
 ----------
 	- fixed Javascript errors

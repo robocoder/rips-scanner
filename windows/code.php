@@ -101,9 +101,10 @@ include('../config/general.php');
 	
 	$file = $_GET['file'];
 	$marklines = explode(',', $_GET['lines']);
+	$ext = '.'.pathinfo($file, PATHINFO_EXTENSION);
 
 	
-	if(!empty($file))
+	if(!empty($file) && is_file($file) && in_array($ext, $FILETYPES))
 	{
 		$lines = file($file); 
 		
@@ -120,7 +121,7 @@ include('../config/general.php');
 		}
 	} else
 	{
-		echo '<tr><td>No file specified.</td></tr>';
+		echo '<tr><td>Invalid file specified.</td></tr>';
 	}
 ?>
 </table>

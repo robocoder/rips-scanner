@@ -845,7 +845,9 @@ var myColor = [
 "#DADFE3", // XSS
 "#16FB3B", // HTTP Header 
 "#DF4242", // other
-"#818C96" // pop
+"#818C96", // pop
+"#ff99ff", // reflection
+"#ff33ff", // 
 ];
 
 var myData = Array();
@@ -858,7 +860,7 @@ function generateDiagram()
 	var myTotal = 0;
 	
 	// generate data
-	for (var j = 0; j < 14; j++)
+	for (var j = 0; j < 15; j++)
 	{
 		if(document.getElementById('vuln'+(j+1)))
 		{

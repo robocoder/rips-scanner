@@ -58,8 +58,10 @@ include('../config/general.php');
 	$file = $_GET['file'];
 	$start = (int)$_GET['start'];
 	$end = (int)$_GET['end'];
+	$ext = '.'.pathinfo($file, PATHINFO_EXTENSION);
 
-	if(!empty($file))
+
+	if(!empty($file) && is_file($file) && in_array($ext, $FILETYPES))
 	{
 		$lines = file($file); 
 		

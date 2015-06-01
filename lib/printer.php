@@ -197,7 +197,9 @@ You should have received a copy of the GNU General Public License along with thi
 		if(isset($GLOBALS['F_XSS'][$func_name])) 
 		{	$vulnname = $GLOBALS['NAME_XSS'];  }
 		else if(isset($GLOBALS['F_HTTP_HEADER'][$func_name])) 
-		{	$vulnname = $GLOBALS['NAME_HTTP_HEADER'];  }		
+		{	$vulnname = $GLOBALS['NAME_HTTP_HEADER'];  }	
+		else if(isset($GLOBALS['F_SESSION_FIXATION'][$func_name])) 
+		{	$vulnname = $GLOBALS['NAME_SESSION_FIXATION'];  }
 		else if(isset($GLOBALS['F_DATABASE'][$func_name])) 
 		{	$vulnname = $GLOBALS['NAME_DATABASE'];  }	
 		else if(isset($GLOBALS['F_FILE_READ'][$func_name])) 
@@ -212,6 +214,8 @@ You should have received a copy of the GNU General Public License along with thi
 		{	$vulnname = $GLOBALS['NAME_EXEC'];  }
 		else if(isset($GLOBALS['F_CODE'][$func_name])) 
 		{	$vulnname = $GLOBALS['NAME_CODE']; }
+		else if(isset($GLOBALS['F_REFLECTION'][$func_name])) 
+		{	$vulnname = $GLOBALS['NAME_REFLECTION']; }
 		else if(isset($GLOBALS['F_XPATH'][$func_name])) 
 		{	$vulnname = $GLOBALS['NAME_XPATH'];	 } 
 		else if(isset($GLOBALS['F_LDAP'][$func_name])) 
@@ -233,6 +237,8 @@ You should have received a copy of the GNU General Public License along with thi
 		{	$GLOBALS['count_xss']++; }	
 		else if(isset($GLOBALS['F_HTTP_HEADER'][$func_name])) 
 		{	$GLOBALS['count_header']++; }
+		else if(isset($GLOBALS['F_SESSION_FIXATION'][$func_name])) 
+		{	$GLOBALS['count_sf']++; }
 		else if(isset($GLOBALS['F_DATABASE'][$func_name])) 
 		{	$GLOBALS['count_sqli']++; }	
 		else if(isset($GLOBALS['F_FILE_READ'][$func_name])) 
@@ -247,6 +253,8 @@ You should have received a copy of the GNU General Public License along with thi
 		{	$GLOBALS['count_exec']++; }
 		else if(isset($GLOBALS['F_CODE'][$func_name])) 
 		{	$GLOBALS['count_code']++; }
+		else if(isset($GLOBALS['F_REFLECTION'][$func_name])) 
+		{	$GLOBALS['count_ri']++; }
 		else if(isset($GLOBALS['F_XPATH'][$func_name])) 
 		{	$GLOBALS['count_xpath']++; } 
 		else if(isset($GLOBALS['F_LDAP'][$func_name])) 
@@ -578,7 +586,7 @@ You should have received a copy of the GNU General Public License along with thi
 				{
 					foreach($lines as $line)
 					{
-						$finds[] = '<span class="funclistline" title="'.$file_name.'" onClick="openCodeViewer(4, \''.addslashes($file_name)."', '$line')\">$line</span>\n";
+						$finds[] = '<span class="funclistline" title="'.htmlentities($file_name).'" onClick="openCodeViewer(4, \''.htmlentities($file_name, ENT_QUOTES)."', '$line')\">$line</span>\n";
 					}
 				}
 				echo "<tr><td nowrap>$input_name</td><td nowrap>",implode(',',array_unique($finds)),'</td></tr>';
@@ -660,7 +668,7 @@ You should have received a copy of the GNU General Public License along with thi
 					}			
 					
 					if($GLOBALS['file_amount'] <= WARNFILES)
-						$js.= "var e$varname = graph.addElement($style, { x:$x, y:$y }, '".addslashes($filename)."', '', '".$userinput."', '".$file_sinks[$file]."', ".(in_array($file, $vulnfiles) ? 1 : 0).");\n";
+						$js.= "var e$varname = graph.addElement($style, { x:$x, y:$y }, '".htmlentities($filename, ENT_QUOTES)."', '', '".$userinput."', '".htmlentities($file_sinks[$file], ENT_QUOTES)."', ".(in_array($file, $vulnfiles) ? 1 : 0).");\n";
 
 				} else
 				{
@@ -682,14 +690,14 @@ You should have received a copy of the GNU General Public License along with thi
 
 				if(empty($includes))
 				{
-					echo '<tr><td><div class="funclistline" title="',$file,'" ',
-					'onClick="openCodeViewer(3, \'',addslashes($file),'\', \'0\')">',$filename,'</div></td></tr>',"\n";
+					echo '<tr><td><div class="funclistline" title="',htmlentities($file),'" ',
+					'onClick="openCodeViewer(3, \'',htmlentities($file, ENT_QUOTES),'\', \'0\')">',htmlentities($filename),'</div></td></tr>',"\n";
 				}	
 				else
 				{
 					$parent = $varname;
-					echo '<tr><td><div class="funclistline" title="',$file,'" ',
-					'onClick="openCodeViewer(3, \'',addslashes($file),'\', \'0\')">',$filename,'</div><ul style="margin-top:0px;">',"\n";
+					echo '<tr><td><div class="funclistline" title="',htmlentities($file),'" ',
+					'onClick="openCodeViewer(3, \'',htmlentities($file, ENT_QUOTES),'\', \'0\')">',htmlentities($filename),'</div><ul style="margin-top:0px;">',"\n";
 					foreach($includes as $include)
 					{
 						$include = realpath($include);
@@ -697,8 +705,8 @@ You should have received a copy of the GNU General Public License along with thi
 						$includename = is_dir($_POST['loc']) ? str_replace(realpath($_POST['loc']), '', $include) : str_replace(realpath(str_replace(basename($_POST['loc']),'', $_POST['loc'])),'',$include);
 						$incvarname = preg_replace('/[^A-Za-z0-9]/', '', $includename); 
 	
-						echo '<li><div class="funclistline" title="',$include,'" ',
-						'onClick="openCodeViewer(3, \'',addslashes($include),'\', \'0\')">',$includename,'</div></li>',"\n";
+						echo '<li><div class="funclistline" title="',htmlentities($include),'" ',
+						'onClick="openCodeViewer(3, \'',htmlentities($include, ENT_QUOTES),'\', \'0\')">',htmlentities($includename),'</div></li>',"\n";
 						
 						if($GLOBALS['file_amount'] <= WARNFILES)
 							$js.="try{graph.addConnection(e$incvarname.getConnector(\"links\"), e$parent.getConnector(\"parents\"), '#000');}catch(e){}\n";

@@ -81,31 +81,6 @@ final class Info
 		'__unset'						=> 'POP gagdet __unset'
 	);
 	
-	// interesting functions regarding cryptography
-	public static $F_INTEREST_CRYPTO = array(
-		'base64_encode'					=> 'Keep in mind you are encoding something here, no hiding at all.', 
-		'base64_decode'					=> 'Keep in mind you are decoding something here, no hiding at all.', 
-		'crc32'							=> 'Don\'t use crc32 for any cryptographic implementation, it is linear (see Gregor Kopf\'s Joomla exploit).', 
-		'crypt'							=> '', 
-		'hash'							=> 'A hash is generated here. Make sure the hash is not trimmed and always compared typesafe (see typo3-sa-2010-020). You may want to use a salt when storing sensitive data such as passwords to prevent rainbow table bruteforce.', 
-		'md5'							=> 'MD5 hash is generated here. Make sure the hash is not trimmed and always compared typesafe (see typo3-sa-2010-020). You may want to use a salt when storing sensitive data such as passwords to prevent rainbow table bruteforce.', 
-		'mt_srand'						=> 'There is no need to generate a new seed for the PRNG. If you do so, do it only once for your server and store the seed. Do not seed multiple times new which will destroy the avalanche effect (see Gregor Kopf\'s Joomla exploit).', 
-		'rand'							=> 'The output of rand() is limited to 32767 values by default and can be bruteforced.', 
-		'sha1'							=> 'SHA1 hash is generated here. Make sure the hash is not trimmed and always compared typesafe (see typo3-sa-2010-020). You may want to use a salt when storing sensitive data such as passwords to prevent rainbow table bruteforce.', 
-		'mt_srand'						=> 'There is no need to generate a new seed for the PRNG. If you do so, do it only once for your server and store the seed. Do not seed multiple times new which will destroy the avalanche effect (see Gregor Kopf\'s Joomla exploit).', 
-		'str_rot13'						=> 'Keep in mind you are only shifting something here, no hiding at all.',
-		'mcrypt_cbc'					=> 'Encrypts/decrypts data in CBC mode',
-		'mcrypt_cfb'					=> 'Encrypts/decrypts data in CFB mode',
-		'mcrypt_create_iv'				=> 'Creates an initialization vector (IV) from a random source',
-		'mcrypt_decrypt'				=> 'Decrypts crypttext with given parameters',
-		'mcrypt_ecb'					=> 'Deprecated: Encrypts/decrypts data in ECB mode',
-		'mcrypt_encrypt'				=> 'Encrypts plaintext with given parameters',
-		'mcrypt_generic_init'			=> 'This function initializes all buffers needed for encryption',
-		'mcrypt_generic'				=> 'This function encrypts data',
-		'mcrypt_module_open' 			=> 'Opens the module of the algorithm and the mode to be used',
-		'mcrypt_ofb' 					=> 'Encrypts/decrypts data in OFB mode',
-		'mdecrypt_generic'				=> 'Decrypts data'
-	);
 }
 
 ?>	

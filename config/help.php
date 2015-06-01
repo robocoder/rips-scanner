@@ -33,13 +33,31 @@ $HELP_HTTP_HEADER = array(
 'patch' => '<?php if(!in_array($_GET["url"], $whitelist)) exit; ?>'
 );
 
+$HELP_SESSION_FIXATION = array(
+'description' => 'An attacker can force a user to use a specific session id. Once the user logs in, the attacker can use the previously fixated session id to access the account.',
+'link' => 'https://www.owasp.org/index.php/Session_fixation',
+'code' => '<?php setcookie("PHPSESSID", $_GET["sessid"]); ?>',
+'poc' => '/index.php?sessid=1f3870be274f6c49b3e31a0c6728957f',
+'patchtext' => 'Do not use a session token supplied by the user.',
+'patch' => 'No code.'
+);
+
 $HELP_CODE = array(
 'description' => 'An attacker might execute arbitrary PHP code with this vulnerability. User tainted data is embedded into a function that compiles PHP code on the run and executes it thus allowing an attacker to inject own PHP code that will be executed. This vulnerability can lead to full server compromise.',
-'link' => '',
+'link' => 'https://www.owasp.org/index.php/Code_Injection',
 'code' => '<?php eval("\$color = \'" . $_GET["color"] . "\';"); ?>',
 'poc' => '/index.php?color=\';phpinfo();//',
 'patchtext' => 'Build a whitelist for positive code with regular expressions (e.g. alphanumeric only) or arrays. Do not try to blacklist for evil PHP code.',
 'patch' => '<?php $colors = array("blue", "red"); if(!in_array($_GET["color"], $colors)) exit; ?>'
+);
+
+$HELP_REFLECTION = array(
+'description' => 'An attacker might execute arbitrary functions with this vulnerability. User tainted data is used as a function name. This can lead to unexpected behaviour of the application.',
+'link' => 'https://www.owasp.org/index.php/Reflection_injection',
+'code' => '<?php call_user_func($_GET["func"]); ?>',
+'poc' => '/index.php?func=phpinfo',
+'patchtext' => 'Build a whitelist for allowed functions.',
+'patch' => '<?php $funcs = array("test1", "test2"); if(!in_array($_GET["func"], $funcs)) exit; ?>'
 );
 
 $HELP_FILE_INCLUDE = array(

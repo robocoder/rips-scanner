@@ -45,9 +45,9 @@ include 'config/general.php';
 		<table class="menutable" width="50%" style="float:left;">
 		<tr>
 			<td nowrap><b>path / file:</b></td>
-			<td colspan="3" nowrap><input type="text" size=80 id="location" value="<?php echo BASEDIR; ?>" title="enter path to PHP file(s)">
+			<td colspan="3" nowrap><input type="text" size=80 id="location" value="<?php echo BASEDIR; ?>" title="enter path to PHP file(s)" placeholder="/var/www/">
 			</td>
-			<td nowrap><input type="checkbox" id="subdirs" value="1" title="check to scan subdirectories" />subdirs
+			<td nowrap><input type="checkbox" id="subdirs" value="1" title="check to scan subdirectories" checked/>subdirs
 			</td>
 		</tr>
 		<tr>
@@ -83,18 +83,20 @@ include 'config/general.php';
 							'server' 		=> 'All server-side',							
 							'code' 			=> '- Code Execution',
 							'exec' 			=> '- Command Execution',
-							'connect'		=> '- Header Injection',							
 							'file_read' 	=> '- File Disclosure',
 							'file_include' 	=> '- File Inclusion',							
 							'file_affect' 	=> '- File Manipulation',
 							'ldap' 			=> '- LDAP Injection',
+							'unserialize' 	=> '- PHP Object Injection',
+							'connect'		=> '- Protocol Injection',							
+							'ri'		 	=> '- Reflection Injection',
 							'database' 		=> '- SQL Injection',
 							'xpath' 		=> '- XPath Injection',
 							'other' 		=> '- other',
 							'client' 		=> 'All client-side',
 							'xss' 			=> '- Cross-Site Scripting',
 							'httpheader'	=> '- HTTP Response Splitting',
-							'unserialize' 	=> 'Unserialize / POP'
+							'fixation'		=> '- Session Fixation',
 							//'crypto'		=> 'Crypto hints'
 						);
 						

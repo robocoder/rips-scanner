@@ -400,6 +400,7 @@ class Scanner
 							|| isset(Info::$F_INTEREST[$tokens[$i][1]]))
 							// ignore oftenly used preg_replace() and alike
 							&& !isset($GLOBALS['F_CODE'][$tokens[$i][1]]) 
+							&& !isset($GLOBALS['F_REFLECTION'][$tokens[$i][1]]) 
 							&& !isset($GLOBALS['F_OTHER'][$tokens[$i][1]]))
 							{
 								$var_trace->value = highlightline($tokens, $comment.$var_declare->comment.', trace stopped', $var_declare->line);
@@ -1929,7 +1930,7 @@ class Scanner
 								} else
 								{
 									if(empty($new_find->title))
-										$new_find->title = 'Userinput reaches sensitive sink.';
+										$new_find->title = 'Userinput reaches sensitive sink. For more information, press the help icon on the left side.';
 									$block = new VulnBlock($this->tif.'_'.$this->tokens[$i][2].'_'.basename($this->file_pointer), getVulnNodeTitle($token_value), $token_value);
 									$block->treenodes[] = $new_find;
 									if($parameter_has_userinput || $GLOBALS['verbosity'] == 4)

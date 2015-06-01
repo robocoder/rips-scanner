@@ -35,10 +35,16 @@ switch($type)
 								break;
 	case $NAME_HTTP_HEADER: 	$HELP = $HELP_HTTP_HEADER;	
 								$FUNCS = array();
+								break;	
+	case $NAME_SESSION_FIXATION: 	$HELP = $HELP_SESSION_FIXATION;	
+								$FUNCS = array();
 								break;							
 	case $NAME_CODE: 			$HELP = $HELP_CODE;	
 								$FUNCS = $F_SECURING_PREG;
 								break;
+	case $NAME_REFLECTION: 		$HELP = $HELP_REFLECTION;	
+								$FUNCS = array();
+								break;							
 	case $NAME_FILE_INCLUDE: 	$HELP = $HELP_FILE_INCLUDE;
 								$FUNCS = $F_SECURING_FILE;
 								break;
@@ -119,7 +125,7 @@ if($_GET['server'])
 
 <h3>vulnerability description:</h3>
 <p><?php echo $HELP['description']; ?></p>
-<p><?php if(!empty($HELP['link'])) echo "More information about $type can be found <a href=\"{$HELP['link']}\">here</a>."; ?></p>
+<p><?php if(!empty($HELP['link'])) echo "More information about $type can be found <a href=\"{$HELP['link']}\" target=\"_blank\">here</a>."; ?></p>
 
 <h3>vulnerable example code:</h3>
 <pre><?php echo highlightline(token_get_all($HELP['code']), '', 1); ?></pre>

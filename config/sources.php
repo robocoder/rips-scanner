@@ -25,14 +25,12 @@ final class Sources
 		'$_REQUEST',
 		'$_FILES',
 		'$_SERVER',
-		'$_ENV',
 		'$HTTP_GET_VARS',
 		'$HTTP_POST_VARS',
 		'$HTTP_COOKIE_VARS',  
 		'$HTTP_REQUEST_VARS', 
 		'$HTTP_POST_FILES',
 		'$HTTP_SERVER_VARS',
-		'$HTTP_ENV_VARS',
 		'$HTTP_RAW_POST_DATA',
 		'$argc',
 		'$argv'
@@ -55,10 +53,12 @@ final class Sources
 		'PHP_AUTH_PW',
 		'AUTH_TYPE',
 		'QUERY_STRING',
+		'REQUEST_METHOD',
 		'REQUEST_URI', // partly urlencoded
 		'PATH_INFO',
 		'ORIG_PATH_INFO',
 		'PATH_TRANSLATED',
+		'REMOTE_HOSTNAME',
 		'PHP_SELF'
 	);
 	
@@ -106,6 +106,10 @@ final class Sources
 	// other functions as input
 	public static $F_OTHER_INPUT = array(
 		'get_headers',
+		'getallheaders',
+		'get_browser',
+		'getenv',
+		'gethostbyaddr',
 		'runkit_superglobals',
 		'import_request_variables'
 	);

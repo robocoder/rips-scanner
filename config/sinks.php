@@ -26,7 +26,12 @@ You should have received a copy of the GNU General Public License along with thi
 		'exit'							=> array(array(1), $F_SECURING_XSS),
 		'die'							=> array(array(1), $F_SECURING_XSS),
 		'printf'						=> array(array(0), $F_SECURING_XSS),
-		'vprintf'						=> array(array(0), $F_SECURING_XSS)
+		'vprintf'						=> array(array(0), $F_SECURING_XSS),
+		'trigger_error'					=> array(array(1), $F_SECURING_XSS),
+		'user_error'					=> array(array(1), $F_SECURING_XSS),
+		'odbc_result_all'				=> array(array(2), $F_SECURING_XSS),
+		'ovrimos_result_all'			=> array(array(2), $F_SECURING_XSS),
+		'ifx_htmltbl_result'			=> array(array(2), $F_SECURING_XSS)
 	);
 	
 	// HTTP header injections
@@ -35,10 +40,38 @@ You should have received a copy of the GNU General Public License along with thi
 		'header' 						=> array(array(1), array())
 	);
 	
+	// session fixation
+	$NAME_SESSION_FIXATION = 'Session Fixation';
+    $F_SESSION_FIXATION = array(
+		'setcookie' 					=> array(array(2), array()),
+		'setrawcookie' 					=> array(array(2), array()),
+		'session_id' 					=> array(array(1), array())
+	);
+	
 	// code evaluating functions  => (parameters to scan, securing functions)
 	// example parameter array(1,3) will trace only first and third parameter 
 	$NAME_CODE = 'Code Execution';
 	$F_CODE = array(
+		'assert' 						=> array(array(1), array()),
+		'create_function' 				=> array(array(1,2), array()),
+		'eval' 							=> array(array(1), array()),
+		'mb_ereg_replace'				=> array(array(1,2), $F_SECURING_PREG),
+		'mb_eregi_replace'				=> array(array(1,2), $F_SECURING_PREG),
+		'preg_filter'					=> array(array(1,2), $F_SECURING_PREG),
+		'preg_replace'					=> array(array(1,2), $F_SECURING_PREG),
+		'preg_replace_callback'			=> array(array(1), $F_SECURING_PREG),
+	);
+	
+	// reflection injection
+	$NAME_REFLECTION = 'Reflection Injection';
+	$F_REFLECTION = array(
+		'event_buffer_new'				=> array(array(2,3,4), array()),		
+		'event_set'						=> array(array(4), array()),
+		'iterator_apply'				=> array(array(2), array()),
+		'forward_static_call'			=> array(array(1), array()),
+		'forward_static_call_array'		=> array(array(1), array()),
+		'call_user_func'				=> array(array(1), array()),
+		'call_user_func_array'			=> array(array(1), array()),		
 		'array_diff_uassoc'				=> array(array(3), array()),
 		'array_diff_ukey'				=> array(array(3), array()),
 		'array_filter'					=> array(array(2), array()),
@@ -54,36 +87,8 @@ You should have received a copy of the GNU General Public License along with thi
 		'array_uintersect_uassoc'		=> array(array(3,4), array()),		
 		'array_walk'					=> array(array(2), array()),
 		'array_walk_recursive'			=> array(array(2), array()),
-		'assert' 						=> array(array(1), array()),
-		'assert_options'				=> array(array(1,2), array()),
-		'call_user_func'				=> array(array(1), array()),
-		'call_user_func_array'			=> array(array(1), array()),
-		'create_function' 				=> array(array(1,2), array()),
-		'dotnet_load'					=> array(array(1), array()),
-		'forward_static_call'			=> array(array(1), array()),
-		'forward_static_call_array'		=> array(array(1), array()),
-		'eio_busy'						=> array(array(3), array()),
-		'eio_chmod'						=> array(array(4), array()),
-		'eio_chown'						=> array(array(5), array()),
-		'eio_close'						=> array(array(3), array()),
-		'eio_custom'					=> array(array(1,2), array()),
-		'eio_dup2'						=> array(array(4), array()),
-		'eio_fallocate'					=> array(array(6), array()),
-		'eio_fchmod'					=> array(array(4), array()),
-		'eio_fchown'					=> array(array(5), array()),
-		'eio_fdatasync'					=> array(array(3), array()),
-		'eio_fstat'						=> array(array(3), array()),
-		'eio_fstatvfs'					=> array(array(3), array()),
-		'eval' 							=> array(array(1), array()),
-		'event_buffer_new'				=> array(array(2,3,4), array()),		
-		'event_set'						=> array(array(4), array()),
-		'iterator_apply'				=> array(array(2), array()),
-		'mb_ereg_replace'				=> array(array(1,2), $F_SECURING_PREG),
-		'mb_eregi_replace'				=> array(array(1,2), $F_SECURING_PREG),
+		'assert_options'				=> array(array(2), array()),
 		'ob_start'						=> array(array(1), array()),
-		'preg_filter'					=> array(array(1,2), $F_SECURING_PREG),
-		'preg_replace'					=> array(array(1,2), $F_SECURING_PREG),
-		'preg_replace_callback'			=> array(array(1,2), $F_SECURING_PREG),
 		'register_shutdown_function'	=> array(array(1), array()),
 		'register_tick_function'		=> array(array(1), array()),
 		'runkit_method_add'				=> array(array(1,2,3,4), array()),
@@ -107,7 +112,21 @@ You should have received a copy of the GNU General Public License along with thi
 		'usort'							=> array(array(2), array()),
 		'yaml_parse'					=> array(array(4), array()),
 		'yaml_parse_file'				=> array(array(4), array()),
-		'yaml_parse_url'				=> array(array(4), array())
+		'yaml_parse_url'				=> array(array(4), array()),
+		'eio_busy'						=> array(array(3), array()),
+		'eio_chmod'						=> array(array(4), array()),
+		'eio_chown'						=> array(array(5), array()),
+		'eio_close'						=> array(array(3), array()),
+		'eio_custom'					=> array(array(1,2), array()),
+		'eio_dup2'						=> array(array(4), array()),
+		'eio_fallocate'					=> array(array(6), array()),
+		'eio_fchmod'					=> array(array(4), array()),
+		'eio_fchown'					=> array(array(5), array()),
+		'eio_fdatasync'					=> array(array(3), array()),
+		'eio_fstat'						=> array(array(3), array()),
+		'eio_fstatvfs'					=> array(array(3), array()),
+		'preg_replace_callback'			=> array(array(2), array()),
+		'dotnet_load'					=> array(array(1), array()),
 	);
 	
 	// file inclusion functions => (parameters to scan, securing functions)
@@ -331,7 +350,7 @@ You should have received a copy of the GNU General Public License along with thi
 	);	
 		
 	// connection handling functions
-	$NAME_CONNECT = 'Header Injection';
+	$NAME_CONNECT = 'Protocol Injection';
     $F_CONNECT = array(
 		'curl_setopt'					=> array(array(2,3), array()),
 		'curl_setopt_array' 			=> array(array(2), array()),
@@ -362,7 +381,8 @@ You should have received a copy of the GNU General Public License along with thi
 		'socket_send'					=> array(array(2), array()), 
 		'socket_write'					=> array(array(2), array()),  
 		'stream_socket_client'			=> array(array(1), array()),  
-		'stream_socket_server'			=> array(array(1), array())
+		'stream_socket_server'			=> array(array(1), array()),
+		'printer_open'					=> array(array(1), array())
 	);
 	
 	// other critical functions
@@ -376,21 +396,22 @@ You should have received a copy of the GNU General Public License along with thi
 		'runkit_constant_redefine'		=> array(array(1,2), array()),
 		'runkit_method_rename'			=> array(array(1,2,3), array()),
 		'sleep'							=> array(array(1), array()),
-		'unserialize'					=> array(array(1), array()),
+		'usleep'						=> array(array(1), array()),
 		'extract'						=> array(array(1), array()),
 		'mb_parse_str'					=> array(array(1), array()),
 		'parse_str'						=> array(array(1), array()),
 		'putenv'						=> array(array(1), array()),
 		'set_include_path'				=> array(array(1), array()),
 		'apache_setenv'					=> array(array(1,2), array()),	
-		'define'						=> array(array(1), array())
+		'define'						=> array(array(1), array()),
+		'is_a'							=> array(array(1), array()) // calls __autoload()
 	);
 	
 	// property oriented programming with unserialize
-	$NAME_POP = 'Unserialize';
+	$NAME_POP = 'PHP Object Injection';
 	$F_POP = array(
-		'unserialize'					=> array(array(1), array()), // calls __destruct
-		'is_a'							=> array(array(1), array())	 // calls __autoload in php 5.3.7, 5.3.8
+		'unserialize'					=> array(array(1), array()), // calls gadgets
+		'yaml_parse'					=> array(array(1), array())	 // calls unserialize
 	);
 	
 	// XML

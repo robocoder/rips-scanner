@@ -35,7 +35,7 @@ You should have received a copy of the GNU General Public License along with thi
 		exit;
 	}
 		
-	define('VERSION', '0.54');				// RIPS version to be displayed	
+	define('VERSION', '0.55');				// RIPS version to be displayed	
 	define('MAXTRACE', 30);					// maximum of parameter traces per sensitive sink
 	define('WARNFILES', 50);				// warn user if amount of files to scan is higher than this value, also limits the graphs so they dont get too confusing and prevents browser hanging
 	define('BASEDIR', '');					// default directory shown
@@ -57,7 +57,10 @@ You should have received a copy of the GNU General Public License along with thi
 		//'.txt',
 		'.phtml', 
 		'.tpl',  
-		'.cgi'
+		'.cgi',
+		'.test',
+		'.module',
+		'.plugin'
 	); 
 	
 	// available stylesheets (filename without .css ending)
@@ -80,6 +83,9 @@ You should have received a copy of the GNU General Public License along with thi
 	$default_stylesheet = isset($_COOKIE['stylesheet']) ? $_COOKIE['stylesheet'] : 'ayti';
 	setcookie("stylesheet", $default_stylesheet);
 	
-	$default_vector = 'server';
+	$default_vector = 'all';
+	
+	$survey_deadline = 1438387200; 
+	$survey_url = 'http://www.ripsscanner.com/survey/';
 	
 ?>	

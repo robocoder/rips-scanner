@@ -71,7 +71,7 @@ You should have received a copy of the GNU General Public License along with thi
 			
 			$verbosity = 3;
 
-			$scan_functions = array_merge($F_XSS, $F_HTTP_HEADER);
+			$scan_functions = array_merge($F_XSS, $F_HTTP_HEADER, $F_SESSION_FIXATION);
 			$F_USERINPUT = array();
 			$V_USERINPUT = array($_POST['varname']);
 			$F_SECURING_XSS = array();
