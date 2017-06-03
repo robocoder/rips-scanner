@@ -376,11 +376,6 @@ You should have received a copy of the GNU General Public License along with thi
 		'<tr><td nowrap>Sensitive sinks:</td><td nowrap>'.(is_array($file_sinks_count) ? array_sum($file_sinks_count) : 0).'</td></tr>',
 		'</table><hr />';
 		
-		// survey
-		if(time() < $survey_deadline) {
-			echo '<center><a href="'.$survey_url.'" rel="nofollow noreferrer" target="_blank" style="text-decoration:none;font-size:11pt" onmouseover="this.style.color=\'white\';" onmouseout="this.style.color=\'#DFDFDF\';">Please help us take <font color="#FC4">RIPS</font> to the next level<br>by answering 6 short questions!</a></center><hr />';
-		}
-		
 		// output info gathering
 		if( !empty($info) || ($count_inc>0 && $round_inc_success < 75 && !$scan_subdirs && count($files)>1) )
 		{
@@ -396,6 +391,8 @@ You should have received a copy of the GNU General Public License along with thi
 			}
 			echo '</table><hr />';
 		}
+
+		echo '<center><a href="https://www.ripstech.com/latest/" target="_blank" style="text-decoration:none;font-size:11pt" onmouseover="this.style.color=\'white\';" onmouseout="this.style.color=\'#DFDFDF\';">Get the next generation of <font color="#FC4">RIPS</font><br />with state-of-the-art code analysis!</a></center><hr />';
 	}	
 		?>
 		<table class="textcolor" width="100%">

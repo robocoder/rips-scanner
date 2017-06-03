@@ -150,7 +150,7 @@ include 'config/general.php';
 	</td>
 	<td width="25%" align="center" valign="center" nowrap>
 		<!-- Logo by Gareth Heyes -->
-		<div class="logo"><a id="logo" href="http://sourceforge.net/projects/rips-scanner/files/" target="_blank" title="get latest version"><?php echo VERSION ?></a></div>
+		<div class="logo"><a id="logo" href="https://www.ripstech.com/latest/" target="_blank" title="get the latest version"><?php echo VERSION ?></a></div>
 	</td></tr>
 	</table>
 	</div>

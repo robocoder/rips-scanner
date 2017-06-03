@@ -85,7 +85,4 @@ You should have received a copy of the GNU General Public License along with thi
 	
 	$default_vector = 'all';
 	
-	$survey_deadline = 1438387200; 
-	$survey_url = 'http://www.ripsscanner.com/survey/';
-	
-?>	
+?>
