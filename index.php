@@ -1,9 +1,9 @@
 <?php
-/** 
+/**
 
-RIPS - A static source code analyser for vulnerabilities in PHP scripts 
+RIPS - A static source code analyser for vulnerabilities in PHP scripts
 	by Johannes Dahse (johannes.dahse@rub.de)
-			
+
 
 Copyright (C) 2012 Johannes Dahse
 
@@ -11,7 +11,7 @@ This program is free software; you can redistribute it and/or modify it under th
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with this program; if not, see <http://www.gnu.org/licenses/>.		
+You should have received a copy of the GNU General Public License along with this program; if not, see <http://www.gnu.org/licenses/>.
 
 **/
 
@@ -54,8 +54,8 @@ include 'config/general.php';
 			<td nowrap>verbosity level:</td>
 			<td nowrap>
 				<select id="verbosity" style="width:100%" title="select verbosity level">
-					<?php 
-					
+					<?php
+
 						$verbosities = array(
 							1 => '1. user tainted only',
 							2 => '2. file/DB tainted +1',
@@ -63,10 +63,10 @@ include 'config/general.php';
 							4 => '4. untainted +1,2,3',
 							5 => '5. debug mode'
 						);
-						
+
 						foreach($verbosities as $level=>$description)
 						{
-							echo "<option value=\"$level\">$description</option>\n";							
+							echo "<option value=\"$level\">$description</option>\n";
 						}
 					?>
 				</select>
@@ -76,19 +76,19 @@ include 'config/general.php';
 			</td>
 			<td>
 				<select id="vector" style="width:100%" title="select vulnerability type to scan">
-					<?php 
-					
+					<?php
+
 						$vectors = array(
 							'all' 			=> 'All',
-							'server' 		=> 'All server-side',							
+							'server' 		=> 'All server-side',
 							'code' 			=> '- Code Execution',
 							'exec' 			=> '- Command Execution',
 							'file_read' 	=> '- File Disclosure',
-							'file_include' 	=> '- File Inclusion',							
+							'file_include' 	=> '- File Inclusion',
 							'file_affect' 	=> '- File Manipulation',
 							'ldap' 			=> '- LDAP Injection',
 							'unserialize' 	=> '- PHP Object Injection',
-							'connect'		=> '- Protocol Injection',							
+							'connect'		=> '- Protocol Injection',
 							'ri'		 	=> '- Reflection Injection',
 							'database' 		=> '- SQL Injection',
 							'xpath' 		=> '- XPath Injection',
@@ -99,7 +99,7 @@ include 'config/general.php';
 							'fixation'		=> '- Session Fixation',
 							//'crypto'		=> 'Crypto hints'
 						);
-						
+
 						foreach($vectors as $vector=>$description)
 						{
 							echo "<option value=\"$vector\" ";
@@ -115,20 +115,20 @@ include 'config/general.php';
 			<td nowrap>code style:</td>
 			<td nowrap>
 				<select name="stylesheet" id="css" onChange="setActiveStyleSheet(this.value);" style="width:49%" title="select color schema for scan result">
-					<?php 
+					<?php
 						foreach($stylesheets as $stylesheet)
 						{
 							echo "<option value=\"$stylesheet\" ";
 							if($stylesheet == $default_stylesheet) echo 'selected';
 							echo ">$stylesheet</option>\n";
 						}
-					?>	
+					?>
 				</select>
 				<select id="treestyle" style="width:49%" title="select direction of code flow in scan result">
 					<option value="1">bottom-up</option>
 					<option value="2">top-down</option>
-				</select>	
-			</td>	
+				</select>
+			</td>
 			<td align="right">
 				/regex/:
 			</td>
@@ -154,7 +154,7 @@ include 'config/general.php';
 	</td></tr>
 	</table>
 	</div>
-	
+
 	<div style="clear:left;"></div>
 </div>
 <div class="menushade"></div>
@@ -164,7 +164,7 @@ include 'config/general.php';
 </div>
 
 <div id="result">
-	
+
 	<div style="margin-left:30px;color:#000000;font-size:14px">
 		<h3>Quickstart:</h3>
 		<p>Locate your local PHP source code <b>path/file</b> (e.g. <em>/var/www/project1/</em> or <em>/var/www/index.php</em>), choose the <b>vulnerability type</b> you are looking for and click <u>scan</u>!<br />
@@ -199,7 +199,7 @@ include 'config/general.php';
 		<li>Only tested with Firefox.</li>
 		</ul>
 	</div>
-	
+
 </div>
 
 </body>

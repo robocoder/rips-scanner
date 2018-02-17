@@ -1,22 +1,22 @@
 <?php
-/** 
+/**
 
-RIPS - A static source code analyser for vulnerabilities in PHP scripts 
+RIPS - A static source code analyser for vulnerabilities in PHP scripts
 	by Johannes Dahse (johannes.dahse@rub.de)
-			
-			
+
+
 Copyright (C) 2012 Johannes Dahse
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with this program; if not, see <http://www.gnu.org/licenses/>.	
+You should have received a copy of the GNU General Public License along with this program; if not, see <http://www.gnu.org/licenses/>.
 
 **/
 
 final class Sources
-{	
+{
 	// userinput variables
 	public static $V_USERINPUT = array(
 		'$_GET',
@@ -27,15 +27,15 @@ final class Sources
 		'$_SERVER',
 		'$HTTP_GET_VARS',
 		'$HTTP_POST_VARS',
-		'$HTTP_COOKIE_VARS',  
-		'$HTTP_REQUEST_VARS', 
+		'$HTTP_COOKIE_VARS',
+		'$HTTP_REQUEST_VARS',
 		'$HTTP_POST_FILES',
 		'$HTTP_SERVER_VARS',
 		'$HTTP_RAW_POST_DATA',
 		'$argc',
 		'$argv'
 	);
-	
+
 	public static $V_SERVER_PARAMS = array(
 		'HTTP_ACCEPT',
 		'HTTP_ACCEPT_LANGUAGE',
@@ -61,7 +61,7 @@ final class Sources
 		'REMOTE_HOSTNAME',
 		'PHP_SELF'
 	);
-	
+
 	// file content as input
 	public static $F_FILE_INPUT = array(
 		'bzread',
@@ -71,7 +71,7 @@ final class Sources
 		'exif_thumbnail',
 		'fgets',
 		'fgetss',
-		'file', 
+		'file',
 		'file_get_contents',
 		'fread',
 		'get_meta_tags',
@@ -82,7 +82,7 @@ final class Sources
 		'scandir',
 		'zip_read'
 	);
-	
+
 	// database content as input
 	public static $F_DATABASE_INPUT = array(
 		'mysql_fetch_array',
@@ -102,7 +102,7 @@ final class Sources
 		'sqlite_fetch_single',
 		'sqlite_fetch_string'
 	);
-	
+
 	// other functions as input
 	public static $F_OTHER_INPUT = array(
 		'get_headers',
@@ -113,9 +113,9 @@ final class Sources
 		'runkit_superglobals',
 		'import_request_variables'
 	);
-	
-	//	'getenv' and 'apache_getenv' 
+
+	//	'getenv' and 'apache_getenv'
 	// will be automatically added if 'putenv' or 'apache_setenv' with userinput is found
 }
-	
-?>	
+
+?>

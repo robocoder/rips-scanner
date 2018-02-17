@@ -1,22 +1,22 @@
 <?php
-/** 
+/**
 
-RIPS - A static source code analyser for vulnerabilities in PHP scripts 
+RIPS - A static source code analyser for vulnerabilities in PHP scripts
 	by Johannes Dahse (johannes.dahse@rub.de)
-			
-			
+
+
 Copyright (C) 2012 Johannes Dahse
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with this program; if not, see <http://www.gnu.org/licenses/>.	
+You should have received a copy of the GNU General Public License along with this program; if not, see <http://www.gnu.org/licenses/>.
 
 **/
 
 final class Info
-{	
+{
 	// interesting functions, output and comment them if seen
 	public static $F_INTEREST = array(
 		'phpinfo'						=> 'phpinfo() detected',
@@ -30,8 +30,8 @@ final class Info
 		'ifx_connect'					=> 'using DBMS Informix',
 		'db2_connect'					=> 'using DBMS IBM DB2',
 		'db2_pconnect'					=> 'using DBMS IBM DB2',
-		'ftp_connect'					=> 'using FTP server', 
-		'ftp_ssl_connect' 				=> 'using FTP server', 
+		'ftp_connect'					=> 'using FTP server',
+		'ftp_ssl_connect' 				=> 'using FTP server',
 		'ingres_connect'				=> 'using DBMS Ingres',
 		'ingres_pconnect'				=> 'using DBMS Ingres',
 		'ldap_connect'					=> 'using LDAP server',
@@ -65,8 +65,8 @@ final class Info
 		'TokyoTyrant'					=> 'using DBMS TokyoTyrant',
 		'xptr_new_context'				=> 'using XML document',
 		'xpath_new_context'				=> 'using XML document'
-	);	
-	
+	);
+
 	// interesting functions for POP/Unserialze
 	public static $F_INTEREST_POP = array(
 		'__autoload'					=> 'function __autoload',
@@ -80,7 +80,7 @@ final class Info
 		'__isset'						=> 'POP gagdet __isset',
 		'__unset'						=> 'POP gagdet __unset'
 	);
-	
+
 }
 
-?>	
+?>

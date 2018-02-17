@@ -1,11 +1,11 @@
 <table width='100%'>
 <?php
-/** 
+/**
 
-RIPS - A static source code analyser for vulnerabilities in PHP scripts 
+RIPS - A static source code analyser for vulnerabilities in PHP scripts
 	by Johannes Dahse (johannes.dahse@rub.de)
-			
-			
+
+
 Copyright (C) 2012 Johannes Dahse
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
@@ -27,15 +27,15 @@ include('../config/general.php');
 		foreach ($tokens as $token)
 		{
 			if (is_string($token))
-			{		
+			{
 				$output .= '<span class="phps-code">';
 				$output .= htmlentities($token, ENT_QUOTES, 'utf-8');
 				$output .= '</span>';
-			} 
-			else if (is_array($token) 
+			}
+			else if (is_array($token)
 			&& $token[0] !== T_OPEN_TAG
-			&& $token[0] !== T_CLOSE_TAG) 
-			{					
+			&& $token[0] !== T_CLOSE_TAG)
+			{
 				if ($token[0] !== T_WHITESPACE)
 				{
 					$text = '<span class="phps-'.str_replace('_', '-', strtolower(token_name($token[0]))).'">';
@@ -46,7 +46,7 @@ include('../config/general.php');
 					$text = str_replace(' ', '&nbsp;', $token[1]);
 					$text = str_replace("\t", str_repeat('&nbsp;', 8), $text);
 				}
-				
+
 				$output .= $text;
 			}
 		}
@@ -54,7 +54,7 @@ include('../config/general.php');
 	}
 
 	// print function code
-	
+
 	$file = $_GET['file'];
 	$start = (int)$_GET['start'];
 	$end = (int)$_GET['end'];
@@ -63,8 +63,8 @@ include('../config/general.php');
 
 	if(!empty($file) && is_file($file) && in_array($ext, $FILETYPES))
 	{
-		$lines = file($file); 
-		
+		$lines = file($file);
+
 		if( isset($lines[$start]) && isset($lines[$end]) )
 		{
 			for($i=$start; $i<=$end; $i++)

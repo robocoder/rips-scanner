@@ -1,7 +1,7 @@
 #scrollwindow {
 	background-color: grey;
 	opacity:0.22;
-}	
+}
 
 .menu {
 	background-color:#010101;
@@ -15,15 +15,15 @@ input[type="text"],select {
 
 .userinput, .persistent {
 	list-style-type: disc;
-	color:white; 
+	color:white;
 }
 .validated {
 	list-style-type: disc;
-	color:red; 
+	color:red;
 }
 .functioninput {
 	list-style-type: disc;
-	color:yellow; 
+	color:yellow;
 }
 
 .codebox {
@@ -47,36 +47,36 @@ input[type="text"],select {
 
 .markline {
 	background-color: #531107;
-}	
-	
+}
+
 .requires,
 .linenr
 	{color: #888888;}
-	
+
 .link
-	{color:#D78787; font-weight:bold; text-decoration:underline;}	
-	
+	{color:#D78787; font-weight:bold; text-decoration:underline;}
+
 .code,
 .phps-code,
 .phps-t-dollar-open-curly-braces,
 .phps-t-curly-open,
 .phps-t-open-tag,
 .phps-t-close-tag,
-.phps-t-and-equal, 
-.phps-t-concat-equal, 
-.phps-t-div-equal, 
-.phps-t-minus-equal, 
-.phps-t-mod-equal, 
-.phps-t-mul-equal, 
-.phps-t-or-equal, 
-.phps-t-plus-equal, 
-.phps-t-sl-equal, 
-.phps-t-sr-equal, 
-.phps-t-xor-equal, 
+.phps-t-and-equal,
+.phps-t-concat-equal,
+.phps-t-div-equal,
+.phps-t-minus-equal,
+.phps-t-mod-equal,
+.phps-t-mul-equal,
+.phps-t-or-equal,
+.phps-t-plus-equal,
+.phps-t-sl-equal,
+.phps-t-sr-equal,
+.phps-t-xor-equal,
 .phps-t-is-equal,
 .phps-t-is-greater-or-equal,
 .phps-t-is-identical,
-.phps-t-is-not-equal,	
+.phps-t-is-not-equal,
 .phps-t-is-not-identical,
 .phps-t-inc,
 .phps-t-dec,
@@ -84,7 +84,7 @@ input[type="text"],select {
 .phps-t-double-colon,
 .phps-t-paamayim-nekudotayim
 	{color: #D78787;}
-	
+
 .phps-t-if,
 .phps-t-while,
 .phps-t-do,
@@ -123,11 +123,11 @@ input[type="text"],select {
 .phps-t-double-cast,
 .phps-t-int-cast,
 .phps-t-unset-cast,
-.phps-t-file, 
-.phps-t-line, 
-.phps-t-dir, 
-.phps-t-func-c, .phps-t-class-c, 
-.phps-t-method-c, 
+.phps-t-file,
+.phps-t-line,
+.phps-t-dir,
+.phps-t-func-c, .phps-t-class-c,
+.phps-t-method-c,
 .phps-t-ns-c
 	{color: #87AFD7;}
 

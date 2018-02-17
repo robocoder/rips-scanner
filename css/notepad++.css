@@ -1,7 +1,7 @@
 #scrollwindow {
 	background-color: grey;
 	opacity:0.22;
-}	
+}
 
 body, html {
 	color: #111111;
@@ -17,15 +17,15 @@ body, html {
 
 .userinput, .persistent {
 	list-style-type: disc;
-	color:grey; 
+	color:grey;
 }
 .validated {
 	list-style-type: disc;
-	color:red; 
+	color:red;
 }
 .functioninput {
 	list-style-type: disc;
-	color:yellow; 
+	color:yellow;
 }
 
 .vulnblock {
@@ -50,10 +50,10 @@ body, html {
 
 .requires
 	{color: #000000; font-weight:bold;}
-	
+
 .linenr
 	{color: #808080;}
-	
+
 .link
 	{color: #0000FF; font-weight:bold;}
 
@@ -62,7 +62,7 @@ body, html {
 	font-size:9pt;
 	font-family: "Bitstream Vera Sans Mono", "Monaco", "Courier New", monospace;
 }
-	
+
 .code,
 .phps-code, .phps-t-curly-open, .phps-t-dollar-open-curly-braces, .vulntitle
 	{color: #8000FF;  font-weight: bold;}
@@ -70,22 +70,22 @@ body, html {
 .phps-t-string,
 .phps-t-eval
 	{color: #000000; font-weight: bold;}
-	
-.phps-t-and-equal, 
-.phps-t-concat-equal, 
-.phps-t-div-equal, 
-.phps-t-minus-equal, 
-.phps-t-mod-equal, 
-.phps-t-mul-equal, 
-.phps-t-or-equal, 
-.phps-t-plus-equal, 
-.phps-t-sl-equal, 
-.phps-t-sr-equal, 
-.phps-t-xor-equal, 
+
+.phps-t-and-equal,
+.phps-t-concat-equal,
+.phps-t-div-equal,
+.phps-t-minus-equal,
+.phps-t-mod-equal,
+.phps-t-mul-equal,
+.phps-t-or-equal,
+.phps-t-plus-equal,
+.phps-t-sl-equal,
+.phps-t-sr-equal,
+.phps-t-xor-equal,
 .phps-t-is-equal,
 .phps-t-is-greater-or-equal,
 .phps-t-is-identical,
-.phps-t-is-not-equal,	
+.phps-t-is-not-equal,
 .phps-t-is-not-identical,
 .phps-t-inc,
 .phps-t-dec,
@@ -96,7 +96,7 @@ body, html {
 .phps-t-boolean-or,
 .phps-t-boolean-and
 	{color: #8000FF;}
-	
+
 .phps-t-print,
 .phps-t-include,
 .phps-t-include-once,
@@ -149,22 +149,22 @@ body, html {
 .phps-t-double-cast,
 .phps-t-int-cast,
 .phps-t-unset-cast,
-.phps-t-file, 
-.phps-t-line, 
-.phps-t-dir, 
-.phps-t-func-c, 
-.phps-t-class-c, 
-.phps-t-method-c, 
+.phps-t-file,
+.phps-t-line,
+.phps-t-dir,
+.phps-t-func-c,
+.phps-t-class-c,
+.phps-t-method-c,
 .phps-t-ns-c
 	{color: #0000FF; font-weight:bold;}
-	
+
 .phps-t-open-tag,
 .phps-t-close-tag
 	{color: #FF0000;  font-weight:bold;}
 
 .phps-t-const
 	{color: #000000;}
-	
+
 .phps-t-variable, .phps-t-string-varname, .funclistline, .phps-t-variable-marked
 	{color: #000080;}
 
@@ -173,7 +173,7 @@ body, html {
 
 .phps-tainted-var
 	{color: #0606Ed;}
-	
+
 .phps-t-lnumber
 	{color: #FF8000}
 

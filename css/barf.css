@@ -1,7 +1,7 @@
 #scrollwindow {
 	background-color: grey;
 	opacity:0.22;
-}	
+}
 
 .menu {
 	background-color: #1D261B;
@@ -15,15 +15,15 @@ input[type="text"],select {
 
 .userinput, .persistent {
 	list-style-type: disc;
-	color:white; 
+	color:white;
 }
 .validated {
 	list-style-type: disc;
-	color:red; 
+	color:red;
 }
 .functioninput {
 	list-style-type: disc;
-	color:yellow; 
+	color:yellow;
 }
 
 .codebox {
@@ -47,10 +47,10 @@ input[type="text"],select {
 
 .requires
 	{color: #697B8F; font-weight:bold;}
-	
+
 .linenr
 	{color: #888;}
-	
+
 .link
 	{color: #EEF2F7; font-weight:bold;}
 
@@ -58,7 +58,7 @@ input[type="text"],select {
 	font-size:9pt;
 	font-family: "Bitstream Vera Sans Mono", "Monaco", "Courier New", monospace;
 }
-	
+
 .code,
 .phps-code, .phps-t-curly-open, .phps-t-dollar-open-curly-braces, .vulntitle
 	{color: #EEF2F7; }
@@ -93,31 +93,31 @@ input[type="text"],select {
 .phps-t-double-cast,
 .phps-t-int-cast,
 .phps-t-unset-cast,
-.phps-t-file, 
-.phps-t-line, 
-.phps-t-dir, 
-.phps-t-func-c, .phps-t-class-c, 
-.phps-t-method-c, 
+.phps-t-file,
+.phps-t-line,
+.phps-t-dir,
+.phps-t-func-c, .phps-t-class-c,
+.phps-t-method-c,
 .phps-t-ns-c
 	{color: #EFF3F8;}
-	
+
 .phps-t-open-tag,
 .phps-t-close-tag,
-.phps-t-and-equal, 
-.phps-t-concat-equal, 
-.phps-t-div-equal, 
-.phps-t-minus-equal, 
-.phps-t-mod-equal, 
-.phps-t-mul-equal, 
-.phps-t-or-equal, 
-.phps-t-plus-equal, 
-.phps-t-sl-equal, 
-.phps-t-sr-equal, 
-.phps-t-xor-equal, 
+.phps-t-and-equal,
+.phps-t-concat-equal,
+.phps-t-div-equal,
+.phps-t-minus-equal,
+.phps-t-mod-equal,
+.phps-t-mul-equal,
+.phps-t-or-equal,
+.phps-t-plus-equal,
+.phps-t-sl-equal,
+.phps-t-sr-equal,
+.phps-t-xor-equal,
 .phps-t-is-equal,
 .phps-t-is-greater-or-equal,
 .phps-t-is-identical,
-.phps-t-is-not-equal,	
+.phps-t-is-not-equal,
 .phps-t-is-not-identical,
 .phps-t-inc,
 .phps-t-dec,
@@ -143,8 +143,8 @@ input[type="text"],select {
 .phps-t-use,
 .phps-t-var
 	{color: #697A8E;}
-	
-.phps-t-function,	
+
+.phps-t-function,
 .phps-t-public,
 .phps-t-private,
 .phps-t-protected,
@@ -154,16 +154,16 @@ input[type="text"],select {
 .phps-t-const,
 .phps-t-return
 	{color: #94F877;}
-	
+
 .phps-t-variable, .phps-t-string-varname, .funclistline, .phps-t-variable-marked
 	{color: #708E67;}
 
 .phps-t-variable-marked
 	{background-color:darkred;}
-	
+
 .phps-tainted-var
-	{color: #7FC16B;}	
-	
+	{color: #7FC16B;}
+
 .phps-t-lnumber
 	{color: #EEF2F7}
 

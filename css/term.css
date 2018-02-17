@@ -1,19 +1,19 @@
 #scrollwindow {
 	background-color: grey;
 	opacity:0.22;
-}	
+}
 
 .userinput, .persistent {
 	list-style-type: disc;
-	color:white; 
+	color:white;
 }
 .validated {
 	list-style-type: disc;
-	color:red; 
+	color:red;
 }
 .functioninput {
 	list-style-type: disc;
-	color:yellow; 
+	color:yellow;
 }
 
 .vulnblock {
@@ -37,18 +37,18 @@
 
 .requires
 	{color: #D2A8A1; font-weight:bold;}
-	
+
 .linenr
 	{color: #444;}
-	
-.link  
+
+.link
 	{color: #DC578C; font-weight:bold;}
-	
+
 .code, .vulntitle {
 	font-size:9pt;
 	font-family: "Bitstream Vera Sans Mono", "Monaco", "Courier New", monospace;
-}	
-	
+}
+
 .code,
 .phps-code, .phps-t-curly-open, .phps-t-dollar-open-curly-braces, .vulntitle
 	{color: #B5C9C9; }
@@ -75,24 +75,24 @@
 .phps-t-end-heredoc
 	{color: #FFFFFF;}
 /*E1E1F9*/
-	
+
 .phps-t-open-tag,
 .phps-t-close-tag,
-.phps-t-and-equal, 
-.phps-t-concat-equal, 
-.phps-t-div-equal, 
-.phps-t-minus-equal, 
-.phps-t-mod-equal, 
-.phps-t-mul-equal, 
-.phps-t-or-equal, 
-.phps-t-plus-equal, 
-.phps-t-sl-equal, 
-.phps-t-sr-equal, 
-.phps-t-xor-equal, 
+.phps-t-and-equal,
+.phps-t-concat-equal,
+.phps-t-div-equal,
+.phps-t-minus-equal,
+.phps-t-mod-equal,
+.phps-t-mul-equal,
+.phps-t-or-equal,
+.phps-t-plus-equal,
+.phps-t-sl-equal,
+.phps-t-sr-equal,
+.phps-t-xor-equal,
 .phps-t-is-equal,
 .phps-t-is-greater-or-equal,
 .phps-t-is-identical,
-.phps-t-is-not-equal,	
+.phps-t-is-not-equal,
 .phps-t-is-not-identical,
 .phps-t-object-operator,
 .phps-t-double-colon,
@@ -136,29 +136,29 @@
 .phps-t-double-cast,
 .phps-t-int-cast,
 .phps-t-unset-cast,
-.phps-t-file, 
-.phps-t-line, 
-.phps-t-dir, 
-.phps-t-func-c, .phps-t-class-c, 
-.phps-t-method-c, 
+.phps-t-file,
+.phps-t-line,
+.phps-t-dir,
+.phps-t-func-c, .phps-t-class-c,
+.phps-t-method-c,
 .phps-t-ns-c
 	{color: #CF628D;}
 
 .phps-t-const
 	{color: #CF628D;}
-	
-.phps-t-variable, 
+
+.phps-t-variable,
 .phps-t-variable-marked,
-.phps-t-string-varname, 
+.phps-t-string-varname,
 .funclistline
 	{color: #1487BD;}
-	
+
 .phps-t-variable-marked
 	{background-color:#132F3C;}
-	
+
 .phps-tainted-var
 	{color: #1AA9EC;}
-	
+
 .phps-t-lnumber
 	{color: #CF6A4C}
 

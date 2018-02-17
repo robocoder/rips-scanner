@@ -83,12 +83,12 @@ CanvasRenderingContext2D.prototype.dashedLine = function(x1, y1, x2, y2)
 	var ey = dy / count;
 
 	var q = 0;
-	while (q++ < count) 
+	while (q++ < count)
 	{
 		x1 += ex;
 		y1 += ey;
 		if (q % 2 === 0)
-		{ 
+		{
 			this.moveTo(x1, y1);
 		}
 		else
@@ -121,13 +121,13 @@ CanvasRenderingContext2D.prototype.roundedRect = function(x, y, width, height, r
   this.closePath();
 };
 
-var Cursors = 
+var Cursors =
 {
 	arrow: "default",
-	grip: "pointer", // "crosshair", 
+	grip: "pointer", // "crosshair",
 	cross: "pointer", // "crosshair",
-	move: "move", 
-	select: "pointer" 
+	move: "move",
+	select: "pointer"
 };
 
 var Connector = function(owner, template)
@@ -176,12 +176,12 @@ Connector.prototype.isValid = function(value)
 		return false;
 	}
 	if (value instanceof Connector)
-	{	
+	{
 		var t2 = value.template.type.split(' ');
 		if ((t1[0] != t2[0]) ||
-		(this.owner == value.owner) || 
-			(t1.contains("[in]") && !t2.contains("[out]")) || 
-			(t1.contains("[out]") && !t2.contains("[in]")) || 
+		(this.owner == value.owner) ||
+			(t1.contains("[in]") && !t2.contains("[out]")) ||
+			(t1.contains("[out]") && !t2.contains("[in]")) ||
 			(!t2.contains("[array]") && (value.connections.length == 1)))
 		{
 			return false;
@@ -193,15 +193,15 @@ Connector.prototype.isValid = function(value)
 Connector.prototype.paint = function(context, other)
 {
 	var rectangle = this.getRectangle();
-	var strokeStyle = this.owner.owner.theme.connectorBorder; 
+	var strokeStyle = this.owner.owner.theme.connectorBorder;
 	var fillStyle = this.owner.owner.theme.connector;
 	if (this.hover)
 	{
-		strokeStyle = this.owner.owner.theme.connectorHoverBorder; 
+		strokeStyle = this.owner.owner.theme.connectorHoverBorder;
 		fillStyle = this.owner.owner.theme.connectorHover;
 		if (!this.isValid(other))
 		{
-			fillStyle = "#f00";			
+			fillStyle = "#f00";
 		}
 	}
 
@@ -288,7 +288,7 @@ Tracker.prototype.getCursor = function(point)
 	{
 		return (this.track) ? Cursors.move : Cursors.select;
 	}
-	if ((hit.x >= -1) && (hit.x <= +1) && (hit.y >= -1) && (hit.y <= +1) && this.resizable) 
+	if ((hit.x >= -1) && (hit.x <= +1) && (hit.y >= -1) && (hit.y <= +1) && this.resizable)
 	{
 		if (hit.x === -1 && hit.y === -1) { return "nw-resize"; }
 		if (hit.x === +1 && hit.y === +1) { return "se-resize"; }
@@ -374,7 +374,7 @@ var Element = function(template, point)
 	{
 		var connectorTemplate = template.connectorTemplates[i];
 		this.connectors.push(new Connector(this, connectorTemplate));
-	}	
+	}
 };
 
 Element.prototype.select = function()
@@ -421,12 +421,12 @@ Element.prototype.setRectangle = function(rectangle)
 Element.prototype.paint = function(context)
 {
 	this.template.paint(this, context);
-	
+
 	if (this.selected)
 	{
 		this.tracker.paint(context);
 	}
-	
+
 	// mark all connections by mouseover
 	if(this.hover || this.selected)
 	{
@@ -435,7 +435,7 @@ Element.prototype.paint = function(context)
 			this.connectors[1].connections[i].lineWidth = 2;
 			if(this.connectors[1].connections[i].color != '#F00')
 				this.connectors[1].connections[i].color = '#00F';
-		}	
+		}
 	} else
 	{
 		for (var i = 0; i < this.connectors[1].connections.length; i++)
@@ -443,44 +443,44 @@ Element.prototype.paint = function(context)
 			this.connectors[1].connections[i].lineWidth = 1;
 			if(this.connectors[1].connections[i].color != '#F00')
 				this.connectors[1].connections[i].color = '#000';
-		}	
+		}
 	}
-	
+
 	var rectangle = this.getRectangle();
 	lines = this.text.split(",");
 	context.textBaseline = "bottom";
 	context.font = "8.25pt Tahoma";
 	context.fillStyle = "#000";
 	context.fillText(lines[0], rectangle.x + 5, rectangle.y + 13 + 20);
-	
+
 	// userinput DOT
 	context.beginPath();
 	context.fillStyle = "#FFF";
 	context.arc(rectangle.x + this.template.defaultWidth-15,rectangle.y + this.template.defaultHeight-11,((this.userinput > 9) ? 9 : this.userinput),0,Math.PI*2,true);
 	context.fill();
 	context.closePath();
-	
+
 	context.beginPath();
 	context.strokeStyle = "#000";
 	context.lineWidth = 1;
 	context.arc(rectangle.x + this.template.defaultWidth-15,rectangle.y + this.template.defaultHeight-11,((this.userinput > 9) ? 9 : this.userinput),0,Math.PI*2,true);
 	context.stroke();
 	context.closePath();
-	
+
 	// sensitive sink DOT
 	context.beginPath();
 	context.fillStyle = this.vuln ? "red" : "#FFCE42";
 	context.arc(rectangle.x + this.template.defaultWidth-35,rectangle.y + this.template.defaultHeight-11,((this.sinks > 9) ? 9 : this.sinks),0,Math.PI*2,true);
 	context.fill();
 	context.closePath();
-	
+
 	context.beginPath();
 	context.strokeStyle = "#000";
 	context.lineWidth = 1;
 	context.arc(rectangle.x + this.template.defaultWidth-35,rectangle.y + this.template.defaultHeight-11,((this.sinks > 9) ? 9 : this.sinks),0,Math.PI*2,true);
 	context.stroke();
-	context.closePath();	
-	
+	context.closePath();
+
 	if (this.hover)
 	{
 		// Tooltip for Element
@@ -501,7 +501,7 @@ Element.prototype.paint = function(context)
 			context.fillStyle = "#000";
 			context.fillText(this.content, b.x, b.y + 13);
 		}
-		
+
 		/*
 		// enlarge element to view whole text
 		var size = context.measureText(this.text);
@@ -517,7 +517,7 @@ Element.prototype.paint = function(context)
 		context.fillStyle = "#000";
 		for (var i = 0; i<lines.length; i++)
 			context.fillText(lines[i], b.x, b.y + 13 + (i*15));
-		*/	
+		*/
 	}
 
 };
@@ -544,7 +544,7 @@ Element.prototype.remove = function()
 			connections[j].remove();
 		}
 	}
-	
+
 	if ((this.owner !== null) && (this.owner.elements.contains(this)))
 	{
 		this.owner.elements.remove(this);
@@ -700,7 +700,7 @@ Connection.prototype.hitTest = function(rectangle)
 		{
 			return (rectangle.contains(p1) && rectangle.contains(p2));
 		}
-		
+
 		var p = rectangle.topLeft();
 
 		// p1 must be the leftmost point
@@ -810,11 +810,11 @@ Selection.prototype.getRectangle = function()
 		(this.startPoint.y <= this.currentPoint.y) ? this.startPoint.y : this.currentPoint.y,
 		this.currentPoint.x - this.startPoint.x,
 		this.currentPoint.y - this.startPoint.y);
-	if (r.width < 0) 
+	if (r.width < 0)
 	{
 		r.width *= -1;
 	}
-	if (r.height < 0) 
+	if (r.height < 0)
 	{
 		r.height *= -1;
 	}
@@ -1057,7 +1057,7 @@ UndoService.prototype.commit = function()
 		this.stack.push(this.container);
 		this.redo();
 	}
-	this.container = null;	
+	this.container = null;
 };
 
 UndoService.prototype.add = function(undoUnit)
@@ -1110,7 +1110,7 @@ var Graph = function(element)
 	this.touchMoveHandler = this.touchMove.bind(this);
 	this.keyDownHandler = this.keyDown.bind(this);
 	this.keyPressHandler = this.keyPress.bind(this);
-	this.keyUpHandler = this.keyUp.bind(this);	
+	this.keyUpHandler = this.keyUp.bind(this);
 
 	this.canvas.addEventListener("mousedown", this.mouseDownHandler, false);
 	this.canvas.addEventListener("mouseup", this.mouseUpHandler, false);
@@ -1122,7 +1122,7 @@ var Graph = function(element)
 	this.canvas.addEventListener("keydown", this.keyDownHandler, false);
 	this.canvas.addEventListener("keypress", this.keyPressHandler, false);
 	this.canvas.addEventListener("keyup", this.keyUpHandler, false);
-	
+
 	this.isWebKit = typeof navigator.userAgent.split("WebKit/")[1] !== "undefined";
 	this.isMozilla = navigator.appVersion.indexOf('Gecko/') >= 0 || ((navigator.userAgent.indexOf("Gecko") >= 0) && !this.isWebKit && (typeof navigator.appVersion !== "undefined"));
 };
@@ -1140,7 +1140,7 @@ Graph.prototype.dispose = function()
 		this.canvas.removeEventListener("touchmove", this.touchMoveHandler);
 		this.canvas.removeEventListener("keydown", this.keyDownHandler);
 		this.canvas.removeEventListener("keypress", this.keyPressHandler);
-		this.canvas.removeEventListener("keyup", this.keyUpHandler);	
+		this.canvas.removeEventListener("keyup", this.keyUpHandler);
 		this.canvas = null;
 		this.context = null;
 	}
@@ -1172,7 +1172,7 @@ Graph.prototype.mouseDown = function(e)
 Graph.prototype.mouseUp = function(e)
 {
 	e.preventDefault();
-	this.updateMousePosition(e);	
+	this.updateMousePosition(e);
 	if (e.button === 0) // left-click
 	{
 		this.pointerUp();
@@ -1181,7 +1181,7 @@ Graph.prototype.mouseUp = function(e)
 
 Graph.prototype.mouseMove = function(e)
 {
-	e.preventDefault(); 
+	e.preventDefault();
 	this.updateMousePosition(e);
 	this.pointerMove();
 };
@@ -1205,17 +1205,17 @@ Graph.prototype.doubleClick = function(e)
 };
 
 Graph.prototype.touchStart = function(e)
-{	
+{
 	if (e.touches.length == 1)
 	{
 		e.preventDefault();
 		this.updateTouchPosition(e);
 		this.pointerDown();
-	}	
+	}
 };
 
 Graph.prototype.touchEnd = function(e)
-{	
+{
 	e.preventDefault();
 	this.pointerUp();
 };
@@ -1251,7 +1251,7 @@ Graph.prototype.pointerDown = function()
 		if (this.activeObject === null)
 		{
 			// start selection
-			this.selection = new Selection(point);			
+			this.selection = new Selection(point);
 		}
 		else
 		{
@@ -1448,9 +1448,9 @@ Graph.prototype.keyPress = function(e)
 		{
 			this.keyCodeTable = [];
 			var charCodeTable = {
-				32: ' ',  48: '0',  49: '1',  50: '2',  51: '3',  52: '4', 53:  '5',  54: '6',  55: '7',  56: '8',  57: '9',  59: ';',  61: '=', 
+				32: ' ',  48: '0',  49: '1',  50: '2',  51: '3',  52: '4', 53:  '5',  54: '6',  55: '7',  56: '8',  57: '9',  59: ';',  61: '=',
 				65:  'a', 66: 'b',  67: 'c',  68: 'd',  69: 'e',  70: 'f',  71: 'g', 72:  'h',  73: 'i',  74: 'j',  75: 'k',  76: 'l',  77: 'm',  78: 'n', 79:  'o', 80: 'p',  81: 'q',  82: 'r',  83: 's',  84: 't',  85: 'u', 86: 'v', 87: 'w',  88: 'x',  89: 'y',  90: 'z',
-				107: '+', 109: '-', 110: '.', 188: ',', 190: '.', 191: '/', 192: '`', 219: '[', 220: '\\', 221: ']', 222: '\"' 
+				107: '+', 109: '-', 110: '.', 188: ',', 190: '.', 191: '/', 192: '`', 219: '[', 220: '\\', 221: ']', 222: '\"'
 			};
 
 			for (var keyCode in charCodeTable)
@@ -1463,7 +1463,7 @@ Graph.prototype.keyPress = function(e)
 				}
 			}
 		}
-		
+
 		this.processKey(e, (this.keyCodeTable[e.charCode]) ? this.keyCodeTable[e.charCode] : e.keyCode);
 	}
 };
@@ -1498,7 +1498,7 @@ Graph.prototype.processKey = function(e, keyCode)
 			this.updateMouseCursor();
 			this.stopEvent(e);
 		}
-		
+
 		if (((keyCode == 90) && (e.shiftKey)) || (keyCode == 89)) // Y - redo
 		{
 			this.undoService.redo();
@@ -1532,7 +1532,7 @@ Graph.prototype.processKey = function(e, keyCode)
 				element.tracker.track = false;
 			}
 		}
-		
+
 		this.update();
 		this.updateActiveObject(this.pointerPosition);
 		this.updateMouseCursor();
@@ -1550,7 +1550,7 @@ Graph.prototype.deleteSelection = function()
 {
 	var i, j, k;
 	var element;
-	
+
 	this.undoService.begin();
 
 	var deletedConnections = [];
@@ -1571,7 +1571,7 @@ Graph.prototype.deleteSelection = function()
 			}
 		}
 	}
-	
+
 	for (i = 0; i < this.elements.length; i++)
 	{
 		element = this.elements[i];
@@ -1633,7 +1633,7 @@ Graph.prototype.updateActiveObject = function(point)
 	var hitObject = this.hitTest(point);
 	if (hitObject != this.activeObject)
 	{
-		if (this.activeObject !== null) 
+		if (this.activeObject !== null)
 		{
 			this.activeObject.hover = false;
 		}
@@ -1695,7 +1695,7 @@ Graph.prototype.hitTest = function(point)
 };
 
 Graph.prototype.updateMouseCursor = function()
-{	
+{
 	if (this.newConnection !== null)
 	{
 		this.canvas.style.cursor = ((this.activeObject !== null) && (this.activeObject instanceof Connector)) ? this.activeObject.getCursor(this.pointerPosition) : Cursors.cross;
@@ -1729,7 +1729,7 @@ Graph.prototype.updateTouchPosition = function(e)
 		this.pointerPosition.x -= node.offsetLeft;
 		this.pointerPosition.y -= node.offsetTop;
 		node = node.offsetParent;
-	}	
+	}
 }
 
 Graph.prototype.addElement = function(template, point, content, text, userinput, sinks, vuln)
@@ -1778,10 +1778,10 @@ Graph.prototype.update = function()
 {
 	var i, j, k;
 	var element, connector, connection;
-	
+
 	this.canvas.style.background = this.theme.background;
 	this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-	
+
 	var connections = [];
 	for (i = 0; i < this.elements.length; i++)
 	{
@@ -1831,77 +1831,77 @@ Graph.prototype.update = function()
 			}
 		}
 	}
-	
+
 	if (this.newElement !== null)
 	{
 		this.context.save();
 		this.newElement.paint(this.context);
 		this.context.restore();
 	}
-	
+
 	if (this.newConnection !== null)
 	{
 		this.newConnection.paintTrack(this.context);
 	}
-	
+
 	if (this.selection !== null)
 	{
 		this.context.strokeStyle = this.theme.selection;
 		this.selection.paint(this.context);
 	}
-	
+
 	// userinput legend
 	this.context.beginPath();
 	this.context.fillStyle = "#FFF";
 	this.context.arc(this.canvas.width-130,30,5,0,Math.PI*2,true);
 	this.context.fill();
 	this.context.closePath();
-	
+
 	this.context.beginPath();
 	this.context.strokeStyle = "#000";
 	this.context.lineWidth = 1;
 	this.context.arc(this.canvas.width-130,30,5,0,Math.PI*2,true);
 	this.context.stroke();
 	this.context.closePath();
-	
+
 	this.context.textBaseline = "bottom";
 	this.context.font = "8.25pt Tahoma";
 	this.context.fillStyle = "#000";
 	this.context.fillText('sources', this.canvas.width-115, 35);
-	
+
 	// sensitive sink legend
 	this.context.beginPath();
 	this.context.fillStyle = "#FFCE42";
 	this.context.arc(this.canvas.width-130,50,5,0,Math.PI*2,true);
 	this.context.fill();
 	this.context.closePath();
-	
+
 	this.context.beginPath();
 	this.context.strokeStyle = "#000";
 	this.context.lineWidth = 1;
 	this.context.arc(this.canvas.width-130,50,5,0,Math.PI*2,true);
 	this.context.stroke();
 	this.context.closePath();
-	
+
 	this.context.textBaseline = "bottom";
 	this.context.font = "8.25pt Tahoma";
 	this.context.fillStyle = "#000";
 	this.context.fillText('sensitive sinks', this.canvas.width-115, 55);
-	
+
 	// vulnerable legend
 	this.context.beginPath();
 	this.context.fillStyle = "red";
 	this.context.arc(this.canvas.width-130,70,5,0,Math.PI*2,true);
 	this.context.fill();
 	this.context.closePath();
-	
+
 	this.context.beginPath();
 	this.context.strokeStyle = "#000";
 	this.context.lineWidth = 1;
 	this.context.arc(this.canvas.width-130,70,5,0,Math.PI*2,true);
 	this.context.stroke();
 	this.context.closePath();
-	
+
 	this.context.textBaseline = "bottom";
 	this.context.font = "8.25pt Tahoma";
 	this.context.fillStyle = "#000";

@@ -1,7 +1,7 @@
 #scrollwindow {
 	background-color: grey;
 	opacity:0.22;
-}	
+}
 
 .menu {
 	background-color: #351F12;
@@ -16,15 +16,15 @@ input[type="text"],select {
 
 .userinput, .persistent {
 	list-style-type: disc;
-	color:white; 
+	color:white;
 }
 .validated {
 	list-style-type: disc;
-	color:red; 
+	color:red;
 }
 .functioninput {
 	list-style-type: disc;
-	color:yellow; 
+	color:yellow;
 }
 
 .codebox {
@@ -48,10 +48,10 @@ input[type="text"],select {
 
 .requires
 	{color: #43A8ED; font-weight:bold;}
-	
+
 .linenr
 	{color: #888;}
-	
+
 .link
 	{color: #2F5FE0; font-weight:bold;}
 
@@ -59,7 +59,7 @@ input[type="text"],select {
 	font-size:9pt;
 	font-family: "Bitstream Vera Sans Mono", "Monaco", "Courier New", monospace;
 }
-	
+
 .code,
 .phps-code, .phps-t-curly-open, .phps-t-dollar-open-curly-braces, .vulntitle
 	{color: #BDAE9D; }
@@ -86,24 +86,24 @@ input[type="text"],select {
 .phps-t-end-heredoc
 	{color: #FFCE42;}
 
-	
+
 .phps-t-open-tag,
 .phps-t-close-tag,
-.phps-t-and-equal, 
-.phps-t-concat-equal, 
-.phps-t-div-equal, 
-.phps-t-minus-equal, 
-.phps-t-mod-equal, 
-.phps-t-mul-equal, 
-.phps-t-or-equal, 
-.phps-t-plus-equal, 
-.phps-t-sl-equal, 
-.phps-t-sr-equal, 
-.phps-t-xor-equal, 
+.phps-t-and-equal,
+.phps-t-concat-equal,
+.phps-t-div-equal,
+.phps-t-minus-equal,
+.phps-t-mod-equal,
+.phps-t-mul-equal,
+.phps-t-or-equal,
+.phps-t-plus-equal,
+.phps-t-sl-equal,
+.phps-t-sr-equal,
+.phps-t-xor-equal,
 .phps-t-is-equal,
 .phps-t-is-greater-or-equal,
 .phps-t-is-identical,
-.phps-t-is-not-equal,	
+.phps-t-is-not-equal,
 .phps-t-is-not-identical,
 .phps-t-inc,
 .phps-t-dec,
@@ -146,17 +146,17 @@ input[type="text"],select {
 .phps-t-double-cast,
 .phps-t-int-cast,
 .phps-t-unset-cast,
-.phps-t-file, 
-.phps-t-line, 
-.phps-t-dir, 
-.phps-t-func-c, .phps-t-class-c, 
-.phps-t-method-c, 
+.phps-t-file,
+.phps-t-line,
+.phps-t-dir,
+.phps-t-func-c, .phps-t-class-c,
+.phps-t-method-c,
 .phps-t-ns-c
 	{color: #43A8ED; font-weight: bold; }
 
 .phps-t-const
 	{color: #C5656B;}
-	
+
 .phps-t-variable, .phps-t-string-varname, .funclistline, .phps-tainted-var
 	{color: #0066FF;}
 
@@ -165,7 +165,7 @@ input[type="text"],select {
 
 .phps-tainted-var
 	{color: #4B91FB;}
-	
+
 .phps-t-lnumber
 	{color: #C4BDA1;}
 

@@ -1,7 +1,7 @@
 #scrollwindow {
 	background-color: grey;
 	opacity:0.22;
-}	
+}
 
 body, html {
 	color: #111111;
@@ -17,15 +17,15 @@ body, html {
 
 .userinput, .persistent {
 	list-style-type: disc;
-	color:white; 
+	color:white;
 }
 .validated {
 	list-style-type: disc;
-	color:red; 
+	color:red;
 }
 .functioninput {
 	list-style-type: disc;
-	color:yellow; 
+	color:yellow;
 }
 
 .codebox {
@@ -48,16 +48,16 @@ body, html {
 	background-color: #F98888;
 }
 
-.code, .vulntitle  { 
+.code, .vulntitle  {
 	font-family: "Bitstream Vera Sans Mono", "Monaco", "Courier New", monospace;
-	font-size:9pt; 
+	font-size:9pt;
 	color: #007700;
 }
 
 .requires,
 .linenr
 	{color: black; font-weight:bold;}
-	
+
 .link
 	{font-weight:bold; color: #0000BB;}
 
@@ -66,21 +66,21 @@ body, html {
 .phps-t-curly-open,
 .phps-t-open-tag,
 .phps-t-close-tag,
-.phps-t-and-equal, 
-.phps-t-concat-equal, 
-.phps-t-div-equal, 
-.phps-t-minus-equal, 
-.phps-t-mod-equal, 
-.phps-t-mul-equal, 
-.phps-t-or-equal, 
-.phps-t-plus-equal, 
-.phps-t-sl-equal, 
-.phps-t-sr-equal, 
-.phps-t-xor-equal, 
+.phps-t-and-equal,
+.phps-t-concat-equal,
+.phps-t-div-equal,
+.phps-t-minus-equal,
+.phps-t-mod-equal,
+.phps-t-mul-equal,
+.phps-t-or-equal,
+.phps-t-plus-equal,
+.phps-t-sl-equal,
+.phps-t-sr-equal,
+.phps-t-xor-equal,
 .phps-t-is-equal,
 .phps-t-is-greater-or-equal,
 .phps-t-is-identical,
-.phps-t-is-not-equal,	
+.phps-t-is-not-equal,
 .phps-t-is-not-identical,
 .phps-t-inc,
 .phps-t-dec,
@@ -143,18 +143,18 @@ body, html {
 .phps-t-unset-cast,
 .phps-t-boolean-or,
 .phps-t-boolean-and,
-.phps-t-file, 
-.phps-t-line, 
-.phps-t-dir, 
-.phps-t-func-c, 
-.phps-t-class-c, 
-.phps-t-method-c, 
+.phps-t-file,
+.phps-t-line,
+.phps-t-dir,
+.phps-t-func-c,
+.phps-t-class-c,
+.phps-t-method-c,
 .phps-t-ns-c
 	{color: #007700;}
 
 .phps-t-const,
 .phps-t-variable,
-.phps-t-string-varname, 
+.phps-t-string-varname,
 .phps-t-string,
 .phps-t-eval,
 .phps-t-lnumber,
@@ -162,13 +162,13 @@ body, html {
 .phps-t-variable-marked,
 .phps-tainted-var
 	{color: #0000BB;}
-	
+
 .phps-t-variable-marked
-	{background-color:#F5A69A;}	
-	
+	{background-color:#F5A69A;}
+
 .phps-tainted-var
-	{font-weight:bold;}	
-	
+	{font-weight:bold;}
+
 .phps-t-encapsed-and-whitespace,
 .phps-t-constant-encapsed-string
 	{color: #DD0000;}

@@ -1,36 +1,36 @@
 <?php
-/** 
+/**
 
-RIPS - A static source code analyser for vulnerabilities in PHP scripts 
+RIPS - A static source code analyser for vulnerabilities in PHP scripts
 	by Johannes Dahse (johannes.dahse@rub.de)
-			
-			
+
+
 Copyright (C) 2012 Johannes Dahse
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with this program; if not, see <http://www.gnu.org/licenses/>.	
+You should have received a copy of the GNU General Public License along with this program; if not, see <http://www.gnu.org/licenses/>.
 
 **/
-	
+
 	// variable declarations = childs
 	class VarDeclare
 	{
 		public $id;
-		public $tokens;	
+		public $tokens;
 		public $tokenscanstart;
 		public $tokenscanstop;
 		public $value;
     	public $comment;
-    	public $line;	
+    	public $line;
 		public $marker;
 		public $dependencies;
 		public $stopvar;
 		public $array_keys;
-		
-		function __construct($tokens = array(), $comment = '') 
+
+		function __construct($tokens = array(), $comment = '')
 		{
 			$this->id = 0;
 			$this->tokens = $tokens;
@@ -45,7 +45,7 @@ You should have received a copy of the GNU General Public License along with thi
 			$this->array_keys = array();
 		}
 	}
-	
+
 	// group vulnerable parts to one vulnerability trace
 	class VulnBlock
 	{
@@ -56,8 +56,8 @@ You should have received a copy of the GNU General Public License along with thi
 		public $sink;
 		public $dataleakvar;
 		public $alternates;
-		
-		function __construct($uid = '', $category = 'match', $sink = '') 
+
+		function __construct($uid = '', $category = 'match', $sink = '')
 		{
 			$this->uid = $uid;
 			$this->vuln = false;
@@ -68,7 +68,7 @@ You should have received a copy of the GNU General Public License along with thi
 			$this->alternates = array();
 		}
 	}
-	
+
 	// used to store new finds
 	class VulnTreeNode
 	{
@@ -90,7 +90,7 @@ You should have received a copy of the GNU General Public License along with thi
 		public $files;
 		public $server;
 
-		function __construct($value = null) 
+		function __construct($value = null)
 		{
 			$this->id = 0;
 			$this->value = $value;
@@ -106,7 +106,7 @@ You should have received a copy of the GNU General Public License along with thi
 			$this->foundcallee = false;
 		}
 	}
-	
+
 	// information gathering finds
 	class InfoTreeNode
 	{
@@ -117,7 +117,7 @@ You should have received a copy of the GNU General Public License along with thi
 		public $title;
 		public $filename;
 
-		function __construct($value = null) 
+		function __construct($value = null)
 		{
 			$this->title = 'File Inclusion';
 			$this->value = $value;
@@ -127,7 +127,7 @@ You should have received a copy of the GNU General Public License along with thi
 			$this->filename = '';
 		}
 	}
-	
+
 	// function declaration
 	class FunctionDeclare
 	{
@@ -137,8 +137,8 @@ You should have received a copy of the GNU General Public License along with thi
 		public $line;
 		public $marker;
 		public $parameters;
-		
-		function __construct($tokens) 
+
+		function __construct($tokens)
 		{
 			$this->value = '';
 			$this->tokens = $tokens;
@@ -149,4 +149,4 @@ You should have received a copy of the GNU General Public License along with thi
 		}
 	}
 
-?>	
+?>

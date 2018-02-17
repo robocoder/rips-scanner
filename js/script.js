@@ -1,9 +1,9 @@
-/** 
+/**
 
-RIPS - A static source code analyser for vulnerabilities in PHP scripts 
+RIPS - A static source code analyser for vulnerabilities in PHP scripts
 	by Johannes Dahse (johannes.dahse@rub.de)
-			
-			
+
+
 **/
 
 /* SCAN */
@@ -30,16 +30,16 @@ function handleResponse(idprefix) {
 	while (prevDataLength != client.responseText.length) {
 		if (client.readyState == 4  && prevDataLength == client.responseText.length)
 			break;
-			
+
 		prevDataLength = client.responseText.length;
 
 		var lines = client.responseText.split('\n');
 		var newline = lines[lines.length-2];
 
-		if(newline == 'STATS_DONE.') {				
+		if(newline == 'STATS_DONE.') {
 			console.log("done");
 			stats_done = true;
-			return;	
+			return;
 		} else if(newline != undefined)
 		{
 			data = newline.split('|');
@@ -47,9 +47,9 @@ function handleResponse(idprefix) {
 			{
 				document.getElementById(idprefix+"file").innerHTML = data[2];
 				procent = Math.round((data[0]/data[1])*100);
-				
+
 				scanAnimation((procent * 75)/100, idprefix)
-				
+
 				document.getElementById(idprefix+"progress").innerHTML = '<span style="font-size:20px">' + procent + '%</span><br />(' + data[0] + '/' + data[1] + ')';
 				document.getElementById(idprefix+"timeleft").innerHTML = 'appr. timeleft: ' + ( (Math.round(data[3]/60) > 1) ? (Math.round(data[3]/60) + ' min') : (Math.round(data[3]) + ' sec') );
 			} else
@@ -57,11 +57,11 @@ function handleResponse(idprefix) {
 				stats_done = true;
 			}
 		}
-	}	
+	}
 
 	if (client.readyState == 4 && prevDataLength == client.responseText.length) {
 		return;
-	}	
+	}
 
 }
 
@@ -74,39 +74,39 @@ function scan(ignore_warning)
 	var vector = document.getElementById("vector").value;
 	var treestyle = document.getElementById("treestyle").value;
 	var stylesheet = document.getElementById("css").value;
-	
+
 	var params = "loc="+location+"&subdirs="+subdirs+"&verbosity="+verbosity+"&vector="+vector+"&treestyle="+treestyle+"&stylesheet="+stylesheet;
 
 	if(ignore_warning)
 		params+="&ignore_warning=1";
-	
+
 	document.getElementById("scanning").style.backgroundImage="url(css/scanning.gif)";
 	document.getElementById("scanning").innerHTML='scanning ...<div class="scanfile" id="scanfile"></div><div class="scanned" id="scanned"></div><div class="scanprogress" id="scanprogress"></div><div class="scantimeleft" id="scantimeleft"></div>'
 	document.getElementById("scanning").style.display="block";
-	
+
 	prevDataLength = 0;
 	nextLine = '';
-	
+
 	var a = true;
 	stats_done = false;
 	client = new XMLHttpRequest();
-	client.onreadystatechange = function () 
-	{ 
+	client.onreadystatechange = function ()
+	{
 		if(this.readyState == 3 && !stats_done)
 			handleResponse('scan');
-		else if(this.readyState == 4 && this.status == 200 && a) 
+		else if(this.readyState == 4 && this.status == 200 && a)
 		{
 			if(!this.responseText.match(/^\s*warning:/))
 			{
 				document.getElementById("scanning").style.display="none";
 				document.getElementById("options").style.display="";
-				
+
 				nostats = this.responseText.split("STATS_DONE.\n");
 				if(nostats[1])
 					result = nostats[1];
 				else
 					result = nostats[0];
-				
+
 				document.getElementById("result").innerHTML=(result);
 				generateDiagram();
 			}
@@ -118,7 +118,7 @@ function scan(ignore_warning)
 				warning+="<p>You are about to scan " + amount + " files. ";
 				warning+="Depending on the amount of codelines and includes this may take a while.";
 				warning+="The author of RIPS recommends to scan only the root directory of your project without subdirs.</p>";
-				warning+="<p>Do you want to continue anyway?</p>";	
+				warning+="<p>Do you want to continue anyway?</p>";
 				warning+="<input type=\"button\" class=\"Button\" value=\"continue\" onClick=\"scan(true);\"/>&nbsp;";
 				warning+="<input type=\"button\" class=\"Button\" value=\"cancel\" onClick=\"document.getElementById('scanning').style.display='none';\"/>";
 				warning+="</div>";
@@ -126,8 +126,8 @@ function scan(ignore_warning)
 				document.getElementById("scanning").innerHTML=warning;
 			}
 			a=false;
-		} 
-		else if (this.readyState == 4 && this.status != 200) 
+		}
+		else if (this.readyState == 4 && this.status != 200)
 		{
 			var warning = "<div class=\"warning\">";
 			warning+="<h2>Network error (HTTP "+this.status+")</h2>";
@@ -135,7 +135,7 @@ function scan(ignore_warning)
 				warning+="<p>Could not access <i>main.php</i>. Make sure your webserver is running.</p>";
 			else if(this.status == 404)
 				warning+="<p>Could not access <i>main.php</i>. Make sure you copied all files.</p>";
-			else if(this.status == 500)	
+			else if(this.status == 500)
 				warning+="<p>Scan aborted. Try to scan only one entry file at once or increase the <i>set_time_limit()</i> in </i>config/general.php</i>.</p>";
 			warning+="</div>";
 			document.getElementById("scanning").style.backgroundImage="none";
@@ -152,33 +152,33 @@ function scan(ignore_warning)
 function leakScan(hoveritem, varname, line, ignore_warning)
 {
 	var title = 'Data Leak Scan - ' + varname;
-	var mywindow = document.getElementById("window2");	
+	var mywindow = document.getElementById("window2");
 	mywindow.style.display="block";
 	mywindow.style.width=700;
 	mywindow.style.height=350;
-	
+
 	if(hoveritem)
 	{
 		if(hoveritem != 3 && hoveritem != 4)
 			var tmp = hoveritem.offsetParent;
-		else	
+		else
 			var tmp = document.getElementById("windowtitle"+hoveritem);
-		
-		mywindow.style.top = tmp.offsetParent.offsetTop - 90; 
-		mywindow.style.right = 250; 
-	}	
-	
+
+		mywindow.style.top = tmp.offsetParent.offsetTop - 90;
+		mywindow.style.right = 250;
+	}
+
 	document.getElementById("windowtitle2").innerHTML=title;
-	
+
 	var location = encodeURIComponent(document.getElementById("location").value);
 	var subdirs = Number(document.getElementById("subdirs").checked);
 	var treestyle = document.getElementById("treestyle").value;
-	
+
 	var params = "loc="+location+"&subdirs="+subdirs+"&treestyle="+treestyle+"&varname="+varname+"&line="+line;
 
 	if(ignore_warning)
 		params+="&ignore_warning=1";
-	
+
 	document.getElementById("windowcontent2").innerHTML = '';
 	var scandiv = document.createElement('div');
 	scandiv.className="scanning";
@@ -188,29 +188,29 @@ function leakScan(hoveritem, varname, line, ignore_warning)
 	scandiv.innerHTML='scanning ...<div class="scanfile" id="leakscanfile"></div><div class="scanned" id="leakscanned"></div><div class="scanprogress" id="leakscanprogress"></div><div class="scantimeleft" id="leakscantimeleft"></div>';
 	scandiv.id="dataleakscanning";
 	scandiv.style.display="block";
-	
+
 	document.getElementById("windowcontent2").appendChild(scandiv);
-	
+
 	var a = true;
 	stats_done = false;
 	client = new XMLHttpRequest();
-	client.onreadystatechange = function () 
-	{ 
+	client.onreadystatechange = function ()
+	{
 		if(this.readyState == 3 && !stats_done)
 			handleResponse('leakscan');
-		else if(this.readyState == 4 && this.status == 200 && a) 
+		else if(this.readyState == 4 && this.status == 200 && a)
 		{
 			if(!this.responseText.match(/^\s*warning:/))
 			{
 				document.getElementById("dataleakscanning").style.display="none";
 
 				nostats = this.responseText.split("STATS_DONE.\n");
-				
+
 				if(nostats[1])
 					document.getElementById("windowcontent2").innerHTML=(nostats[1]);
 				else
 					document.getElementById("windowcontent2").innerHTML='<br /><center>No data leak found. You need blind exploitation techniques.</center>';
-			}	
+			}
 			else
 			{
 				var amount = this.responseText.split(':')[1];
@@ -219,7 +219,7 @@ function leakScan(hoveritem, varname, line, ignore_warning)
 				warning+="<p>You are about to scan " + amount + " files. ";
 				warning+="Depending on the amount of codelines and includes this may take a while. ";
 				warning+="The author of RIPS recommends to scan only the root directory of your project without subdirs.</p>";
-				warning+="<p>Do you want to continue anyway?</p>";	
+				warning+="<p>Do you want to continue anyway?</p>";
 				warning+="<input type=\"button\" class=\"Button\" value=\"continue\" onClick=\"document.getElementById('dataleakscanning').style.display='none';leakScan(null, '"+varname+"', '"+line+"', true);\"/>&nbsp;";
 				warning+="<input type=\"button\" class=\"Button\" value=\"cancel\" onClick=\"document.getElementById('windowcontent2').removeChild(document.getElementById('dataleakscanning'));closeWindow(2);\"/>";
 				warning+="</div>";
@@ -227,8 +227,8 @@ function leakScan(hoveritem, varname, line, ignore_warning)
 				document.getElementById("dataleakscanning").innerHTML=warning;
 			}
 			a=false;
-		} 
-		else if (this.readyState == 4 && this.status != 200) 
+		}
+		else if (this.readyState == 4 && this.status != 200)
 		{
 			var warning = "<div class=\"warning\">";
 			warning+="<h2>Network error (HTTP "+this.status+")</h2>";
@@ -236,7 +236,7 @@ function leakScan(hoveritem, varname, line, ignore_warning)
 				warning+="<p>Could not access <i>windows/leakscan.php</i>. Make sure your webserver is running.</p>";
 			else if(this.status == 404)
 				warning+="<p>Could not access <i>windows/leakscan.php</i>. Make sure you copied all files.</p>";
-			else if(this.status == 500)	
+			else if(this.status == 500)
 				warning+="<p>Scan aborted. Try to scan only one entry file at once or increase the <i>set_time_limit()</i> in </i>config/general.php</i>.</p>";
 			warning+="</div>";
 			document.getElementById("dataleakscanning").style.backgroundImage="none";
@@ -258,19 +258,19 @@ function search()
 	var subdirs = Number(document.getElementById("subdirs").checked);
 	var regex = encodeURIComponent(document.getElementById("search").value);
 	var stylesheet = document.getElementById("css").value;
-	
+
 	var params = 'loc='+location+'&subdirs='+subdirs+'&search=1&regex='+regex+'&ignore_warning=1&treestyle=1&stylesheet='+stylesheet;
 
 	document.getElementById("scanning").style.backgroundImage="url(css/scanning.gif)";
 	document.getElementById("scanning").innerHTML='searching ...<div class="scanned" id="scanned"></div>';
 	document.getElementById("scanning").style.display="block";
 	var animation = window.setInterval("scanAnimation(document.getElementById('scanned'))", 300);
-	
+
 	var a = true;
 	var client = new XMLHttpRequest();
-	client.onreadystatechange = function () 
-	{ 
-		if(this.readyState == 4 && this.status == 200 && a) 
+	client.onreadystatechange = function ()
+	{
+		if(this.readyState == 4 && this.status == 200 && a)
 		{
 			document.getElementById("scanning").style.display="none";
 			window.clearInterval(animation);
@@ -278,7 +278,7 @@ function search()
 			document.getElementById("result").innerHTML=(this.responseText);
 			a=false;
 		}
-		else if (this.readyState == 4 && this.status != 200) 
+		else if (this.readyState == 4 && this.status != 200)
 		{
 			alert("Network error ("+this.status+").");
 		}
@@ -291,14 +291,14 @@ function search()
 }
 
 
-/* CODE STYLE */	
+/* CODE STYLE */
 
 function setActiveStyleSheet(title)
 {
 	var i, a;
 	for(i=0; (a = document.getElementsByTagName("link")[i]); i++)
 	{
-		if(a.getAttribute("rel").indexOf("style") != -1 && a.getAttribute("title")) 
+		if(a.getAttribute("rel").indexOf("style") != -1 && a.getAttribute("title"))
 		{
 			a.disabled = true;
 			if(a.getAttribute("title") == title) a.disabled = false;
@@ -329,13 +329,13 @@ function catshow(tag)
 			elements[i].firstChild.style.display="block";
 		else
 			elements[i].firstChild.style.display="none";
-	}	
-	
+	}
+
 	var elements = document.getElementsByName('pic'+tag);
 	for(var i=0;i<elements.length;i++)
 	{
 			elements[i].className='minusico';
-	}	
+	}
 }
 
 function showAllCats()
@@ -344,7 +344,7 @@ function showAllCats()
 	for(var i=0;i<elements.length;i++)
 	{
 		elements[i].firstChild.style.display="block";
-	}		
+	}
 }
 
 function markVariable(variable)
@@ -355,7 +355,7 @@ function markVariable(variable)
 	for(i=0; (a = document.getElementsByName("phps-var-"+variable)[i]); i++)
 	{
 		if(a.className == 'phps-t-variable' || a.className == 'phps-tainted-var')
-			a.className = 'phps-t-variable-marked';	
+			a.className = 'phps-t-variable-marked';
 		else
 			a.className = 'phps-t-variable';
 	}
@@ -369,10 +369,10 @@ function mouseFunction(name, item)
 		item.style.cursor='pointer';
 		item.style.textDecoration='underline';
 		item.title='jump to function code';
-	}	
+	}
 }
 
-var stack = new Array(); 
+var stack = new Array();
 
 function openFunction(name, linenr)
 {
@@ -383,7 +383,7 @@ function openFunction(name, linenr)
 		var save = new Array(document.getElementById('windowcontent1').innerHTML, linenr);
 		stack.push(save);
 		document.getElementById('return').style.display='block';
-	}	
+	}
 }
 
 function returnLastCode()
@@ -422,7 +422,7 @@ function maxWindow(id, newwidth)
 	{
 		document.getElementById("windowcontent1").style.width = newwidth-84 + "px";
 		scroller();
-	}	
+	}
 }
 
 function minWindow(id, oldwidth)
@@ -463,7 +463,7 @@ function showlist(type)
 	document.getElementById(type+'graphbutton').style.color="white";
 }
 
-function scroller() 
+function scroller()
 {
 	var content = document.getElementById('windowcontent1');
 	var win = document.getElementById('scrollwindow');
@@ -478,7 +478,7 @@ function scroller()
 	{
 		code = code1;
 	}
-	
+
 	win.style.height=(0.1 * content.clientHeight) + 'px';
 	code1.scrollTop=((content.scrollTop / (content.scrollHeight-content.clientHeight)) * ((code.scrollHeight-code.clientHeight)));
 	win.style.top=((content.scrollTop / (content.scrollHeight-content.clientHeight)) * (code.clientHeight-win.clientHeight)) + 'px';
@@ -493,38 +493,38 @@ function openWindow(id)
 	if(style.display == "" || style.display == "none") {
 		style.display = "block";
 		style.zIndex = 3;
-	}	
+	}
 	else {
 		style.display = "none";
-	}	
+	}
 }
-	
+
 function getFuncCode(hoveritem, file, start, end)
 {
 	var codediv = document.getElementById("funccode");
-	codediv.style.display="block"; 
+	codediv.style.display="block";
 	codediv.style.zIndex = 3;
-	
+
 	if(file.length > 50)
 		title = '...'+file.substr(file.length-50,50);
 	else
 		title = file;
 	document.getElementById("funccodetitle").innerHTML=title;
-	
+
 	var tmp = hoveritem.offsetParent;
-	codediv.style.top = tmp.offsetParent.offsetTop; 
+	codediv.style.top = tmp.offsetParent.offsetTop;
 	codediv.style.left = hoveritem.offsetLeft;
-	
+
 	var a = true;
 	var client = new XMLHttpRequest();
-	client.onreadystatechange = function () 
-	{ 
-		if(this.readyState == 4 && this.status == 200 && a) 
+	client.onreadystatechange = function ()
+	{
+		if(this.readyState == 4 && this.status == 200 && a)
 		{
 			document.getElementById("funccodecontent").innerHTML=(this.responseText);
 			a=false;
-		} 
-		else if (this.readyState == 4 && this.status != 200) 
+		}
+		else if (this.readyState == 4 && this.status != 200)
 		{
 			alert("Network error ("+this.status+").");
 		}
@@ -540,40 +540,40 @@ function openHelp(hoveritem, type, thefunction, get, post, cookie, files, server
 		title+= type.substr(0,80)+'...';
 	else
 		title+=type;
-	
-	var mywindow = document.getElementById("window2");	
+
+	var mywindow = document.getElementById("window2");
 	mywindow.style.display="block";
-	
+
 	if(hoveritem != 3 && hoveritem != 4)
 		var tmp = hoveritem.offsetParent;
-	else	
+	else
 		var tmp = document.getElementById("windowtitle"+hoveritem);
-		
-	mywindow.style.top = tmp.offsetParent.offsetTop - 100; 
-	mywindow.style.right = 200; 
-	
+
+	mywindow.style.top = tmp.offsetParent.offsetTop - 100;
+	mywindow.style.right = 200;
+
 	document.getElementById("windowtitle2").innerHTML=title;
-	
+
 	var a = true;
 	var client = new XMLHttpRequest();
-	client.onreadystatechange = function () 
-	{ 
-		if(this.readyState == 4 && this.status == 200 && a) 
+	client.onreadystatechange = function ()
+	{
+		if(this.readyState == 4 && this.status == 200 && a)
 		{
 			document.getElementById("windowcontent2").innerHTML=(this.responseText);
-					
+
 			document.getElementById("windowcontent2").scrollIntoView();
-		
+
 			document.body.scrollTop = tmp.offsetParent.offsetTop - 200;
-			
+
 			a=false;
-		} 
-		else if (this.readyState == 4 && this.status != 200) 
+		}
+		else if (this.readyState == 4 && this.status != 200)
 		{
 			alert("Network error ("+this.status+").");
 		}
 	}
-	client.open("GET", 
+	client.open("GET",
 		"windows/help.php?type="+type+"&function="+thefunction+"&get="+get+"&post="+post+"&cookie="+cookie+"&files="+files+"&server="+server);
 	client.send();
 }
@@ -585,37 +585,37 @@ function openHotpatch(hoveritem, file, get, post, cookie, files, server)
 		title+= '...'+file.substr(file.length-50,50);
 	else
 		title+= file;
-		
-	var mywindow = document.getElementById("window2");	
+
+	var mywindow = document.getElementById("window2");
 	mywindow.style.display="block";
-	
+
 	var tmp = hoveritem.offsetParent;
-	
-	mywindow.style.top = tmp.offsetParent.offsetTop - 100; 
-	mywindow.style.right = 200; 
-	
+
+	mywindow.style.top = tmp.offsetParent.offsetTop - 100;
+	mywindow.style.right = 200;
+
 	document.getElementById("windowtitle2").innerHTML=title;
-	
+
 	var a = true;
 	var client = new XMLHttpRequest();
-	client.onreadystatechange = function () 
-	{ 
-		if(this.readyState == 4 && this.status == 200 && a) 
+	client.onreadystatechange = function ()
+	{
+		if(this.readyState == 4 && this.status == 200 && a)
 		{
 			document.getElementById("windowcontent2").innerHTML=(this.responseText);
-					
+
 			document.getElementById("windowcontent2").scrollIntoView();
-		
+
 			document.body.scrollTop = tmp.offsetParent.offsetTop - 200;
-			
+
 			a=false;
-		} 
-		else if (this.readyState == 4 && this.status != 200) 
+		}
+		else if (this.readyState == 4 && this.status != 200)
 		{
 			alert("Network error ("+this.status+").");
 		}
 	}
-	client.open("GET", 
+	client.open("GET",
 		"windows/hotpatch.php?file="+file+"&get="+get+"&post="+post+"&cookie="+cookie+"&files="+files+"&server="+server);
 	client.send();
 }
@@ -628,41 +628,41 @@ function openCodeViewer(hoveritem, file, lines)
 		title+= '...'+file.substr(file.length-50,50);
 	else
 		title+= file;
-		
-	var mywindow = document.getElementById("window1");	
+
+	var mywindow = document.getElementById("window1");
 	mywindow.style.display="block";
-	
+
 	if(hoveritem != 3 && hoveritem != 4)
 		var tmp = hoveritem.offsetParent;
-	else	
+	else
 		var tmp = document.getElementById("windowtitle"+hoveritem);
-		
-	if(tmp.offsetParent != null)	
-		mywindow.style.top = tmp.offsetParent.offsetTop - 100; 
-	mywindow.style.right = 200; 
-	
+
+	if(tmp.offsetParent != null)
+		mywindow.style.top = tmp.offsetParent.offsetTop - 100;
+	mywindow.style.right = 200;
+
 	document.getElementById("windowtitle1").innerHTML=title;
-	
+
 	var a = true;
 	var client = new XMLHttpRequest();
-	client.onreadystatechange = function () 
-	{ 
-		if(this.readyState == 4 && this.status == 200 && a) 
+	client.onreadystatechange = function ()
+	{
+		if(this.readyState == 4 && this.status == 200 && a)
 		{
 			document.getElementById("windowcontent1").innerHTML=(this.responseText);
-					
-			if(document.getElementById(linenrs[0]) != null)	
+
+			if(document.getElementById(linenrs[0]) != null)
 				document.getElementById(linenrs[0]).scrollIntoView();
-		
+
 			if(tmp.offsetParent != null)
 				document.body.scrollTop = tmp.offsetParent.offsetTop - 200;
 			else
 				document.body.scrollTop = document.body.scrollTop - 100;
-			
+
 			document.getElementById("scrollcode").innerHTML=document.getElementById("codeonly").innerHTML;
 			a=false;
-		} 
-		else if (this.readyState == 4 && this.status != 200) 
+		}
+		else if (this.readyState == 4 && this.status != 200)
 		{
 			alert("Network error ("+this.status+").");
 		}
@@ -678,37 +678,37 @@ function openExploitCreator(hoveritem, file, get, post, cookie, files, server)
 		title+= '...'+file.substr(file.length-50,50);
 	else
 		title+= file;
-		
-	var mywindow = document.getElementById("window2");	
+
+	var mywindow = document.getElementById("window2");
 	mywindow.style.display="block";
-	
+
 	var tmp = hoveritem.offsetParent;
-	
-	mywindow.style.top = tmp.offsetParent.offsetTop - 100; 
-	mywindow.style.right = 200; 
-	
+
+	mywindow.style.top = tmp.offsetParent.offsetTop - 100;
+	mywindow.style.right = 200;
+
 	document.getElementById("windowtitle2").innerHTML=title;
-	
+
 	var a = true;
 	var client = new XMLHttpRequest();
-	client.onreadystatechange = function () 
-	{ 
-		if(this.readyState == 4 && this.status == 200 && a) 
+	client.onreadystatechange = function ()
+	{
+		if(this.readyState == 4 && this.status == 200 && a)
 		{
 			document.getElementById("windowcontent2").innerHTML=(this.responseText);
-					
+
 			document.getElementById("windowcontent2").scrollIntoView();
-		
+
 			document.body.scrollTop = tmp.offsetParent.offsetTop - 200;
-			
+
 			a=false;
-		} 
-		else if (this.readyState == 4 && this.status != 200) 
+		}
+		else if (this.readyState == 4 && this.status != 200)
 		{
 			alert("Network error ("+this.status+").");
 		}
 	}
-	client.open("GET", 
+	client.open("GET",
 		"windows/exploit.php?file="+file+"&get="+get+"&post="+post+"&cookie="+cookie+"&files="+files+"&server="+server);
 	client.send();
 }
@@ -730,7 +730,7 @@ function saveCanvas(canvas, id)
 	document.getElementById("canvas"+id).style.display='block';
 	document.getElementById(canvas).style.display='none';
 	document.getElementById(canvas+'save').value='edit graph';
-	var onC='restoreCanvas("'+canvas+'", '+id+')'; 
+	var onC='restoreCanvas("'+canvas+'", '+id+')';
 	document.getElementById(canvas+'save').onclick = new Function(onC);
 }
 
@@ -739,12 +739,12 @@ function restoreCanvas(canvas, id)
 	document.getElementById("canvas"+id).style.display='none';
 	document.getElementById(canvas).style.display='block';
 	document.getElementById(canvas+'save').value='save graph';
-	var onC='saveCanvas("'+canvas+'", '+id+')'; 
+	var onC='saveCanvas("'+canvas+'", '+id+')';
 	document.getElementById(canvas+'save').onclick = new Function(onC);
 }
-	
-/* DRAG WINDOW */	
-	
+
+/* DRAG WINDOW */
+
 var dragobjekt = null;
 var dragx = 0;
 var dragy = 0;
@@ -776,7 +776,7 @@ function drag(ereignis) {
     dragobjekt.style.left = (posx - dragx) + "px";
     dragobjekt.style.top = (posy - dragy) + "px";
   }
-}		
+}
 
 /* RESIZE WINDOW */
 
@@ -793,10 +793,10 @@ function resizeStart(e, id)
 {
 	windowid = id;
 	curEvent = ((typeof event == "undefined")? e: event);
-	mouseButtonPos = "down";	
+	mouseButtonPos = "down";
 	curX = curEvent.clientX;
 	curY = curEvent.clientY;
-	
+
 	var tempWidth = document.getElementById("window"+id).style.width;
 	var tempHeight = document.getElementById("window"+id).style.height;
 
@@ -843,22 +843,22 @@ var myColor = [
 "#477FCA", // sqli
 "#4A47CA", // xpath
 "#DADFE3", // XSS
-"#16FB3B", // HTTP Header 
+"#16FB3B", // HTTP Header
 "#DF4242", // other
 "#818C96", // pop
 "#ff99ff", // reflection
-"#ff33ff", // 
+"#ff33ff", //
 ];
 
 var myData = Array();
-	
+
 function generateDiagram()
 {
 	var canvas;
 	var ctx;
 	var lastend = 0;
 	var myTotal = 0;
-	
+
 	// generate data
 	for (var j = 0; j < 15; j++)
 	{
@@ -866,15 +866,15 @@ function generateDiagram()
 		{
 			myTotal += Number(document.getElementById('vuln'+(j+1)).innerHTML);
 			myData[j] = Number(document.getElementById('vuln'+(j+1)).innerHTML);
-		}	
+		}
 		else
 			myData[j] = 0;
 	}
-	
+
 	canvas = document.getElementById("diagram");
 	ctx = canvas.getContext("2d");
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	
+
 	for (var i = 0; i < myData.length; i++)
 	{
 		if(myData[i] != 0)

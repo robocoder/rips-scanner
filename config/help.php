@@ -1,17 +1,17 @@
 <?php
-/** 
+/**
 
-RIPS - A static source code analyser for vulnerabilities in PHP scripts 
+RIPS - A static source code analyser for vulnerabilities in PHP scripts
 	by Johannes Dahse (johannes.dahse@rub.de)
-			
-			
+
+
 Copyright (C) 2012 Johannes Dahse
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with this program; if not, see <http://www.gnu.org/licenses/>.	
+You should have received a copy of the GNU General Public License along with this program; if not, see <http://www.gnu.org/licenses/>.
 
 **/
 
@@ -21,7 +21,7 @@ $HELP_XSS = array(
 'code' => '<?php print("Hello " . $_GET["name"]); ?>',
 'poc' => '/index.php?name=<script>alert(1)</script>',
 'patchtext' => 'Encode all user tainted data with PHP buildin functions before embedding the data into the output. Make sure to set the parameter ENT_QUOTES to avoid an eventhandler injections to existing HTML attributes and specify the correct charset.',
-'patch' => '<?php print("Hello " . htmlentities($_GET["name"], ENT_QUOTES, "utf-8"); ?>' 
+'patch' => '<?php print("Hello " . htmlentities($_GET["name"], ENT_QUOTES, "utf-8"); ?>'
 );
 
 $HELP_HTTP_HEADER = array(
@@ -136,14 +136,14 @@ $HELP_POP = array(
 'description' => 'When userinput is parsed by the unserialize() function an attacker may abuse this by supplying serialized objects that will be used in the current application scope. These objects can only be instances of classes of this application. Several gadgets such as __wakeup() or __destruct() functions of those classes will be automatically called when the object is resurrected during the unserialization and object variables specified by the attacker may lead to vulnerabilities in those gadgets.',
 'link' => 'https://media.blackhat.com/bh-us-10/presentations/Esser/BlackHat-USA-2010-Esser-Utilizing-Code-Reuse-Or-Return-Oriented-Programming-In-PHP-Application-Exploits-slides.pdf',
 'code' => '<?php
-class foo { 
+class foo {
 	public $file = "test.txt";
-	public $data = "text"; 
-	function __destruct() 
-	{ 
-		file_put_contents($this->file, $this->data); 
-	} 
-} 
+	public $data = "text";
+	function __destruct()
+	{
+		file_put_contents($this->file, $this->data);
+	}
+}
 $a = unserialize($_GET["s"]);
 ?>',
 'poc' => '/index.php?s=O:3:"foo":2:{s:4:"file";s:9:"shell.php";s:4:"data";s:29:"<?php passthru($_GET["c"]);?>";}',
