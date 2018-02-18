@@ -37,7 +37,7 @@ def extract_td_single(column_name,data):
 def main(args, options=[]):
     errcode = 0
     stats={}
-    
+
     for file in args:
         print "[*] processing '%s'"%file
         if not os.path.isfile(file):
@@ -62,34 +62,34 @@ def main(args, options=[]):
                 stats['num_cats']=len(stats['cats'])
                 x = re.findall(r'<span id="scantime">(\d+\.\d+) seconds</span>',data)
                 stats['scantime'] = x[0] if x else None
-    
+
                 for s in ("Scanned files:", "Include success:", "Considered sinks:",
                           "User-defined functions:","Unique sources:","Sensitive sinks:"):
                     stats[s] = extract_td_single(s, data).strip()
-    
-    
+
+
         stats['dummy']=''
         print "[***] Results"
         print """[    ] Scanned Files:           %(Scanned files:)20s
-[    ] Include Success:         %(Include success:)20s 
+[    ] Include Success:         %(Include success:)20s
 [    ] Time Elapsed:            %(scantime)19ss
 
-[    ] Considered sinks:        %(Considered sinks:)20s 
-[    ] User-defined functions:  %(User-defined functions:)20s 
-[    ] Unique sources:          %(Unique sources:)20s 
-[    ] Sensitive sinks:         %(Sensitive sinks:)20s 
+[    ] Considered sinks:        %(Considered sinks:)20s
+[    ] User-defined functions:  %(User-defined functions:)20s
+[    ] Unique sources:          %(Unique sources:)20s
+[    ] Sensitive sinks:         %(Sensitive sinks:)20s
 
-[    ] Hits:                    %(hits)20s 
+[    ] Hits:                    %(hits)20s
 [    ] Categories:              %(num_cats)20s"""%stats
-        for c in stats.get("cats",[]):         
+        for c in stats.get("cats",[]):
             print "   %50s"%("%s   [+]"%c)
         errcode+=stats.get('hits',0)
-    
-            
+
+
     return errcode
 
 if __name__=='__main__':
     args, options = getargs()
     sys.exit(main(args,options))
-        
-        
+
+

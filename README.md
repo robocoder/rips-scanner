@@ -33,7 +33,7 @@ options:
   verbosity			... log verbosity [0-9]
   treestyle			... html output style [0|1]
   stylesheet		... html output stylesheet [ayti|...]
-  
+
 example: recursively scan ./code for all vuln. classes
   php index.php loc=./code subdirs=1 vector=all verbosity=2
 ```
@@ -64,13 +64,13 @@ Note: in cli-mode argv wil be parsed into $_POST therefore allowing you to set a
 	echo "[**] running scan ... $PATH_TARGET"
 	echo "========================================================="
 	php $PATH_RIPS/index.php ignore_warning=1 loc=$PATH_TARGET subdirs=$RIPS_RECURSE_SUBDIR vector=$RIPS_VECTOR verbosity=$RIPS_VERBOSITY treestyle=1 stylesheet=ayti > $PATH_REPORT/$FILE_REPORT
-	echo "=========================================================" 
+	echo "========================================================="
 	echo "[**] scan done ... check out $PATH_REPORT/$FILE_REPORT"
 	echo "========================================================="
 	```
-  
+
 4. add build step: execute python
-  
+
 	```python
 	import os, sys
 	import rips_stats as rips

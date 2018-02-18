@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License along with thi
 **/
 	if (php_sapi_name() === 'cli')
 		define("MODE_CLI",1);
-		
+
 	#error_reporting(E_ALL);
 	error_reporting(E_ERROR | E_PARSE);
 	// various settings making flush() work correctly
