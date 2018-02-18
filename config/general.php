@@ -44,7 +44,8 @@ You should have received a copy of the GNU General Public License along with thi
 	if (!defined("MODE_CLI"))
 		define('WARNFILES', 50);			// warn user if amount of files to scan is higher than this value, also limits the graphs so they dont get too confusing and prevents browser hanging
 	else
-		define('WARNFILES', 500000);		// only warn if more than 500k files	define('BASEDIR', '');					// default directory shown
+		define('WARNFILES', 500000);		// only warn if more than 500k files
+	define('BASEDIR', '');					// default directory shown
 	define('PHPDOC', 'http://php.net/');	// PHP documentation link
 	define('MAX_ARRAY_ELEMENTS', 50);		// maximum array(1,2,3,4,...) elements to be indexed
 	define('MAX_ARRAY_KEYS', 10);			// maximum array key $array[1][2][3][4]..

@@ -70,8 +70,8 @@ You should have received a copy of the GNU General Public License along with thi
 			$user_input = array();
 
 			$file_sinks_count = array();
-			$count_xss=$count_sqli=$count_fr=$count_fa=$count_fi=$count_exec=$count_code=$count_eval=$count_xpath=$count_ldap=$count_con=$count_other=$count_pop=$count_inc=$count_inc_fail=$count_header=0;
-			
+			$count_xss=$count_sqli=$count_fr=$count_fa=$count_fi=$count_exec=$count_code=$count_eval=$count_xpath=$count_ldap=$count_con=$count_other=$count_pop=$count_inc=$count_inc_fail=$count_header=$count_sf=$count_ri=0;
+
 			$verbosity = isset($_POST['verbosity']) ? $_POST['verbosity'] : 1;
 			$scan_functions = array();
 			$info_functions = Info::$F_INTEREST;
@@ -82,7 +82,9 @@ You should have received a copy of the GNU General Public License along with thi
 				{
 					case 'xss':			$scan_functions = $F_XSS;			break;
 					case 'httpheader':	$scan_functions = $F_HTTP_HEADER;	break;
+					case 'fixation':	$scan_functions = $F_SESSION_FIXATION;	break;
 					case 'code': 		$scan_functions = $F_CODE;			break;
+					case 'ri': 			$scan_functions = $F_REFLECTION;	break;
 					case 'file_read':	$scan_functions = $F_FILE_READ;		break;
 					case 'file_affect':	$scan_functions = $F_FILE_AFFECT;	break;
 					case 'file_include':$scan_functions = $F_FILE_INCLUDE;	break;
@@ -93,37 +95,23 @@ You should have received a copy of the GNU General Public License along with thi
 					case 'connect': 	$scan_functions = $F_CONNECT;		break;
 					case 'other':		$scan_functions = $F_OTHER;			break;
 					case 'unserialize':	{
-										$scan_functions = array_merge($F_POP,$F_XSS);				
+										$scan_functions = $F_POP;
 										$info_functions = Info::$F_INTEREST_POP;
 										$source_functions = array('unserialize');
 										$verbosity = 2;
 										}
 										break;
-					case 'all': 
-						$scan_functions = array_merge(
-							$F_XSS,
-							$F_HTTP_HEADER,
-							$F_CODE,
-							$F_FILE_READ,
-							$F_FILE_AFFECT,
-							$F_FILE_INCLUDE,
-							$F_EXEC,
-							$F_DATABASE,
-							$F_XPATH,
-							$F_LDAP,
-							$F_CONNECT,
-							$F_OTHER
-						); break;
 					case 'client':
 						$scan_functions = array_merge(
 							$F_XSS,
-							$F_HTTP_HEADER
+							$F_HTTP_HEADER,
+							$F_SESSION_FIXATION
 						);
-						break;	
-					default: // all server side
-					{ 
+						break;
+					case 'server':
 						$scan_functions = array_merge(
 							$F_CODE,
+							$F_REFLECTION,
 							$F_FILE_READ,
 							$F_FILE_AFFECT,
 							$F_FILE_INCLUDE,
@@ -132,9 +120,28 @@ You should have received a copy of the GNU General Public License along with thi
 							$F_XPATH,
 							$F_LDAP,
 							$F_CONNECT,
+							$F_POP,
 							$F_OTHER
-						); break; 
-					}
+						); break;
+					case 'all':
+					default:
+						$scan_functions = array_merge(
+							$F_XSS,
+							$F_HTTP_HEADER,
+							$F_SESSION_FIXATION,
+							$F_CODE,
+							$F_REFLECTION,
+							$F_FILE_READ,
+							$F_FILE_AFFECT,
+							$F_FILE_INCLUDE,
+							$F_EXEC,
+							$F_DATABASE,
+							$F_XPATH,
+							$F_LDAP,
+							$F_CONNECT,
+							$F_POP,
+							$F_OTHER
+						); break;
 				}
 			}
 
@@ -150,7 +157,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 			$overall_time = 0;
 			$timeleft = 0;
-			$file_amount = count($files);	
+			$file_amount = count($files);
 			if (defined("MODE_CLI"))
 				echo "\n<div id=\"scan_metadata\" style=\"display: none;\">";		//hide metadata
 
@@ -304,7 +311,7 @@ You should have received a copy of the GNU General Public License along with thi
 	// output stats
 	if(empty($_POST['search']))
 	{
-		$count_all=$count_xss+$count_sqli+$count_fr+$count_fa+$count_fi+$count_exec+$count_code+$count_eval+$count_xpath+$count_ldap+$count_con+$count_other+$count_pop+$count_header;
+		$count_all=$count_xss+$count_sqli+$count_fr+$count_fa+$count_fi+$count_exec+$count_code+$count_eval+$count_xpath+$count_ldap+$count_con+$count_other+$count_pop+$count_header+$count_sf+$count_ri;
 		if($count_all > 0)
 		{
 			if($count_code > 0)
@@ -327,12 +334,16 @@ You should have received a copy of the GNU General Public License along with thi
 				statsRow(9, $NAME_XPATH, $count_xpath, $count_all);
 			if($count_xss > 0)
 				statsRow(10, $NAME_XSS, $count_xss, $count_all);
-			if($count_header > 0)	
-				statsRow(11, $NAME_HTTP_HEADER, $count_header, $count_all);	
-			if($count_other > 0)	
-				statsRow(12, $NAME_OTHER, $count_other, $count_all);
-			if($count_pop > 0)	
-				statsRow(13, $NAME_POP, $count_pop, $count_all);	
+			if($count_header > 0)
+				statsRow(11, $NAME_HTTP_HEADER, $count_header, $count_all);
+			if($count_sf > 0)
+				statsRow(12, $NAME_SESSION_FIXATION, $count_sf, $count_all);
+			if($count_other > 0)
+				statsRow(13, $NAME_OTHER, $count_other, $count_all);
+			if($count_ri > 0)
+				statsRow(14, $NAME_REFLECTION, $count_ri, $count_all);
+			if($count_pop > 0)
+				statsRow(15, $NAME_POP, $count_pop, $count_all);
 			echo '<tr><td nowrap width="160" onmouseover="this.style.color=\'white\';" onmouseout="this.style.color=\'#DFDFDF\';" onClick="showAllCats()" style="cursor:pointer;" title="show all categories">Sum:</td><td>',$count_all,'</td></tr>';
 		} else
 		{
@@ -369,7 +380,7 @@ You should have received a copy of the GNU General Public License along with thi
 		'<tr><td nowrap onmouseover="this.style.color=\'white\';" onmouseout="this.style.color=\'#DFDFDF\';" onClick="openWindow(4);" style="cursor:pointer;" title="open userinput window">Unique sources:</td><td nowrap>'.count($user_input).'</td></tr>',
 		'<tr><td nowrap>Sensitive sinks:</td><td nowrap>'.(is_array($file_sinks_count) ? array_sum($file_sinks_count) : 0).'</td></tr>',
 		'</table><hr />';
-		
+
 		// output info gathering
 		if( !empty($info) || ($count_inc>0 && $round_inc_success < 75 && !$scan_subdirs && count($files)>1) )
 		{
