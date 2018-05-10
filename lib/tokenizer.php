@@ -323,8 +323,14 @@ class Tokenizer
 				}
 			// switch a do while with a while (the difference in loop rounds doesnt matter
 			// and we need the condition to be parsed before the loop tokens)
-				else if( $this->tokens[$i][0] === T_DO )
+				else if( $this->tokens[$i][0] === T_DO)
 				{
+					// don't rewrite where do() is a class method
+					if (($previous = $this->tokens[$i-1][0]) === T_FUNCTION 
+					|| $previous === T_PAAMAYIM_NEKUDOTAYIM
+					|| $previous === T_OBJECT_OPERATOR)
+						break;
+
 					$f=2;
 					$otherDOs = 0;
 					// f = T_WHILE token position relative to i
