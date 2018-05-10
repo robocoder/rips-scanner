@@ -42,5 +42,3 @@ You should have received a copy of the GNU General Public License along with thi
 		$id = (isset($GLOBALS['output'][$file_name])) ? count($GLOBALS['output'][$file_name]) : 0;
 		$GLOBALS['output'][$file_name][$id] = $block;
 	}
-
-?>

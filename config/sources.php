@@ -117,5 +117,3 @@ final class Sources
 	//	'getenv' and 'apache_getenv'
 	// will be automatically added if 'putenv' or 'apache_setenv' with userinput is found
 }
-
-?>

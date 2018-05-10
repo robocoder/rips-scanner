@@ -172,5 +172,3 @@ class Analyzer
 		return explode(';', $path);
 	}
 }
-
-?>

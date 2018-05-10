@@ -420,5 +420,3 @@ You should have received a copy of the GNU General Public License along with thi
 
 	# interruption vulnerabilities
 	# trim(), rtrim(), ltrim(), explode(), strchr(), strstr(), substr(), chunk_split(), strtok(), addcslashes(), str_repeat() htmlentities() htmlspecialchars(), unset()
-
-?>

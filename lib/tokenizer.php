@@ -539,5 +539,3 @@ class Tokenizer
 		$this->tokens = array_values($this->tokens);
 	}
 }
-
-?>

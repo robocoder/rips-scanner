@@ -212,5 +212,3 @@ You should have received a copy of the GNU General Public License along with thi
 
 	// securing functions that work only when embedded in quotes
 	$F_QUOTE_ANALYSIS = $F_SECURING_SQL;
-
-?>

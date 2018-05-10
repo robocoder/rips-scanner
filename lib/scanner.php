@@ -2339,4 +2339,3 @@ class Scanner
 		return $this->inc_map;
 	}
 }
-?>
