@@ -15,6 +15,33 @@ You should have received a copy of the GNU General Public License along with thi
 
 **/
 
+// define own token for include ending
+define('T_INCLUDE_END', 10000);
+
+// added in php 5.3
+if ( ! defined('T_GOTO'))          define('T_GOTO', 10001);
+if ( ! defined('T_NAMESPACE'))     define('T_NAMESPACE', 10002);
+if ( ! defined('T_NS_C'))          define('T_NS_C', 10003);
+if ( ! defined('T_NS_SEPARATOR'))  define('T_NS_SEPARATOR', 10004);
+if ( ! defined('T_USE'))           define('T_USE', 10005);
+
+// added in php 5.4
+if ( ! defined('T_INSTEADOF'))     define('T_INSTEADOF', 10006);
+if ( ! defined('T_TRAIT'))         define('T_TRAIT', 10007);
+if ( ! defined('T_TRAIT_C'))       define('T_TRAIT_C', 10008);
+
+// added in php 5.5
+if ( ! defined('T_FINALLY'))       define('T_FINALLY', 10009);
+if ( ! defined('T_YIELD'))         define('T_YIELD', 10010);
+if ( ! defined('T_YIELD_FROM'))    define('T_YIELD_FROM', 10011);
+
+// added in php 5.6
+if ( ! defined('T_POW'))           define('T_POW', 10012);
+if ( ! defined('T_POW_EQUAL'))     define('T_POW_EQUAL', 10013);
+
+// added in php 7.0
+if ( ! defined('T_SPACESHIP'))     define('T_SPACESHIP', 10014);
+
 final class Tokens
 {
 	// tokens to ignore while scanning
@@ -25,8 +52,8 @@ final class Tokens
 		//T_ML_COMMENT,
 		T_INLINE_HTML,
 		T_WHITESPACE,
-		T_OPEN_TAG
-		//T_CLOSE_TAG
+		T_OPEN_TAG,
+		//T_CLOSE_TAG,
 	);
 
 	// code blocks that should be ignored as requirement
@@ -34,7 +61,7 @@ final class Tokens
 		//T_DO, // removed, because DO..WHILE is rewritten to WHILE
 		T_WHILE,
 		T_FOR,
-		T_FOREACH
+		T_FOREACH,
 	);
 
 	// control structures
@@ -43,7 +70,7 @@ final class Tokens
 		T_SWITCH,
 		T_CASE,
 		T_ELSE,
-		T_ELSEIF
+		T_ELSEIF,
 	);
 
 	// variable assignment tokens
@@ -56,9 +83,10 @@ final class Tokens
 		T_MUL_EQUAL,
 		T_OR_EQUAL,
 		T_PLUS_EQUAL,
+		T_POW_EQUAL,
 		T_SL_EQUAL,
 		T_SR_EQUAL,
-		T_XOR_EQUAL
+		T_XOR_EQUAL,
 	);
 
 	// variable assignment tokens that prevent tainting
@@ -69,9 +97,10 @@ final class Tokens
 		T_MUL_EQUAL,
 		T_OR_EQUAL,
 		T_PLUS_EQUAL,
+		T_POW_EQUAL,
 		T_SL_EQUAL,
 		T_SR_EQUAL,
-		T_XOR_EQUAL
+		T_XOR_EQUAL,
 	);
 
 	// condition operators
@@ -81,7 +110,8 @@ final class Tokens
 		T_IS_IDENTICAL,
 		T_IS_NOT_EQUAL,
 		T_IS_NOT_IDENTICAL,
-		T_IS_SMALLER_OR_EQUAL
+		T_IS_SMALLER_OR_EQUAL,
+		T_SPACESHIP,
 	);
 
 	// all function call tokens
@@ -91,7 +121,7 @@ final class Tokens
 		T_INCLUDE,
 		T_INCLUDE_ONCE,
 		T_REQUIRE,
-		T_REQUIRE_ONCE
+		T_REQUIRE_ONCE,
 	);
 
 	// including operation tokens
@@ -99,7 +129,7 @@ final class Tokens
 		T_INCLUDE,
 		T_INCLUDE_ONCE,
 		T_REQUIRE,
-		T_REQUIRE_ONCE
+		T_REQUIRE_ONCE,
 	);
 
 	// XSS affected operation tokens
@@ -107,7 +137,7 @@ final class Tokens
 		T_PRINT,
 		T_ECHO,
 		T_OPEN_TAG_WITH_ECHO,
-		T_EXIT
+		T_EXIT,
 	);
 
 	// securing operation tokens
@@ -116,7 +146,7 @@ final class Tokens
 		T_DOUBLE_CAST,
 		T_INT_CAST,
 		T_UNSET_CAST,
-		T_UNSET
+		T_UNSET,
 	);
 
 	// tokens that will have a space before and after in the output, besides $T_OPERATOR and $T_ASSIGNMENT
@@ -132,13 +162,13 @@ final class Tokens
 		T_CASE,
 		T_ELSE,
 		T_GLOBAL,
-		T_NEW
+		T_NEW,
 	);
 
 	// arithmetical operators to detect automatic typecasts
 	public static $T_ARITHMETIC = array(
 		T_INC,
-		T_DEC
+		T_DEC,
 	);
 
 	// arithmetical operators to detect automatic typecasts
@@ -147,7 +177,8 @@ final class Tokens
 		'-',
 		'*',
 		'/',
-		'%'
+		'%',
+		T_POW,
 	);
 
 	// strings that will have a space before and after in the output besides $S_ARITHMETIC
@@ -157,9 +188,6 @@ final class Tokens
 		'>',
 		'<',
 		':',
-		'?'
+		'?',
 	);
 }
-
-// define own token for include ending
-define('T_INCLUDE_END', 380);

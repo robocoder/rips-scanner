@@ -2250,6 +2250,7 @@ class Scanner
 				|| $this->tokens[$i-1][0] === T_ELSE // else {
 				|| $this->tokens[$i-1][0] === T_STRING // class bla {
 				|| $this->tokens[$i-1][0] === T_TRY // try {
+				|| $this->tokens[$i-1][0] === T_FINALLY // finally {
 				|| $this->tokens[$i-1][0] === T_CATCH)) ) ) // catch{
 				{
 					// save brace amount at start of function
