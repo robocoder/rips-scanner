@@ -16,29 +16,32 @@ A static source code analyser for vulnerabilities in PHP scripts
 ## Usage
 Follow the instructions on the main page.
 
-## Command-line Interface - CLI
+## Command Line Interface - CLI
 
-#### usage
+#### Usage
 
-see original php-rips scan html form (index.php) for more options.
+See original php-rips scan html form (index.php) for more options.
 
 ```
-php index.php [option=value]
+  php index.php [option=value]
+```
 
-options:
-  loc 				... target scan file/folder <path>
-  subdir			... recurse subdirs [0|1]
-  ignore_warning	... [0|1]
-  vector			... scan vectors [all|..]
-  verbosity			... log verbosity [0-9]
-  treestyle			... html output style [0|1]
-  stylesheet		... html output stylesheet [ayti|...]
+| Options | Value |
+| --- | --- |
+| loc | target scan file/folder <path> |
+| subdir | recurse subdirs \[0\|1] |
+| ignore_warning | \[0\|1] |
+| vector | scan vectors \[all\|...] |
+| verbosity | log verbosity \[0-9] |
+| treestyle | html output style \[0\|1] |
+| stylesheet | html output stylesheet \[ayti\|...] |
 
-example: recursively scan ./code for all vuln. classes
+Example: recursively scan ./code for all vuln. classes
+```
   php index.php loc=./code subdirs=1 vector=all verbosity=2
 ```
 
-Note: in cli-mode argv wil be parsed into $_POST therefore allowing you to set any POST-Vars.
+Note: in cli-mode argv wil be parsed into `$_POST` therefore allowing you to set any POST variables.
 
 #### Jenkins-CI Integration Notes
 
@@ -82,4 +85,28 @@ Note: in cli-mode argv wil be parsed into $_POST therefore allowing you to set a
 5. add post-build step: publish html, select folder 'report' name 'vulnerability-report'. A new clickable action icon 'vulnerability-report' will appear that points at the archived scan result.
 
 ## Development
-RIPS 0.5 development is abandoned. A complete rewrite is in development. Follow @FluxReiners for updates.
+The `community` branch of RIPS is forked from version 0.55 and is not officially supported by RIPS Technologies.
+
+A completely rebuilt solution is available from RIPS Technologies that overcomes fundamental limitations in the open source version and performs state-of-the-art security analysis.
+
+| Compared Feature | RIPS 0.5 | Next Generation |
+| --- | --- | --- |
+| Supported PHP Language | PHP 3-4, no OOP | all, PHP 3-7 |
+| Static Code Analysis | Only Token-based | Full |
+| Analysis Precision | Low | Very High |
+| PHP Version Specific Analysis | No | Yes |
+| Scales to Large Codesizes | No | Yes |
+| API / CLI Support | No | Yes |
+| Continuous Integration | No | Yes |
+| Compliance / Standards | No | Yes |
+| Store Analysis Results | No | Yes |
+| Export Analysis Results | No | Yes |
+| Issue Review System | No | Yes |
+| Realtime Results | No | Yes |
+| Vulnerability Trends | No | Yes |
+| Detects Latest Risks | No | Yes |
+| Detects Complex Vulnerabilities | Limited | Yes |
+| Supported Issue Types | 15 | >140 |
+| Speed | Fast | Fast |
+
+Learn more about the next generation of RIPS at https://www.ripstech.com/latest/.
