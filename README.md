@@ -109,4 +109,4 @@ A completely rebuilt solution is available from RIPS Technologies that overcomes
 | Supported Issue Types | 15 | >140 |
 | Speed | Fast | Fast |
 
-Learn more about the next generation of RIPS at https://www.ripstech.com/latest/.
+Learn more about the next generation of RIPS at https://www.ripstech.com/product/datasheets/.
