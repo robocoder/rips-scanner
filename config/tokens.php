@@ -19,28 +19,48 @@ You should have received a copy of the GNU General Public License along with thi
 define('T_INCLUDE_END', 10000);
 
 // added in php 5.3
-if ( ! defined('T_GOTO'))          define('T_GOTO', 10001);
-if ( ! defined('T_NAMESPACE'))     define('T_NAMESPACE', 10002);
-if ( ! defined('T_NS_C'))          define('T_NS_C', 10003);
-if ( ! defined('T_NS_SEPARATOR'))  define('T_NS_SEPARATOR', 10004);
-if ( ! defined('T_USE'))           define('T_USE', 10005);
+if ( ! defined('T_GOTO'))                                     define('T_GOTO', 10001);
+if ( ! defined('T_NAMESPACE'))                                define('T_NAMESPACE', 10002);
+if ( ! defined('T_NS_C'))                                     define('T_NS_C', 10003);
+if ( ! defined('T_NS_SEPARATOR'))                             define('T_NS_SEPARATOR', 10004);
+if ( ! defined('T_USE'))                                      define('T_USE', 10005);
 
 // added in php 5.4
-if ( ! defined('T_INSTEADOF'))     define('T_INSTEADOF', 10006);
-if ( ! defined('T_TRAIT'))         define('T_TRAIT', 10007);
-if ( ! defined('T_TRAIT_C'))       define('T_TRAIT_C', 10008);
+if ( ! defined('T_INSTEADOF'))                                define('T_INSTEADOF', 10006);
+if ( ! defined('T_TRAIT'))                                    define('T_TRAIT', 10007);
+if ( ! defined('T_TRAIT_C'))                                  define('T_TRAIT_C', 10008);
 
 // added in php 5.5
-if ( ! defined('T_FINALLY'))       define('T_FINALLY', 10009);
-if ( ! defined('T_YIELD'))         define('T_YIELD', 10010);
-if ( ! defined('T_YIELD_FROM'))    define('T_YIELD_FROM', 10011);
+if ( ! defined('T_FINALLY'))                                  define('T_FINALLY', 10009);
+if ( ! defined('T_YIELD'))                                    define('T_YIELD', 10010);
+if ( ! defined('T_YIELD_FROM'))                               define('T_YIELD_FROM', 10011);
 
 // added in php 5.6
-if ( ! defined('T_POW'))           define('T_POW', 10012);
-if ( ! defined('T_POW_EQUAL'))     define('T_POW_EQUAL', 10013);
+if ( ! defined('T_ELLIPSIS'))                                 define('T_ELLIPSIS', 10012);
+if ( ! defined('T_POW'))                                      define('T_POW', 10013);
+if ( ! defined('T_POW_EQUAL'))                                define('T_POW_EQUAL', 10014);
 
 // added in php 7.0
-if ( ! defined('T_SPACESHIP'))     define('T_SPACESHIP', 10014);
+if ( ! defined('T_COALESCE'))                                 define('T_COALESCE', 10015);
+if ( ! defined('T_SPACESHIP'))                                define('T_SPACESHIP', 10016);
+
+// added in php 7.4
+if ( ! defined('T_COALESCE_EQUAL'))                           define('T_COALESCE_EQUAL', 10017);
+if ( ! defined('T_FN'))                                       define('T_FN', 10018);
+
+// added in php 8.0
+if ( ! defined('T_ATTRIBUTE'))                                define('T_ATTRIBUTE', 10019);
+if ( ! defined('T_MATCH'))                                    define('T_MATCH', 10020);
+if ( ! defined('T_NAME_FULLY_QUALIFIED'))                     define('T_NAME_FULLY_QUALIFIED', 10021);
+if ( ! defined('T_NAME_QUALIFIED'))                           define('T_NAME_QUALIFIED', 10022);
+if ( ! defined('T_NAME_RELATIVE'))                            define('T_NAME_RELATIVE', 10023);
+if ( ! defined('T_NULLSAFE_OBJECT_OPERATOR'))                 define('T_NULLSAFE_OBJECT_OPERATOR', 10024);
+
+// added in php 8.1
+if ( ! defined('T_ENUM'))                                     define('T_ENUM', 10025);
+if ( ! defined('T_READONLY'))                                 define('T_READONLY', 10026);
+if ( ! defined('T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG'))  define('T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG', 10027);
+if ( ! defined('T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG'))      define('T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG', 10028);
 
 final class Tokens
 {
@@ -87,6 +107,7 @@ final class Tokens
 		T_SL_EQUAL,
 		T_SR_EQUAL,
 		T_XOR_EQUAL,
+		T_COALESCE_EQUAL,
 	);
 
 	// variable assignment tokens that prevent tainting
@@ -112,6 +133,7 @@ final class Tokens
 		T_IS_NOT_IDENTICAL,
 		T_IS_SMALLER_OR_EQUAL,
 		T_SPACESHIP,
+		T_COALESCE,
 	);
 
 	// all function call tokens
