@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License along with thi
 class Analyzer
 {
 	// reconstructs string from a list of tokens
-	function get_tokens_value($file_name, $tokens, $var_declares, $var_declares_global, $tokenid, $start=0, $stop=0, $source_functions=array())
+	static function get_tokens_value($file_name, $tokens, $var_declares, $var_declares_global, $tokenid, $start=0, $stop=0, $source_functions=array())
 	{
 		$value = '';
 		if(!$stop) $stop = count($tokens);
@@ -115,7 +115,7 @@ class Analyzer
 	}
 
 	// traces values of variables and reconstructs string
-	function get_var_value($file_name, $var_token, $var_declares, $var_declares_global, $last_token_id, $source_functions=array())
+	static function get_var_value($file_name, $var_token, $var_declares, $var_declares_global, $last_token_id, $source_functions=array())
 	{
 		$var_value = '';
 
@@ -144,7 +144,7 @@ class Analyzer
 	}
 
 	// get end of codeblock (Detect brace ending, ignore new brace opening and closing in between)
-	function getBraceEnd($tokens, $i)
+	static function getBraceEnd($tokens, $i)
 	{
 		$c=1;
 		$newbraceopen = 1;
@@ -165,7 +165,7 @@ class Analyzer
 		return $c;
 	}
 
-	function get_ini_paths($path)
+	static function get_ini_paths($path)
 	{
 		if(!preg_match('/([;\\\\]|\W*[C-Z]{1}:)/', $path))
 			$path = str_replace(':', ';', $path);

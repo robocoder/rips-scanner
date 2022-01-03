@@ -37,8 +37,10 @@ class Scanner
 	public $put_in_global_scope;
 	public $brace_save_func;
 
+	public $in_condition;
 	public $braces_open;
 	public $ignore_requirement;
+	public $last_dependency;
 	public $dependencies;
 	public $dependencytokens;
 
@@ -55,7 +57,7 @@ class Scanner
 	public $lines_stack;
 	public $lines_pointer;
 	public $tif;
-	public $tif_Stack;
+	public $tif_stack;
 
 	public $tokens;
 
@@ -84,6 +86,7 @@ class Scanner
 		$this->brace_save_func = -1;
 		$this->brace_save_class = -1;
 		$this->ignore_requirement = false;
+		$this->last_dependency = array();
 		$this->dependencies = array();
 		$this->dependencytokens = array();
 
@@ -148,7 +151,7 @@ class Scanner
 
 	// traces recursivly parameters and adds them as child to parent
 	// returns true if a parameter is tainted by userinput (1=directly tainted, 2=function param)
-	function scan_parameter($mainparent, $parent, $var_token, $var_keys=array(), $last_token_id, $var_declares, $var_declares_global=array(), $userinput, $F_SECURES=array(), $return_scan=false, $ignore_securing=false, $secured=false)
+	function scan_parameter($mainparent, $parent, $var_token, $var_keys, $last_token_id, $var_declares, $var_declares_global, $userinput, $F_SECURES=array(), $return_scan=false, $ignore_securing=false, $secured=false)
 	{
 		#print_r(func_get_args());echo "\n----------------\n";
 		$vardependent = false;
@@ -626,7 +629,7 @@ class Scanner
 	}
 
 	// add a variable to the varlist
-	function variable_add($var_name, $tokens, $comment='', $tokenscanstart, $tokenscanstop, $linenr, $id, $array_keys=array(), $additional_keys=array())
+	function variable_add($var_name, $tokens, $comment, $tokenscanstart, $tokenscanstop, $linenr, $id, $array_keys=array(), $additional_keys=array())
 	{
 		// add variable declaration to beginning of varlist
 		$new_var = new VarDeclare($tokens,$this->comment . $comment);
@@ -1150,7 +1153,7 @@ class Scanner
 										2, 0,
 										$line_nr,
 										$i,
-										$tokens[$i-2][3],
+										$this->tokens[$i-2][3],
 										str_replace(array('"',"'"),'',$this->tokens[$i+$f][1])
 									);
 								}
@@ -1576,7 +1579,7 @@ class Scanner
 					*************************/
 					if(isset($this->scan_functions[$token_value]) && $GLOBALS['verbosity'] != 5
 					// not a function of a class or a function of a vulnerable class
-					&& (empty($class) || (($this->in_function && is_array($function_obj->parameters) && in_array($classvar, $function_obj->parameters)) || @in_array($token_value, $this->vuln_classes[$class]))) )
+					&& (empty($class) || (($this->in_function && is_array($this->function_obj->parameters) && in_array($classvar, $this->function_obj->parameters)) || @in_array($token_value, $this->vuln_classes[$class]))) )
 					{
 						if(!$this->already_scanned($i))
 						{

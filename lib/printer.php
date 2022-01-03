@@ -59,7 +59,7 @@ You should have received a copy of the GNU General Public License along with thi
 	}
 
 	// prepare output to style with CSS
-	function highlightline($tokens=array(), $comment='', $line_nr, $title=false, $udftitle=false, $tainted_vars=array())
+	function highlightline($tokens, $comment, $line_nr, $title=false, $udftitle=false, $tainted_vars=array())
 	{
 		$reference = true;
 		$output = "<span class=\"linenr\">$line_nr:</span>&nbsp;";
